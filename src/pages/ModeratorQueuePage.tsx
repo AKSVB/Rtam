@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { usePendingStays, usePendingTemples, useReviewStay, useReviewTemple } from '../hooks/useModeration'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Button } from '../components/common/Button'
@@ -15,6 +16,7 @@ type TempleEdits = Pick<
 
 export function ModeratorQueuePage() {
   const { profile } = useAuth()
+  const { toast } = useToast()
   const { data: pendingTemples, isLoading: templesLoading } = usePendingTemples()
   const { data: pendingStays, isLoading: staysLoading } = usePendingStays()
   const reviewTemple = useReviewTemple()
@@ -25,9 +27,24 @@ export function ModeratorQueuePage() {
 
   if (templesLoading || staysLoading) return <LoadingSpinner label="Loading queue…" />
 
-  const handleTempleDecision = (templeId: string, status: 'approved' | 'rejected', edits?: TempleEdits) => {
+  const handleTempleDecision = (
+    templeId: string,
+    templeName: string,
+    status: 'approved' | 'rejected',
+    edits?: TempleEdits,
+  ) => {
     if (!profile) return
-    reviewTemple.mutate({ templeId, status, moderatorId: profile.id, moderatorNote: note[templeId], edits })
+    reviewTemple.mutate(
+      { templeId, status, moderatorId: profile.id, moderatorNote: note[templeId], edits },
+      {
+        onSuccess: () =>
+          toast(
+            status === 'approved' ? `${templeName} approved and published.` : `${templeName} rejected.`,
+            status === 'approved' ? 'success' : 'info',
+          ),
+        onError: () => toast(`Couldn't update ${templeName}. Please try again.`, 'error'),
+      },
+    )
     setEditingId(null)
     setDraft(null)
   }
@@ -146,7 +163,7 @@ export function ModeratorQueuePage() {
                               <Button
                                 variant="primary"
                                 className="min-h-9 px-3 py-1 text-xs"
-                                onClick={() => handleTempleDecision(temple.id, 'approved', draft)}
+                                onClick={() => handleTempleDecision(temple.id, temple.name, 'approved', draft)}
                               >
                                 Save &amp; Approve
                               </Button>
@@ -155,7 +172,7 @@ export function ModeratorQueuePage() {
                                 <Button
                                   variant="primary"
                                   className="min-h-9 px-3 py-1 text-xs"
-                                  onClick={() => handleTempleDecision(temple.id, 'approved')}
+                                  onClick={() => handleTempleDecision(temple.id, temple.name, 'approved')}
                                 >
                                   {strings.moderator.approve}
                                 </Button>
@@ -171,7 +188,7 @@ export function ModeratorQueuePage() {
                             <Button
                               variant="danger"
                               className="min-h-9 px-3 py-1 text-xs"
-                              onClick={() => handleTempleDecision(temple.id, 'rejected')}
+                              onClick={() => handleTempleDecision(temple.id, temple.name, 'rejected')}
                             >
                               {strings.moderator.reject}
                             </Button>
@@ -211,14 +228,24 @@ export function ModeratorQueuePage() {
                         <Button
                           variant="primary"
                           className="min-h-9 px-3 py-1 text-xs"
-                          onClick={() => reviewStay.mutate({ stayId: stay.id, status: 'approved' })}
+                          onClick={() =>
+                            reviewStay.mutate(
+                              { stayId: stay.id, status: 'approved' },
+                              { onSuccess: () => toast(`${stay.name} approved and published.`, 'success') },
+                            )
+                          }
                         >
                           {strings.moderator.approve}
                         </Button>
                         <Button
                           variant="danger"
                           className="min-h-9 px-3 py-1 text-xs"
-                          onClick={() => reviewStay.mutate({ stayId: stay.id, status: 'rejected' })}
+                          onClick={() =>
+                            reviewStay.mutate(
+                              { stayId: stay.id, status: 'rejected' },
+                              { onSuccess: () => toast(`${stay.name} rejected.`, 'info') },
+                            )
+                          }
                         >
                           {strings.moderator.reject}
                         </Button>

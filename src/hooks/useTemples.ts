@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { FoodTierLevel, FriendlinessLevel, Temple } from '../types/database'
@@ -54,4 +55,54 @@ export function useTempleStates() {
       return unique
     },
   })
+}
+
+/** Most recently approved temples, for a "just added" strip on the home page. */
+export function useRecentlyAddedTemples(limit = 8) {
+  return useQuery({
+    queryKey: ['recently-added-temples', limit],
+    queryFn: async (): Promise<Temple[]> => {
+      const { data, error } = await supabase
+        .from('temples')
+        .select('*')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 5 * 60_000,
+  })
+}
+
+/**
+ * A handful of temples from one pilgrimage circuit, picked deterministically
+ * by the day of year so the "spotlight" on the home page rotates daily
+ * rather than needing an editor to curate it by hand.
+ */
+export function useCircuitSpotlight(tags: readonly string[], limit = 4) {
+  const [tag] = useState(() => {
+    const dayOfYear = Math.floor(
+      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000,
+    )
+    return tags[dayOfYear % tags.length]
+  })
+
+  const query = useQuery({
+    queryKey: ['circuit-spotlight', tag, limit],
+    queryFn: async (): Promise<Temple[]> => {
+      const { data, error } = await supabase
+        .from('temples')
+        .select('*')
+        .eq('status', 'approved')
+        .contains('significance', [tag])
+        .order('name')
+        .limit(limit)
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 60 * 60_000,
+  })
+
+  return { tag, ...query }
 }

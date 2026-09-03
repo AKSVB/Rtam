@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 import { useAddReview, useMyReview } from '../../hooks/useTempleDetail'
 import { Button } from '../common/Button'
 import { TextArea } from '../common/FormField'
@@ -7,6 +8,7 @@ import { strings } from '../../constants/strings'
 
 export function ReviewForm({ templeId }: { templeId: string }) {
   const { user } = useAuth()
+  const { toast } = useToast()
   const { data: myReview } = useMyReview(templeId, user?.id)
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
@@ -36,7 +38,12 @@ export function ReviewForm({ templeId }: { templeId: string }) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    await addReview.mutateAsync({ userId: user.id, rating, comment })
+    try {
+      await addReview.mutateAsync({ userId: user.id, rating, comment })
+      toast(isEditing ? 'Review updated.' : 'Review posted — thank you!', 'success')
+    } catch {
+      /* addReview.isError already renders the inline message below */
+    }
   }
 
   return (

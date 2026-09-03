@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import {
   useNearbyTemples,
   useTemple,
@@ -32,6 +33,7 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
 export function TempleDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
+  const { toast } = useToast()
   const { data: temple, isLoading } = useTemple(id)
   const { data: photos } = useTemplePhotos(id)
   const { data: stays } = useTempleStays(id)
@@ -93,13 +95,44 @@ export function TempleDetailPage() {
           </p>
         )}
 
-        <Button
-          variant={inTrip ? 'secondary' : 'primary'}
-          className="mt-4"
-          onClick={() => (inTrip ? removeTemple(temple.id) : addTemple(temple.id))}
-        >
-          {inTrip ? `✓ ${strings.temple.inTrip}` : strings.temple.addToTrip}
-        </Button>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            variant={inTrip ? 'secondary' : 'primary'}
+            onClick={() => {
+              if (inTrip) {
+                removeTemple(temple.id)
+                toast(`Removed ${temple.name} from your trip.`, 'info')
+              } else {
+                addTemple(temple.id)
+                toast(`Added ${temple.name} to your trip.`, 'success')
+              }
+            }}
+          >
+            {inTrip ? `✓ ${strings.temple.inTrip}` : strings.temple.addToTrip}
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              const url = window.location.href
+              if (navigator.share) {
+                try {
+                  await navigator.share({ title: temple.name, url })
+                } catch {
+                  /* user cancelled the native share sheet — nothing to do */
+                }
+                return
+              }
+              try {
+                await navigator.clipboard.writeText(url)
+                toast('Link copied to clipboard.', 'success')
+              } catch {
+                toast("Couldn't copy the link — copy it from the address bar instead.", 'error')
+              }
+            }}
+          >
+            ⤴ Share
+          </Button>
+        </div>
       </div>
 
       <section className="grid grid-cols-1 gap-6 rounded-xl border border-cream-200 bg-white p-5 md:grid-cols-2">

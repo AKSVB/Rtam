@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import { useTemples, useTempleStates, type TempleFilters } from '../hooks/useTemples'
+import { Link } from 'react-router-dom'
+import {
+  useCircuitSpotlight,
+  useRecentlyAddedTemples,
+  useTemples,
+  useTempleStates,
+  type TempleFilters,
+} from '../hooks/useTemples'
+import { useTemplePhotoCovers } from '../hooks/useTemplePhotoCovers'
+import { useSiteStats } from '../hooks/useSiteStats'
 import { TempleCard } from '../components/temple/TempleCard'
 import { TempleMap } from '../components/temple/TempleMap'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
@@ -7,9 +16,30 @@ import { Select, TextInput } from '../components/common/FormField'
 import { Button } from '../components/common/Button'
 import { strings } from '../constants/strings'
 import { FOOD_TIER_LABELS, FRIENDLINESS_LABELS, SIGNIFICANCE_TAGS } from '../constants/enumLabels'
-import type { FoodTierLevel, FriendlinessLevel } from '../types/database'
+import type { FoodTierLevel, FriendlinessLevel, Temple } from '../types/database'
 
 type ViewMode = 'list' | 'map'
+
+function StatPill({ value, label }: { value: number | undefined; label: string }) {
+  return (
+    <div className="flex flex-col items-center px-4 py-1 text-center">
+      <span className="font-display text-3xl font-semibold text-gold-300">{value ?? '—'}</span>
+      <span className="text-xs uppercase tracking-wide text-cream-100/70">{label}</span>
+    </div>
+  )
+}
+
+function TempleStrip({ temples, covers }: { temples: Temple[]; covers: ReturnType<typeof useTemplePhotoCovers>['data'] }) {
+  return (
+    <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+      {temples.map((temple) => (
+        <div key={temple.id} className="w-64 shrink-0 snap-start sm:w-auto">
+          <TempleCard temple={temple} cover={covers?.[temple.id]} />
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export function HomePage() {
   const [search, setSearch] = useState('')
@@ -30,9 +60,14 @@ export function HomePage() {
     foodTier: foodTier || undefined,
     hasRiver: hasRiver || undefined,
   }
+  const isBrowsing = Object.values(filters).some(Boolean)
 
   const { data: temples, isLoading } = useTemples(filters)
   const { data: states } = useTempleStates()
+  const { data: covers } = useTemplePhotoCovers()
+  const { data: stats } = useSiteStats()
+  const { data: recent } = useRecentlyAddedTemples()
+  const spotlight = useCircuitSpotlight(SIGNIFICANCE_TAGS)
 
   const clearFilters = () => {
     setState('')
@@ -44,37 +79,84 @@ export function HomePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-charcoal-900">{strings.appName}</h1>
-        <p className="text-charcoal-700/80">{strings.tagline}</p>
-      </div>
+    <div className="flex flex-col gap-10">
+      {/* ── Hero ──────────────────────────────────────────────────────── */}
+      <section className="bg-gopuram-line relative -mx-4 overflow-hidden rounded-b-3xl bg-maroon-900 px-4 pb-10 pt-8 text-cream-50 sm:-mx-6 sm:px-6">
+        <div className="bg-kolam pointer-events-none absolute inset-0 text-gold-300/10" />
+        <div className="relative mx-auto max-w-3xl text-center">
+          <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+            {strings.appName}
+          </h1>
+          <p className="mx-auto mt-3 max-w-xl text-cream-100/85">{strings.tagline}</p>
 
-      <TextInput
-        type="search"
-        placeholder={strings.search.placeholder}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        aria-label={strings.search.placeholder}
-      />
+          <div className="mt-6">
+            <TextInput
+              type="search"
+              placeholder={strings.search.placeholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label={strings.search.placeholder}
+              className="!bg-cream-50 text-charcoal-900 shadow-lg"
+            />
+          </div>
 
-      <div className="flex flex-wrap gap-2">
-        {SIGNIFICANCE_TAGS.map((tag) => (
-          <button
-            key={tag}
-            type="button"
-            onClick={() => setSignificance((prev) => (prev === tag ? '' : tag))}
-            className={`min-h-9 rounded-full border px-3 text-sm font-medium transition-colors ${
-              significance === tag
-                ? 'border-maroon-700 bg-maroon-700 text-cream-50'
-                : 'border-saffron-400 bg-saffron-400/10 text-maroon-800 hover:bg-saffron-400/20'
-            }`}
-          >
-            ✦ {tag}
-          </button>
-        ))}
-      </div>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            {SIGNIFICANCE_TAGS.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setSignificance((prev) => (prev === tag ? '' : tag))}
+                className={`min-h-9 rounded-full border px-3 text-sm font-medium transition-colors ${
+                  significance === tag
+                    ? 'border-gold-400 bg-gold-400 text-maroon-900'
+                    : 'border-cream-100/30 bg-white/5 text-cream-100 hover:bg-white/10'
+                }`}
+              >
+                ✦ {tag}
+              </button>
+            ))}
+          </div>
 
+          <div className="mx-auto mt-7 flex max-w-md justify-center divide-x divide-cream-100/20">
+            <StatPill value={stats?.templeCount} label="Temples" />
+            <StatPill value={stats?.stateCount} label="States" />
+            <StatPill value={stats?.contributorCount} label="Contributors" />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Circuit spotlight (only while not actively browsing) ────────── */}
+      {!isBrowsing && spotlight.data && spotlight.data.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-baseline justify-between gap-2">
+            <h2 className="font-display text-2xl font-semibold text-charcoal-900">
+              ✦ Today's Circuit: {spotlight.tag}
+            </h2>
+            <button
+              type="button"
+              onClick={() => setSignificance(spotlight.tag)}
+              className="shrink-0 text-sm font-semibold text-maroon-700 hover:underline"
+            >
+              See all →
+            </button>
+          </div>
+          <TempleStrip temples={spotlight.data} covers={covers} />
+        </section>
+      )}
+
+      {/* ── Recently added (only while not actively browsing) ───────────── */}
+      {!isBrowsing && recent && recent.length > 0 && (
+        <section>
+          <h2 className="mb-4 font-display text-2xl font-semibold text-charcoal-900">
+            🕯 Newly Added by the Community
+          </h2>
+          <TempleStrip temples={recent.slice(0, 4)} covers={covers} />
+        </section>
+      )}
+
+      <div className="divider-lotus" />
+
+      {/* ── Filters ───────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 rounded-xl border border-cream-200 bg-white p-4 md:flex-row md:flex-wrap md:items-end">
         <div className="flex flex-1 flex-col gap-1 min-w-[160px]">
           <label htmlFor="state-filter" className="text-xs font-semibold text-charcoal-700">
@@ -212,10 +294,18 @@ export function HomePage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {temples.map((temple) => (
-            <TempleCard key={temple.id} temple={temple} />
+            <TempleCard key={temple.id} temple={temple} cover={covers?.[temple.id]} />
           ))}
         </div>
       )}
+
+      <p className="text-center text-sm text-charcoal-700/60">
+        Don't see a temple you know?{' '}
+        <Link to="/temples/new" className="font-semibold text-maroon-700 hover:underline">
+          Add it yourself
+        </Link>{' '}
+        — every entry here was added by someone like you.
+      </p>
     </div>
   )
 }

@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useTripList } from '../hooks/useTripList'
+import { useTemplePhotoCovers } from '../hooks/useTemplePhotoCovers'
+import { useToast } from '../context/ToastContext'
 import { TempleCard } from '../components/temple/TempleCard'
 import { TempleMap } from '../components/temple/TempleMap'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
@@ -15,6 +17,8 @@ export function TripPlannerPage() {
   const [searchParams] = useSearchParams()
   const sharedIds = searchParams.get('temples')?.split(',').filter(Boolean)
   const { templeIds: myTempleIds, removeTemple } = useTripList()
+  const { data: covers } = useTemplePhotoCovers()
+  const { toast } = useToast()
   const [copied, setCopied] = useState(false)
 
   const isSharedView = !!sharedIds
@@ -35,9 +39,13 @@ export function TripPlannerPage() {
 
   const handleShare = async () => {
     const url = `${window.location.origin}/trip?temples=${myTempleIds.join(',')}`
-    await navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast("Couldn't copy the link — copy it from the address bar instead.", 'error')
+    }
   }
 
   return (
@@ -68,11 +76,14 @@ export function TripPlannerPage() {
                 <span className="absolute -left-2 -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-maroon-700 text-xs font-bold text-cream-50">
                   {i + 1}
                 </span>
-                <TempleCard temple={temple} />
+                <TempleCard temple={temple} cover={covers?.[temple.id]} />
                 {!isSharedView && (
                   <button
                     type="button"
-                    onClick={() => removeTemple(temple.id)}
+                    onClick={() => {
+                      removeTemple(temple.id)
+                      toast(`Removed ${temple.name} from your trip.`, 'info')
+                    }}
                     className="mt-2 min-h-9 rounded-lg border border-stone-300 px-3 text-xs font-medium text-charcoal-700 hover:bg-stone-100"
                   >
                     {strings.temple.removeFromTrip}
