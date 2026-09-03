@@ -81,14 +81,14 @@ create table public.temples (
   )
 );
 
+create extension if not exists pg_trgm;
+
 create index temples_state_idx on public.temples (state);
 create index temples_country_idx on public.temples (country);
 create index temples_significance_idx on public.temples using gin (significance);
 create index temples_status_idx on public.temples (status);
 create index temples_deity_idx on public.temples (deity);
 create index temples_name_trgm_idx on public.temples using gin (name gin_trgm_ops);
-
-create extension if not exists pg_trgm;
 
 -- ── temple_stays ─────────────────────────────────────────────────────────
 
