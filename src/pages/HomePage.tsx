@@ -23,10 +23,18 @@ type ViewMode = 'list' | 'map'
 function StatPill({ value, label }: { value: number | undefined; label: string }) {
   return (
     <div className="flex flex-col items-center px-4 py-1 text-center">
-      <span className="font-display text-3xl font-semibold text-gold-300">{value ?? '—'}</span>
-      <span className="text-xs uppercase tracking-wide text-cream-100/70">{label}</span>
+      <span className="font-display text-3xl font-semibold text-maroon-800">{value ?? '—'}</span>
+      <span className="text-xs uppercase tracking-wide text-charcoal-700/60">{label}</span>
     </div>
   )
+}
+
+const HERO_IMAGE = {
+  url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Ranganathaswamy_temple_tiruchirappalli.jpg/1280px-Ranganathaswamy_temple_tiruchirappalli.jpg',
+  alt: 'The painted gopuram of the Ranganathaswamy Temple, Srirangam',
+  credit: 'RUPESH MAURYA',
+  license: 'CC BY-SA 4.0',
+  sourceUrl: 'https://commons.wikimedia.org/wiki/File:Ranganathaswamy_temple_tiruchirappalli.jpg',
 }
 
 function TempleStrip({ temples, covers }: { temples: Temple[]; covers: ReturnType<typeof useTemplePhotoCovers>['data'] }) {
@@ -81,46 +89,60 @@ export function HomePage() {
   return (
     <div className="flex flex-col gap-10">
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="bg-gopuram-line relative -mx-4 overflow-hidden rounded-b-3xl bg-maroon-900 px-4 pb-10 pt-8 text-cream-50 sm:-mx-6 sm:px-6">
-        <div className="bg-kolam pointer-events-none absolute inset-0 text-gold-300/10" />
-        <div className="relative mx-auto max-w-3xl text-center">
-          <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-            {strings.appName}
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-cream-100/85">{strings.tagline}</p>
+      <section className="relative -mx-4 overflow-hidden rounded-b-3xl sm:-mx-6">
+        <div className="relative h-48 w-full sm:h-64">
+          <img src={HERO_IMAGE.url} alt={HERO_IMAGE.alt} className="h-full w-full object-cover" />
+          <div className="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-vermilion-400 via-gold-400 to-peacock-500" />
+          <a
+            href={HERO_IMAGE.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="absolute bottom-2.5 right-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/90 backdrop-blur-sm hover:bg-black/55"
+          >
+            Ranganathaswamy Temple, Srirangam · {HERO_IMAGE.credit} · {HERO_IMAGE.license}
+          </a>
+        </div>
 
-          <div className="mt-6">
-            <TextInput
-              type="search"
-              placeholder={strings.search.placeholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              aria-label={strings.search.placeholder}
-              className="!bg-cream-50 text-charcoal-900 shadow-lg"
-            />
-          </div>
+        <div className="bg-gradient-to-b from-cream-100 to-cream-50 px-4 pb-10 pt-8 sm:px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="font-display text-4xl font-semibold tracking-tight text-maroon-900 sm:text-5xl">
+              {strings.appName}
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-charcoal-700/90">{strings.tagline}</p>
 
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
-            {SIGNIFICANCE_TAGS.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => setSignificance((prev) => (prev === tag ? '' : tag))}
-                className={`min-h-9 rounded-full border px-3 text-sm font-medium transition-colors ${
-                  significance === tag
-                    ? 'border-gold-400 bg-gold-400 text-maroon-900'
-                    : 'border-cream-100/30 bg-white/5 text-cream-100 hover:bg-white/10'
-                }`}
-              >
-                ✦ {tag}
-              </button>
-            ))}
-          </div>
+            <div className="mt-6">
+              <TextInput
+                type="search"
+                placeholder={strings.search.placeholder}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                aria-label={strings.search.placeholder}
+                className="shadow-md"
+              />
+            </div>
 
-          <div className="mx-auto mt-7 flex max-w-md justify-center divide-x divide-cream-100/20">
-            <StatPill value={stats?.templeCount} label="Temples" />
-            <StatPill value={stats?.stateCount} label="States" />
-            <StatPill value={stats?.contributorCount} label="Contributors" />
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {SIGNIFICANCE_TAGS.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setSignificance((prev) => (prev === tag ? '' : tag))}
+                  className={`min-h-9 rounded-full border px-3 text-sm font-medium transition-colors ${
+                    significance === tag
+                      ? 'border-gold-400 bg-gold-400 text-maroon-900'
+                      : 'border-gold-400/40 bg-white text-maroon-800 hover:bg-gold-400/10'
+                  }`}
+                >
+                  ✦ {tag}
+                </button>
+              ))}
+            </div>
+
+            <div className="mx-auto mt-7 flex max-w-md justify-center divide-x divide-maroon-200">
+              <StatPill value={stats?.templeCount} label="Temples" />
+              <StatPill value={stats?.stateCount} label="States" />
+              <StatPill value={stats?.contributorCount} label="Contributors" />
+            </div>
           </div>
         </div>
       </section>

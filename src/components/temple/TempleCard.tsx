@@ -20,12 +20,15 @@ function foodTone(tier: Temple['food_tier']) {
 }
 
 // A small, deterministic palette of cover-photo placeholders so temples
-// without a photo yet still read as distinct cards in a grid rather than
-// one repeated grey box.
+// without a photo yet still read as distinct, vibrant cards in a grid
+// rather than one repeated dark box — gopuram-paint and kumkum/turmeric
+// tones, never the darkest maroon/charcoal shades on their own.
 const PLACEHOLDER_GRADIENTS = [
-  'from-maroon-800 to-maroon-900',
-  'from-maroon-900 to-charcoal-900',
-  'from-gold-600 to-maroon-900',
+  'from-saffron-400 to-vermilion-600',
+  'from-turmeric-300 to-gold-600',
+  'from-gold-400 to-maroon-700',
+  'from-peacock-500 to-turmeric-500',
+  'from-vermilion-400 to-maroon-700',
 ]
 
 function placeholderGradient(seed: string) {
@@ -42,7 +45,7 @@ export function TempleCard({ temple, cover }: { temple: Temple; cover?: PhotoCov
       to={`/temples/${temple.id}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-cream-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gold-400/60 hover:shadow-lg"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-maroon-900">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gold-300">
         {cover ? (
           <img
             src={cover.url}
@@ -52,18 +55,21 @@ export function TempleCard({ temple, cover }: { temple: Temple; cover?: PhotoCov
           />
         ) : (
           <div
-            className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${placeholderGradient(temple.id)}`}
+            className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br ${placeholderGradient(temple.id)}`}
           >
-            <TempleGopuramIcon className="h-12 w-12 text-cream-100/40" />
+            <div className="bg-kolam absolute inset-0 text-white/10" aria-hidden />
+            <TempleGopuramIcon className="relative h-14 w-14 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]" />
           </div>
         )}
         {firstTag && (
-          <span className="absolute left-2 top-2 rounded-full border border-gold-400/70 bg-charcoal-900/70 px-2.5 py-1 text-[11px] font-semibold text-gold-300 backdrop-blur-sm">
+          <span className="absolute left-2 top-2 rounded-full bg-gradient-to-r from-saffron-500 to-gold-500 px-2.5 py-1 text-[11px] font-semibold text-maroon-900 shadow-sm">
             ✦ {firstTag}
             {restTags.length > 0 ? ` +${restTags.length}` : ''}
           </span>
         )}
       </div>
+
+      <div className="h-[3px] w-full bg-gradient-to-r from-vermilion-400 via-gold-400 to-peacock-500" aria-hidden />
 
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div>
