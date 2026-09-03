@@ -61,6 +61,7 @@ export const SIGNIFICANCE_TAGS = [
   'Pancha Bhoota Sthalam',
   'Char Dham',
   'Sapta Puri',
+  'Char Peetham',
 ] as const
 
 export const SANDHYA_HELP =
