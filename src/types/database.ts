@@ -82,6 +82,7 @@ export interface TempleStay {
   notes: string | null
   submitted_by: string | null
   status: SubmissionStatus
+  moderator_note: string | null
   created_at: string
   updated_at: string
 }
@@ -127,5 +128,5 @@ export type NewTempleInput = Omit<
 
 export type NewStayInput = Omit<
   TempleStay,
-  'id' | 'submitted_by' | 'status' | 'created_at' | 'updated_at'
+  'id' | 'submitted_by' | 'status' | 'moderator_note' | 'created_at' | 'updated_at'
 >

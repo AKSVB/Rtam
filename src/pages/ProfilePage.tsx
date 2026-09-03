@@ -105,6 +105,14 @@ export function ProfilePage() {
                 {temple.status === 'rejected' && temple.moderator_note && (
                   <p className="mt-2 text-sm text-maroon-700">Feedback: {temple.moderator_note}</p>
                 )}
+                {(temple.status === 'rejected' || temple.status === 'pending') && (
+                  <Link
+                    to={`/temples/${temple.id}/edit`}
+                    className="mt-2 inline-block text-sm font-semibold text-maroon-700 hover:underline"
+                  >
+                    {strings.temple.editAndResubmit}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

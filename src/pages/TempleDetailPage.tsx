@@ -1,6 +1,7 @@
-import { useParams } from 'react-router-dom'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import {
+  useNearbyTemples,
   useTemple,
   useTempleContributor,
   useTemplePhotos,
@@ -30,12 +31,14 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
 
 export function TempleDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
   const { data: temple, isLoading } = useTemple(id)
   const { data: photos } = useTemplePhotos(id)
   const { data: stays } = useTempleStays(id)
   const { data: reviews } = useTempleReviews(id)
   const { isInTrip, addTemple, removeTemple } = useTripList()
   const { data: contributor } = useTempleContributor(temple?.submitted_by)
+  const { data: nearby } = useNearbyTemples(temple)
 
   if (isLoading) return <LoadingSpinner label="Loading temple…" />
   if (!temple) return <p className="text-charcoal-700">Temple not found.</p>
@@ -49,6 +52,20 @@ export function TempleDetailPage() {
           <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
             {strings.temple.submittedStatusPending}
           </p>
+        )}
+        {temple.status === 'rejected' && (
+          <div className="mb-3 rounded-lg border border-maroon-200 bg-maroon-50 px-3 py-2 text-sm text-maroon-800">
+            <p>{strings.temple.submittedStatusRejected}</p>
+            {temple.moderator_note && (
+              <p className="mt-1 italic">"{temple.moderator_note}"</p>
+            )}
+            <Link
+              to={`/temples/${temple.id}/edit`}
+              className="mt-2 inline-block font-semibold underline"
+            >
+              {strings.temple.editAndResubmit}
+            </Link>
+          </div>
         )}
         <h1 className="text-2xl font-bold text-charcoal-900">{temple.name}</h1>
         <p className="text-charcoal-700/80">
@@ -126,7 +143,17 @@ export function TempleDetailPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-bold text-charcoal-900">{strings.temple.nearbyStays}</h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold text-charcoal-900">{strings.temple.nearbyStays}</h2>
+          {user && (
+            <Link
+              to={`/temples/${temple.id}/add-stay`}
+              className="text-sm font-semibold text-maroon-700 hover:underline"
+            >
+              + {strings.temple.addStay}
+            </Link>
+          )}
+        </div>
         {!stays || stays.length === 0 ? (
           <p className="text-sm text-charcoal-700/70">{strings.temple.noStays}</p>
         ) : (
@@ -145,6 +172,34 @@ export function TempleDetailPage() {
         </div>
         <ReviewForm templeId={temple.id} />
       </section>
+
+      {nearby && nearby.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-lg font-bold text-charcoal-900">{strings.temple.nearbyTemples}</h2>
+          <ul className="flex flex-col divide-y divide-cream-200 overflow-hidden rounded-xl border border-cream-200 bg-white">
+            {nearby.map((t) => (
+              <li key={t.id}>
+                <Link
+                  to={`/temples/${t.id}`}
+                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-cream-100"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold text-charcoal-900">{t.name}</span>
+                    <span className="block truncate text-sm text-charcoal-700/70">
+                      {t.deity} · {t.town}, {t.state}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-cream-100 px-2.5 py-1 text-xs font-medium text-charcoal-700">
+                    {t.distanceKm < 1
+                      ? `${Math.round(t.distanceKm * 1000)} m`
+                      : `${t.distanceKm.toFixed(0)} km`}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }

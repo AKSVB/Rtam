@@ -47,10 +47,14 @@ export const strings = {
       'Told as tradition records it. If your family or region knows a different account, please add it.',
     nearbyStays: 'Nearby Stays',
     noStays: 'No verified stays listed yet for this temple.',
+    addStay: 'Add a stay',
     reviews: 'Reviews',
     noReviews: 'No reviews yet. Share your experience below.',
     addReview: 'Add a Review',
+    nearbyTemples: 'Temples Nearby',
     submittedStatusPending: 'This submission is awaiting moderator review.',
+    submittedStatusRejected: 'A moderator asked for changes — see the note below, then edit and resubmit.',
+    editAndResubmit: 'Edit & resubmit',
   },
 
   form: {

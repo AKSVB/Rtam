@@ -1,15 +1,28 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { useAddReview } from '../../hooks/useTempleDetail'
+import { useAddReview, useMyReview } from '../../hooks/useTempleDetail'
 import { Button } from '../common/Button'
 import { TextArea } from '../common/FormField'
 import { strings } from '../../constants/strings'
 
 export function ReviewForm({ templeId }: { templeId: string }) {
   const { user } = useAuth()
-  const addReview = useAddReview(templeId)
+  const { data: myReview } = useMyReview(templeId, user?.id)
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
+  const addReview = useAddReview(templeId)
+
+  // Prefill once the existing review (if any) has loaded, so editing starts
+  // from what's already posted rather than silently overwriting it. Done
+  // during render (React's documented pattern for adjusting state when a
+  // fetched value changes) rather than in an effect, which would cause an
+  // extra render after the data arrives.
+  const [prefilledFor, setPrefilledFor] = useState<string | null>(null)
+  if (myReview && prefilledFor !== myReview.id) {
+    setPrefilledFor(myReview.id)
+    setRating(myReview.rating)
+    setComment(myReview.comment ?? '')
+  }
 
   if (!user) {
     return (
@@ -19,14 +32,20 @@ export function ReviewForm({ templeId }: { templeId: string }) {
     )
   }
 
+  const isEditing = !!myReview
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     await addReview.mutateAsync({ userId: user.id, rating, comment })
-    setComment('')
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-xl border border-cream-200 bg-white p-4">
+      {isEditing && (
+        <p className="text-xs font-medium text-charcoal-700/60">
+          You've already reviewed this temple — saving here updates your review.
+        </p>
+      )}
       <div className="flex items-center gap-2">
         <label htmlFor="rating" className="text-sm font-semibold text-charcoal-900">
           Your rating
@@ -50,7 +69,7 @@ export function ReviewForm({ templeId }: { templeId: string }) {
         onChange={(e) => setComment(e.target.value)}
       />
       <Button type="submit" disabled={addReview.isPending} className="self-start">
-        {addReview.isPending ? 'Posting…' : strings.temple.addReview}
+        {addReview.isPending ? 'Saving…' : isEditing ? 'Update review' : strings.temple.addReview}
       </Button>
       {addReview.isError && (
         <p className="text-sm text-maroon-700">Something went wrong. Please try again.</p>

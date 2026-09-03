@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useSubmitTemple, useUploadTemplePhoto } from '../hooks/useSubmitTemple'
+import { useSubmitTemple, useUpdateTemple, useUploadTemplePhoto } from '../hooks/useSubmitTemple'
+import { useTemple } from '../hooks/useTempleDetail'
 import { Button } from '../components/common/Button'
 import { FormField, Select, TextArea, TextInput } from '../components/common/FormField'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { LocationPicker } from '../components/temple/LocationPicker'
 import { strings } from '../constants/strings'
 import {
@@ -14,7 +16,7 @@ import {
   SANDHYA_HELP,
   SIGNIFICANCE_TAGS,
 } from '../constants/enumLabels'
-import type { FoodTierLevel, FriendlinessLevel, NewTempleInput } from '../types/database'
+import type { FoodTierLevel, FriendlinessLevel, NewTempleInput, Temple } from '../types/database'
 
 const STEPS = ['basics', 'rituals', 'food', 'photos', 'review'] as const
 type Step = (typeof STEPS)[number]
@@ -75,18 +77,61 @@ function toNullableNumber(value: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+function formStateFromTemple(t: Temple): FormState {
+  return {
+    name: t.name,
+    deity: t.deity,
+    sampradaya: t.sampradaya ?? '',
+    significance: t.significance,
+    country: t.country,
+    state: t.state,
+    district: t.district,
+    town: t.town,
+    latitude: String(t.latitude),
+    longitude: String(t.longitude),
+    sandhya_friendly: t.sandhya_friendly,
+    sandhya_notes: t.sandhya_notes ?? '',
+    samidhadhanam_friendly: t.samidhadhanam_friendly,
+    samidhadhanam_notes: t.samidhadhanam_notes ?? '',
+    food_tier: t.food_tier,
+    food_source_name: t.food_source_name ?? '',
+    food_source_contact: t.food_source_contact ?? '',
+    food_distance_km: t.food_distance_km != null ? String(t.food_distance_km) : '',
+    nearest_river_name: t.nearest_river_name ?? '',
+    river_distance_km: t.river_distance_km != null ? String(t.river_distance_km) : '',
+    best_season_notes: t.best_season_notes ?? '',
+    sthala_purana: t.sthala_purana ?? '',
+  }
+}
+
 export function AddTemplePage() {
+  const { id } = useParams<{ id?: string }>()
+  const isEditing = !!id
   const { user } = useAuth()
   const navigate = useNavigate()
   const submitTemple = useSubmitTemple()
+  const updateTemple = useUpdateTemple()
   const uploadPhoto = useUploadTemplePhoto()
+  const { data: existingTemple, isLoading: loadingExisting } = useTemple(id)
 
   const [stepIndex, setStepIndex] = useState(0)
   const [form, setForm] = useState<FormState>(initialState)
+  const [loadedExistingInto, setLoadedExistingInto] = useState<string | null>(null)
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // Populate the form once the existing temple has loaded, but only once —
+  // otherwise every refetch (e.g. after the photo upload invalidates the
+  // 'temple' query) would stomp on whatever the user has since typed. Done
+  // during render (React's documented pattern for adjusting state when a
+  // fetched value changes) rather than in an effect, which would cause an
+  // extra render after the data arrives.
+  if (existingTemple && loadedExistingInto !== existingTemple.id) {
+    setLoadedExistingInto(existingTemple.id)
+    setForm(formStateFromTemple(existingTemple))
+  }
 
   const step: Step = STEPS[stepIndex]
 
@@ -104,6 +149,16 @@ export function AddTemplePage() {
     form.longitude.trim() &&
     !Number.isNaN(Number(form.latitude)) &&
     !Number.isNaN(Number(form.longitude))
+
+  // The food_fields_require_known_tier DB constraint rejects
+  // brahmin_run_kitchen/pure_veg_available unless at least a source name or
+  // a distance is given — check it client-side so the failure is a helpful
+  // inline message instead of a raw Postgres error at final submit.
+  const foodValid =
+    form.food_tier === 'unknown' ||
+    form.food_tier === 'no_veg_confirmed_nearby' ||
+    form.food_source_name.trim() !== '' ||
+    form.food_distance_km.trim() !== ''
 
   const goNext = () => setStepIndex((i) => Math.min(i + 1, STEPS.length - 1))
   const goBack = () => setStepIndex((i) => Math.max(i - 1, 0))
@@ -138,10 +193,12 @@ export function AddTemplePage() {
         sthala_purana: form.sthala_purana.trim() || null,
       }
 
-      const created = await submitTemple.mutateAsync({ temple: templeInput, userId: user.id })
+      const templeId = isEditing
+        ? (await updateTemple.mutateAsync({ id: id!, temple: templeInput })).id
+        : (await submitTemple.mutateAsync({ temple: templeInput, userId: user.id })).id
 
       for (const file of photoFiles) {
-        await uploadPhoto.mutateAsync({ templeId: created.id, file, userId: user.id })
+        await uploadPhoto.mutateAsync({ templeId, file, userId: user.id })
       }
 
       setSubmitted(true)
@@ -150,6 +207,39 @@ export function AddTemplePage() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (isEditing && loadingExisting) {
+    return <LoadingSpinner label="Loading your submission…" />
+  }
+
+  if (isEditing && !existingTemple) {
+    return (
+      <div className="mx-auto max-w-lg rounded-xl border border-cream-200 bg-white p-8 text-center">
+        <h1 className="text-xl font-bold text-charcoal-900">Can't edit this submission</h1>
+        <p className="mt-2 text-charcoal-700/80">
+          Either it doesn't exist, or it isn't yours to edit — you can only edit your own
+          submissions while they're pending or awaiting changes.
+        </p>
+        <Button className="mt-6" onClick={() => navigate('/profile')}>
+          Back to my profile
+        </Button>
+      </div>
+    )
+  }
+
+  if (isEditing && existingTemple && existingTemple.status === 'approved') {
+    return (
+      <div className="mx-auto max-w-lg rounded-xl border border-cream-200 bg-white p-8 text-center">
+        <h1 className="text-xl font-bold text-charcoal-900">Already live</h1>
+        <p className="mt-2 text-charcoal-700/80">
+          This temple has already been approved and published, so it can no longer be edited here.
+        </p>
+        <Button className="mt-6" onClick={() => navigate(`/temples/${existingTemple.id}`)}>
+          View the temple page
+        </Button>
+      </div>
+    )
   }
 
   if (submitted) {
@@ -166,7 +256,9 @@ export function AddTemplePage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="text-2xl font-bold text-charcoal-900">{strings.nav.addTemple}</h1>
+      <h1 className="text-2xl font-bold text-charcoal-900">
+        {isEditing ? 'Edit Temple Submission' : strings.nav.addTemple}
+      </h1>
 
       <ol className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
         {STEPS.map((s, i) => (
@@ -342,7 +434,11 @@ export function AddTemplePage() {
 
             {form.food_tier !== 'unknown' && form.food_tier !== 'no_veg_confirmed_nearby' && (
               <>
-                <FormField label="Food source name" htmlFor="food_source_name">
+                <FormField
+                  label="Food source name"
+                  htmlFor="food_source_name"
+                  error={!foodValid ? 'Give either a source name or a distance below.' : undefined}
+                >
                   <TextInput
                     id="food_source_name"
                     value={form.food_source_name}
@@ -450,13 +546,17 @@ export function AddTemplePage() {
           </Button>
           {step === 'review' ? (
             <Button type="button" onClick={handleFinalSubmit} disabled={submitting}>
-              {submitting ? strings.form.savingDraft : strings.form.submitTemple}
+              {submitting
+                ? strings.form.savingDraft
+                : isEditing
+                  ? 'Save & Resubmit'
+                  : strings.form.submitTemple}
             </Button>
           ) : (
             <Button
               type="button"
               onClick={goNext}
-              disabled={step === 'basics' && !basicsValid}
+              disabled={(step === 'basics' && !basicsValid) || (step === 'food' && !foodValid)}
             >
               Next
             </Button>

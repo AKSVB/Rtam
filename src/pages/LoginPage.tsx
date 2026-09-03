@@ -54,6 +54,11 @@ export function LoginPage() {
         <Button type="submit" disabled={loading}>
           {loading ? 'Logging in…' : strings.auth.loginCta}
         </Button>
+        <p className="text-center text-sm">
+          <Link to="/forgot-password" className="font-semibold text-maroon-700 hover:underline">
+            Forgot password?
+          </Link>
+        </p>
         <p className="text-center text-sm text-charcoal-700/80">
           {strings.auth.noAccount}{' '}
           <Link to="/signup" className="font-semibold text-maroon-700 hover:underline">
