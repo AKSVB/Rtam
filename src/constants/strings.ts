@@ -42,6 +42,9 @@ export const strings = {
     inTrip: 'In your trip list',
     photos: 'Photos',
     noPhotos: 'No photos yet — be the first to add one.',
+    sthalaPurana: 'Sthala Puranam',
+    sthalaPuranaNote:
+      'Told as tradition records it. If your family or region knows a different account, please add it.',
     nearbyStays: 'Nearby Stays',
     noStays: 'No verified stays listed yet for this temple.',
     reviews: 'Reviews',

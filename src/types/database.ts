@@ -57,6 +57,7 @@ export interface Temple {
   river_distance_km: number | null
 
   best_season_notes: string | null
+  sthala_purana: string | null
 
   submitted_by: string | null
   status: SubmissionStatus
@@ -89,6 +90,12 @@ export interface TemplePhoto {
   id: string
   temple_id: string
   url: string
+  caption: string | null
+  /** Photographer — required by the CC BY / CC BY-SA licences most of these use. */
+  credit: string | null
+  license: string | null
+  /** Link back to the original file page, also a licence requirement. */
+  source_url: string | null
   uploaded_by: string | null
   created_at: string
 }

@@ -108,6 +108,18 @@ export function TempleDetailPage() {
         />
       </section>
 
+      {temple.sthala_purana && (
+        <section className="rounded-xl border border-saffron-400/40 bg-saffron-400/5 p-5">
+          <h2 className="mb-2 flex items-center gap-2 text-lg font-bold text-maroon-800">
+            <span aria-hidden>✦</span> {strings.temple.sthalaPurana}
+          </h2>
+          <p className="whitespace-pre-line leading-relaxed text-charcoal-900">
+            {temple.sthala_purana}
+          </p>
+          <p className="mt-3 text-xs text-charcoal-700/60">{strings.temple.sthalaPuranaNote}</p>
+        </section>
+      )}
+
       <section>
         <h2 className="mb-3 text-lg font-bold text-charcoal-900">{strings.temple.photos}</h2>
         <PhotoGallery photos={photos ?? []} templeName={temple.name} />

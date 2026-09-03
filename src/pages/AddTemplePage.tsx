@@ -41,6 +41,7 @@ interface FormState {
   nearest_river_name: string
   river_distance_km: string
   best_season_notes: string
+  sthala_purana: string
 }
 
 const initialState: FormState = {
@@ -65,6 +66,7 @@ const initialState: FormState = {
   nearest_river_name: '',
   river_distance_km: '',
   best_season_notes: '',
+  sthala_purana: '',
 }
 
 function toNullableNumber(value: string): number | null {
@@ -133,6 +135,7 @@ export function AddTemplePage() {
         nearest_river_name: form.nearest_river_name.trim() || null,
         river_distance_km: toNullableNumber(form.river_distance_km),
         best_season_notes: form.best_season_notes.trim() || null,
+        sthala_purana: form.sthala_purana.trim() || null,
       }
 
       const created = await submitTemple.mutateAsync({ temple: templeInput, userId: user.id })
@@ -391,6 +394,20 @@ export function AddTemplePage() {
                 id="best_season_notes"
                 value={form.best_season_notes}
                 onChange={(e) => update('best_season_notes', e.target.value)}
+              />
+            </FormField>
+
+            <FormField
+              label="Sthala Puranam"
+              htmlFor="sthala_purana"
+              helpText="The temple's traditional origin story, if you know it. Write it as tradition tells it — local and family accounts are welcome."
+            >
+              <TextArea
+                id="sthala_purana"
+                rows={6}
+                value={form.sthala_purana}
+                onChange={(e) => update('sthala_purana', e.target.value)}
+                placeholder="Tradition holds that…"
               />
             </FormField>
           </>
