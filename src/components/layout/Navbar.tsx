@@ -46,6 +46,9 @@ export function Navbar() {
           <NavLink to="/trip" className={linkClasses}>
             {strings.nav.tripPlanner}
           </NavLink>
+          <NavLink to="/contributors" className={linkClasses}>
+            {strings.nav.contributors}
+          </NavLink>
           {profile && profile.role !== 'member' && (
             <NavLink to="/moderate" className={linkClasses}>
               {strings.nav.moderatorQueue}
@@ -90,6 +93,9 @@ export function Navbar() {
           </NavLink>
           <NavLink to="/trip" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.tripPlanner}
+          </NavLink>
+          <NavLink to="/contributors" className={linkClasses} onClick={() => setMenuOpen(false)}>
+            {strings.nav.contributors}
           </NavLink>
           {profile && profile.role !== 'member' && (
             <NavLink to="/moderate" className={linkClasses} onClick={() => setMenuOpen(false)}>

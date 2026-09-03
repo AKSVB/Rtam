@@ -9,6 +9,8 @@ import { ModeratorQueuePage } from './pages/ModeratorQueuePage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { ContributorsPage } from './pages/ContributorsPage'
+import { PublicProfilePage } from './pages/PublicProfilePage'
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
           }
         />
         <Route path="/trip" element={<TripPlannerPage />} />
+        <Route path="/contributors" element={<ContributorsPage />} />
+        <Route path="/u/:username" element={<PublicProfilePage />} />
         <Route
           path="/moderate"
           element={

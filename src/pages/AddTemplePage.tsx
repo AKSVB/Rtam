@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useSubmitTemple, useUploadTemplePhoto } from '../hooks/useSubmitTemple'
 import { Button } from '../components/common/Button'
 import { FormField, Select, TextArea, TextInput } from '../components/common/FormField'
+import { LocationPicker } from '../components/temple/LocationPicker'
 import { strings } from '../constants/strings'
 import {
   FOOD_TIER_HELP,
@@ -245,31 +246,22 @@ export function AddTemplePage() {
                 <TextInput id="town" value={form.town} onChange={(e) => update('town', e.target.value)} />
               </FormField>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                label="Latitude"
-                htmlFor="latitude"
-                required
-                helpText="Find this by right-clicking the location on Google Maps or OpenStreetMap"
-              >
-                <TextInput
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  value={form.latitude}
-                  onChange={(e) => update('latitude', e.target.value)}
+            <FormField
+              label="Where is it on the map?"
+              htmlFor="location-picker"
+              required
+              helpText="You don't need coordinates — search for the place, use your current location, or just tap the map."
+            >
+              <div id="location-picker">
+                <LocationPicker
+                  latitude={form.latitude}
+                  longitude={form.longitude}
+                  onChange={(lat, lng) =>
+                    setForm((prev) => ({ ...prev, latitude: lat, longitude: lng }))
+                  }
                 />
-              </FormField>
-              <FormField label="Longitude" htmlFor="longitude" required>
-                <TextInput
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  value={form.longitude}
-                  onChange={(e) => update('longitude', e.target.value)}
-                />
-              </FormField>
-            </div>
+              </div>
+            </FormField>
           </>
         )}
 

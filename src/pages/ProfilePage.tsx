@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Badge } from '../components/common/Badge'
 import { Button } from '../components/common/Button'
 import { FormField, TextInput } from '../components/common/FormField'
+import { strings } from '../constants/strings'
 import type { SubmissionStatus, Temple } from '../types/database'
 
 const statusTone: Record<SubmissionStatus, 'positive' | 'partial' | 'negative'> = {
@@ -52,7 +53,15 @@ export function ProfilePage() {
     <div className="mx-auto flex max-w-2xl flex-col gap-8">
       <div>
         <h1 className="text-2xl font-bold text-charcoal-900">My Profile</h1>
-        <p className="text-charcoal-700/80">{profile.contribution_points} contribution points</p>
+        <p className="text-charcoal-700/80">
+          <Link to={`/u/${profile.username}`} className="font-semibold text-maroon-700 hover:underline">
+            @{profile.username}
+          </Link>{' '}
+          · {profile.contribution_points} contribution points
+        </p>
+        <p className="mt-1 text-sm text-charcoal-700/60">
+          {strings.contributors.howPointsWork}
+        </p>
       </div>
 
       <form onSubmit={handleSave} className="flex flex-col gap-4 rounded-xl border border-cream-200 bg-white p-5">

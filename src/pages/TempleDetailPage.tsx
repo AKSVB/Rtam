@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   useTemple,
+  useTempleContributor,
   useTemplePhotos,
   useTempleReviews,
   useTempleStays,
@@ -33,6 +35,7 @@ export function TempleDetailPage() {
   const { data: stays } = useTempleStays(id)
   const { data: reviews } = useTempleReviews(id)
   const { isInTrip, addTemple, removeTemple } = useTripList()
+  const { data: contributor } = useTempleContributor(temple?.submitted_by)
 
   if (isLoading) return <LoadingSpinner label="Loading temple…" />
   if (!temple) return <p className="text-charcoal-700">Temple not found.</p>
@@ -60,6 +63,18 @@ export function TempleDetailPage() {
         <div className="mt-4">
           <TempleBadges temple={temple} />
         </div>
+
+        {contributor?.username && (
+          <p className="mt-3 text-sm text-charcoal-700/70">
+            Added by{' '}
+            <Link
+              to={`/u/${contributor.username}`}
+              className="font-semibold text-maroon-700 hover:underline"
+            >
+              {contributor.display_name} @{contributor.username}
+            </Link>
+          </p>
+        )}
 
         <Button
           variant={inTrip ? 'secondary' : 'primary'}

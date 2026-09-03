@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { TempleReview } from '../../types/database'
 import { strings } from '../../constants/strings'
 
@@ -20,9 +21,19 @@ export function ReviewList({ reviews }: { reviews: TempleReview[] }) {
       {reviews.map((review) => (
         <li key={review.id} className="rounded-xl border border-cream-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold text-charcoal-900">
-              {review.user_profiles?.display_name ?? 'A pilgrim'}
-            </span>
+            {review.user_profiles?.username ? (
+              <Link
+                to={`/u/${review.user_profiles.username}`}
+                className="min-w-0 truncate font-semibold text-charcoal-900 hover:underline"
+              >
+                {review.user_profiles.display_name}{' '}
+                <span className="font-normal text-charcoal-700/60">
+                  @{review.user_profiles.username}
+                </span>
+              </Link>
+            ) : (
+              <span className="font-semibold text-charcoal-900">A pilgrim</span>
+            )}
             <Stars rating={review.rating} />
           </div>
           {review.comment && <p className="mt-2 text-sm text-charcoal-700/90">{review.comment}</p>}

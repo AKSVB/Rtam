@@ -12,6 +12,7 @@ export const strings = {
     addTemple: 'Add a Temple',
     tripPlanner: 'Trip Planner',
     moderatorQueue: 'Moderator Queue',
+    contributors: 'Contributors',
     profile: 'Profile',
     login: 'Log In',
     signup: 'Sign Up',
@@ -69,6 +70,7 @@ export const strings = {
     emailLabel: 'Email',
     passwordLabel: 'Password',
     displayNameLabel: 'Display name',
+    usernameLabel: 'Username',
     homeCityLabel: 'Home city (optional)',
     loginTitle: 'Log in to Ṛtam',
     signupTitle: 'Create your Ṛtam account',
@@ -85,6 +87,18 @@ export const strings = {
     reject: 'Reject',
     editThenApprove: 'Edit & Approve',
     feedbackPlaceholder: 'Optional feedback note for the contributor…',
+  },
+
+  contributors: {
+    title: 'Contributors',
+    subtitle:
+      'Ṛtam is built entirely by the people who walk these paths. Every temple here was added by someone below.',
+    empty: 'No contributions yet — be the first.',
+    points: 'points',
+    templesAdded: 'temples added',
+    howPointsWork:
+      'Points are awarded automatically: 25 for each temple accepted, 5 per photo, 3 per review.',
+    joinedPrompt: 'Add a temple nobody has listed yet',
   },
 
   tripPlanner: {

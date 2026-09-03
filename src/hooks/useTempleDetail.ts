@@ -14,6 +14,23 @@ export function useTemple(id: string | undefined) {
   })
 }
 
+/** The contributor who submitted a temple, for the "Added by" credit line. */
+export function useTempleContributor(userId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['temple-contributor', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('username, display_name')
+        .eq('id', userId)
+        .maybeSingle()
+      if (error) throw error
+      return data
+    },
+    enabled: !!userId,
+  })
+}
+
 export function useTempleStays(templeId: string | undefined) {
   return useQuery({
     queryKey: ['temple-stays', templeId],
@@ -53,7 +70,7 @@ export function useTempleReviews(templeId: string | undefined) {
     queryFn: async (): Promise<TempleReview[]> => {
       const { data, error } = await supabase
         .from('temple_reviews')
-        .select('*, user_profiles(display_name)')
+        .select('*, user_profiles(display_name, username)')
         .eq('temple_id', templeId)
         .order('created_at', { ascending: false })
       if (error) throw error

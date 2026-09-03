@@ -14,6 +14,7 @@ export type UserRole = 'member' | 'moderator' | 'admin'
 
 export interface UserProfile {
   id: string
+  username: string
   display_name: string
   home_city: string | null
   role: UserRole
@@ -21,6 +22,12 @@ export interface UserProfile {
   created_at: string
   updated_at: string
 }
+
+/** The subset of a profile safe to show publicly next to a contribution. */
+export type PublicProfile = Pick<
+  UserProfile,
+  'id' | 'username' | 'display_name' | 'contribution_points'
+>
 
 export interface Temple {
   id: string
@@ -93,7 +100,7 @@ export interface TempleReview {
   rating: number
   comment: string | null
   created_at: string
-  user_profiles?: Pick<UserProfile, 'display_name'>
+  user_profiles?: Pick<UserProfile, 'display_name' | 'username'>
 }
 
 export interface TripList {
