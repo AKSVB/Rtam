@@ -11,6 +11,7 @@ import { SignupPage } from './pages/SignupPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { ContributorsPage } from './pages/ContributorsPage'
 import { PublicProfilePage } from './pages/PublicProfilePage'
+import { NotFoundPage } from './pages/NotFoundPage'
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   )

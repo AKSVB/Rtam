@@ -3,6 +3,7 @@ import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-lea
 import L from 'leaflet'
 import { TextInput } from '../common/FormField'
 import { Button } from '../common/Button'
+import '../../lib/leafletIcons'
 
 const INDIA_CENTER: [number, number] = [22.5, 79.0]
 
