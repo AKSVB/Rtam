@@ -44,6 +44,7 @@ interface FormState {
   river_distance_km: string
   best_season_notes: string
   sthala_purana: string
+  etiquette_notes: string
 }
 
 const initialState: FormState = {
@@ -69,6 +70,7 @@ const initialState: FormState = {
   river_distance_km: '',
   best_season_notes: '',
   sthala_purana: '',
+  etiquette_notes: '',
 }
 
 function toNullableNumber(value: string): number | null {
@@ -101,6 +103,7 @@ function formStateFromTemple(t: Temple): FormState {
     river_distance_km: t.river_distance_km != null ? String(t.river_distance_km) : '',
     best_season_notes: t.best_season_notes ?? '',
     sthala_purana: t.sthala_purana ?? '',
+    etiquette_notes: t.etiquette_notes ?? '',
   }
 }
 
@@ -191,6 +194,7 @@ export function AddTemplePage() {
         river_distance_km: toNullableNumber(form.river_distance_km),
         best_season_notes: form.best_season_notes.trim() || null,
         sthala_purana: form.sthala_purana.trim() || null,
+        etiquette_notes: form.etiquette_notes.trim() || null,
       }
 
       const templeId = isEditing
@@ -504,6 +508,19 @@ export function AddTemplePage() {
                 value={form.sthala_purana}
                 onChange={(e) => update('sthala_purana', e.target.value)}
                 placeholder="Tradition holds that…"
+              />
+            </FormField>
+
+            <FormField
+              label="Dress code / etiquette"
+              htmlFor="etiquette_notes"
+              helpText="Anything a first-time visitor should know before arriving — dress code, ID or entry restrictions, what not to carry in."
+            >
+              <TextArea
+                id="etiquette_notes"
+                value={form.etiquette_notes}
+                onChange={(e) => update('etiquette_notes', e.target.value)}
+                placeholder="e.g. Men must be bare-chested; only Hindus permitted inside…"
               />
             </FormField>
           </>

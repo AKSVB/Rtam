@@ -45,6 +45,7 @@ export const strings = {
     sthalaPurana: 'Sthala Puranam',
     sthalaPuranaNote:
       'Told as tradition records it. If your family or region knows a different account, please add it.',
+    etiquette: 'Before You Go',
     nearbyStays: 'Nearby Stays',
     noStays: 'No verified stays listed yet for this temple.',
     addStay: 'Add a stay',

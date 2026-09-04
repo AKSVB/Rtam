@@ -135,6 +135,17 @@ export function TempleDetailPage() {
         </div>
       </div>
 
+      {temple.etiquette_notes && (
+        <section className="rounded-xl border border-gold-500/50 bg-gold-400/10 p-5">
+          <h2 className="mb-2 flex items-center gap-2 text-lg font-bold text-maroon-800">
+            <span aria-hidden>ⓘ</span> {strings.temple.etiquette}
+          </h2>
+          <p className="whitespace-pre-line leading-relaxed text-charcoal-900">
+            {temple.etiquette_notes}
+          </p>
+        </section>
+      )}
+
       <section className="grid grid-cols-1 gap-6 rounded-xl border border-cream-200 bg-white p-5 md:grid-cols-2">
         <InfoRow label="Sandhya Vandanam notes" value={temple.sandhya_notes} />
         <InfoRow label="Samidhadhanam notes" value={temple.samidhadhanam_notes} />

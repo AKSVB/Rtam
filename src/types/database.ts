@@ -58,6 +58,7 @@ export interface Temple {
 
   best_season_notes: string | null
   sthala_purana: string | null
+  etiquette_notes: string | null
 
   submitted_by: string | null
   status: SubmissionStatus
