@@ -6,4 +6,4 @@ Disallow: /trip
 Disallow: /reset-password
 Disallow: /forgot-password
 
-Sitemap: https://rtam.vercel.app/sitemap.xml
+Sitemap: https://rtamtemples.com/sitemap.xml

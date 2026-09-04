@@ -26,7 +26,7 @@ function loadLocalEnv() {
 }
 loadLocalEnv()
 
-const SITE_URL = 'https://rtam.vercel.app'
+const SITE_URL = 'https://rtamtemples.com'
 const supabaseUrl = process.env.VITE_SUPABASE_URL
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
 
