@@ -48,14 +48,6 @@ const HERO_IMAGES = [
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:Ranganathaswamy_temple_tiruchirappalli.jpg',
   },
   {
-    url: 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Oor_koodi_therr_illuthal.JPG',
-    name: 'Suchindram Thanumalayan Temple',
-    alt: 'The temple chariot festival at Suchindram Thanumalayan Temple, with its white gopuram behind',
-    credit: 'Ganesan',
-    license: 'CC BY-SA 3.0',
-    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Oor_koodi_therr_illuthal.JPG',
-  },
-  {
     url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Brihadisvara_Temple_during_Maha_Shivaratri-WUS03611_%28edit%29.jpg/1280px-Brihadisvara_Temple_during_Maha_Shivaratri-WUS03611_%28edit%29.jpg',
     name: 'Brihadeeswarar Temple, Thanjavur',
     alt: 'The Brihadeeswarar Temple at Thanjavur, lit at dusk during Maha Shivaratri',
@@ -63,6 +55,32 @@ const HERO_IMAGES = [
     license: 'CC BY-SA 4.0',
     sourceUrl:
       'https://commons.wikimedia.org/wiki/File:Brihadisvara_Temple_during_Maha_Shivaratri-WUS03611_(edit).jpg',
+  },
+  {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Aerial_view_of_Madurai_Meenakshi_amman_temple.jpg/1280px-Aerial_view_of_Madurai_Meenakshi_amman_temple.jpg',
+    name: 'Meenakshi Amman Temple, Madurai',
+    alt: "Aerial view of the Meenakshi Amman Temple's towering, sculpture-covered gopurams rising over Madurai",
+    credit: 'Prakashkumar',
+    license: 'CC BY-SA 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Aerial_view_of_Madurai_Meenakshi_amman_temple.jpg',
+  },
+  {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Thousand_pillar_corridor%2CRameshwaram_temple%2Ctamilnadu_-_panoramio.jpg/1280px-Thousand_pillar_corridor%2CRameshwaram_temple%2Ctamilnadu_-_panoramio.jpg',
+    name: 'Ramanathaswamy Temple, Rameswaram',
+    alt: "The painted thousand-pillar corridor of the Ramanathaswamy Temple, Rameswaram, receding into the distance",
+    credit: 'rajaraman sundaram',
+    license: 'CC BY 3.0',
+    sourceUrl:
+      'https://commons.wikimedia.org/wiki/File:Thousand_pillar_corridor,Rameshwaram_temple,tamilnadu_-_panoramio.jpg',
+  },
+  {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/%22Aerial_view_of_Somnath_temple_01%2C_Prabhas_Patan_Gujarat.jpg/1280px-%22Aerial_view_of_Somnath_temple_01%2C_Prabhas_Patan_Gujarat.jpg',
+    name: 'Somnath Temple',
+    alt: 'Aerial dusk view of the illuminated Somnath Temple on the Arabian Sea coast',
+    credit: 'Ms Sarah Welch',
+    license: 'CC0 1.0',
+    sourceUrl:
+      'https://commons.wikimedia.org/wiki/File:%22Aerial_view_of_Somnath_temple_01,_Prabhas_Patan_Gujarat.jpg',
   },
 ]
 
