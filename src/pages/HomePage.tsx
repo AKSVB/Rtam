@@ -29,13 +29,35 @@ function StatPill({ value, label }: { value: number | undefined; label: string }
   )
 }
 
-const HERO_IMAGE = {
-  url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Ranganathaswamy_temple_tiruchirappalli.jpg/1280px-Ranganathaswamy_temple_tiruchirappalli.jpg',
-  alt: 'The painted gopuram of the Ranganathaswamy Temple, Srirangam',
-  credit: 'RUPESH MAURYA',
-  license: 'CC BY-SA 4.0',
-  sourceUrl: 'https://commons.wikimedia.org/wiki/File:Ranganathaswamy_temple_tiruchirappalli.jpg',
-}
+// A small rotation of verified, vibrant daylight photos — picked once per
+// visit so the homepage doesn't always open on the same image.
+const HERO_IMAGES = [
+  {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Ranganathaswamy_temple_tiruchirappalli.jpg/1280px-Ranganathaswamy_temple_tiruchirappalli.jpg',
+    name: 'Ranganathaswamy Temple, Srirangam',
+    alt: 'The painted gopuram of the Ranganathaswamy Temple, Srirangam',
+    credit: 'RUPESH MAURYA',
+    license: 'CC BY-SA 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Ranganathaswamy_temple_tiruchirappalli.jpg',
+  },
+  {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Oor_koodi_therr_illuthal.JPG',
+    name: 'Suchindram Thanumalayan Temple',
+    alt: 'The temple chariot festival at Suchindram Thanumalayan Temple, with its white gopuram behind',
+    credit: 'Ganesan',
+    license: 'CC BY-SA 3.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Oor_koodi_therr_illuthal.JPG',
+  },
+  {
+    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Brihadisvara_Temple_during_Maha_Shivaratri-WUS03611_%28edit%29.jpg/1280px-Brihadisvara_Temple_during_Maha_Shivaratri-WUS03611_%28edit%29.jpg',
+    name: 'Brihadeeswarar Temple, Thanjavur',
+    alt: 'The Brihadeeswarar Temple at Thanjavur, lit at dusk during Maha Shivaratri',
+    credit: 'Rainer Halama, derivative work UnpetitproleX',
+    license: 'CC BY-SA 4.0',
+    sourceUrl:
+      'https://commons.wikimedia.org/wiki/File:Brihadisvara_Temple_during_Maha_Shivaratri-WUS03611_(edit).jpg',
+  },
+]
 
 function TempleStrip({ temples, covers }: { temples: Temple[]; covers: ReturnType<typeof useTemplePhotoCovers>['data'] }) {
   return (
@@ -58,6 +80,7 @@ export function HomePage() {
   const [foodTier, setFoodTier] = useState<FoodTierLevel | ''>('')
   const [hasRiver, setHasRiver] = useState(false)
   const [view, setView] = useState<ViewMode>('list')
+  const [heroImage] = useState(() => HERO_IMAGES[Math.floor(Math.random() * HERO_IMAGES.length)])
 
   const filters: TempleFilters = {
     search,
@@ -91,15 +114,20 @@ export function HomePage() {
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="relative -mx-4 overflow-hidden rounded-b-3xl sm:-mx-6">
         <div className="relative h-48 w-full sm:h-64">
-          <img src={HERO_IMAGE.url} alt={HERO_IMAGE.alt} className="h-full w-full object-cover" />
+          <img
+            key={heroImage.url}
+            src={heroImage.url}
+            alt={heroImage.alt}
+            className="h-full w-full object-cover"
+          />
           <div className="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-vermilion-400 via-gold-400 to-peacock-500" />
           <a
-            href={HERO_IMAGE.sourceUrl}
+            href={heroImage.sourceUrl}
             target="_blank"
             rel="noopener noreferrer nofollow"
             className="absolute bottom-2.5 right-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/90 backdrop-blur-sm hover:bg-black/55"
           >
-            Ranganathaswamy Temple, Srirangam · {HERO_IMAGE.credit} · {HERO_IMAGE.license}
+            {heroImage.name} · {heroImage.credit} · {heroImage.license}
           </a>
         </div>
 
