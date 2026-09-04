@@ -27,6 +27,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // Without this, the SW's default SPA navigation fallback serves the
+        // cached app shell for *any* full-page navigation — including
+        // /sitemap.xml and /robots.txt — to a browser that already has this
+        // PWA installed. Crawlers (which don't run service workers) were
+        // never affected, but exclude these so a real browser sees the
+        // actual files too.
+        navigateFallbackDenylist: [/^\/sitemap\.xml$/, /^\/robots\.txt$/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/,
