@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   useCircuitSpotlight,
@@ -13,8 +13,12 @@ import { useSiteStats } from '../hooks/useSiteStats'
 import { useToast } from '../context/ToastContext'
 import { currentIstMinutes, getOpenStatus } from '../lib/templeTimings'
 import { TempleCard } from '../components/temple/TempleCard'
-import { TempleMap } from '../components/temple/TempleMap'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
+
+// Leaflet is a heavy dependency and the map view is opt-in (list view is the
+// default), so it's worth its own chunk rather than shipping in the main
+// bundle for every visitor.
+const TempleMap = lazy(() => import('../components/temple/TempleMap').then((m) => ({ default: m.TempleMap })))
 import { Select, TextInput } from '../components/common/FormField'
 import { Button } from '../components/common/Button'
 import { strings } from '../constants/strings'
@@ -419,7 +423,9 @@ export function HomePage() {
           {strings.search.noResults}
         </p>
       ) : view === 'map' ? (
-        <TempleMap temples={temples} />
+        <Suspense fallback={<LoadingSpinner label="Loading map…" />}>
+          <TempleMap temples={temples} />
+        </Suspense>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {temples.map((temple) => (
