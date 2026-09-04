@@ -1,6 +1,13 @@
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { strings } from '../../constants/strings'
 import { TempleGopuramIcon } from '../temple/TempleGopuramIcon'
+
+// Pulls in the qrcode library, which most visitors never need — keep it out
+// of the main bundle and load it only if someone opens this footer section.
+const SupportProject = lazy(() =>
+  import('./SupportProject').then((m) => ({ default: m.SupportProject })),
+)
 
 export function Footer() {
   return (
@@ -70,6 +77,10 @@ export function Footer() {
           Built by the community, for the community. Ṛtam (ऋतम्) — the Vedic principle of cosmic
           and ritual order.
         </p>
+
+        <Suspense fallback={null}>
+          <SupportProject />
+        </Suspense>
       </div>
     </footer>
   )
