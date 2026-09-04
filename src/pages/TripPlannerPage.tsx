@@ -12,6 +12,7 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Button } from '../components/common/Button'
 import { strings } from '../constants/strings'
 import { sortByProximity } from '../lib/geo'
+import { buildItinerary } from '../lib/itinerary'
 import type { Temple } from '../types/database'
 
 export function TripPlannerPage() {
@@ -38,6 +39,7 @@ export function TripPlannerPage() {
   })
 
   const orderedTemples = useMemo(() => sortByProximity(temples ?? []), [temples])
+  const itinerary = useMemo(() => buildItinerary(orderedTemples), [orderedTemples])
 
   const handleShare = async () => {
     const url = `${window.location.origin}/trip?temples=${myTempleIds.join(',')}`
@@ -95,6 +97,30 @@ export function TripPlannerPage() {
       ) : (
         <>
           <TempleMap temples={orderedTemples} />
+
+          {itinerary.length > 1 && (
+            <section className="rounded-xl border border-cream-200 bg-white p-4">
+              <h2 className="mb-1 text-lg font-bold text-charcoal-900">Suggested Itinerary</h2>
+              <p className="mb-3 text-xs text-charcoal-700/60">
+                A rough day-by-day split based on straight-line distance and an average 40 km/h —
+                real road time will vary. Not a substitute for checking an actual route.
+              </p>
+              <ol className="flex flex-col gap-3">
+                {itinerary.map((leg) => (
+                  <li key={leg.day} className="rounded-lg border border-cream-200 bg-cream-50 p-3">
+                    <p className="text-sm font-semibold text-maroon-800">
+                      Day {leg.day} · {leg.temples.length} stop{leg.temples.length === 1 ? '' : 's'}
+                      {leg.drivingKm > 0 ? ` · ~${Math.round(leg.drivingKm)} km driving` : ''}
+                    </p>
+                    <p className="mt-1 text-sm text-charcoal-700/80">
+                      {leg.temples.map((t) => t.name).join(' → ')}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
           <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {orderedTemples.map((temple, i) => (
               <li key={temple.id} className="relative">
