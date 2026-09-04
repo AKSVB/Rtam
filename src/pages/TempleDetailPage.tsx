@@ -15,6 +15,7 @@ import { PhotoGallery } from '../components/temple/PhotoGallery'
 import { StayCard } from '../components/temple/StayCard'
 import { ReviewList } from '../components/temple/ReviewList'
 import { ReviewForm } from '../components/temple/ReviewForm'
+import { WeatherPill } from '../components/temple/WeatherPill'
 import { Button } from '../components/common/Button'
 import { useTripList } from '../hooks/useTripList'
 import { strings } from '../constants/strings'
@@ -78,6 +79,10 @@ export function TempleDetailPage() {
           {temple.town}, {temple.district}, {temple.state}
           {temple.country !== 'India' ? `, ${temple.country}` : ''}
         </p>
+
+        <div className="mt-3">
+          <WeatherPill latitude={temple.latitude} longitude={temple.longitude} />
+        </div>
 
         <div className="mt-4">
           <TempleBadges temple={temple} />
