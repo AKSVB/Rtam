@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { compressImageForUpload } from '../lib/imageCompression'
 import type { NewStayInput, NewTempleInput } from '../types/database'
 
 export function useSubmitTemple() {
@@ -68,11 +69,10 @@ export function useSubmitStay() {
 export function useUploadTemplePhoto() {
   return useMutation({
     mutationFn: async (input: { templeId: string; file: File; userId: string }) => {
-      const ext = input.file.name.split('.').pop()
+      const file = await compressImageForUpload(input.file)
+      const ext = file.name.split('.').pop()
       const path = `${input.templeId}/${crypto.randomUUID()}.${ext}`
-      const { error: uploadError } = await supabase.storage
-        .from('temple-photos')
-        .upload(path, input.file)
+      const { error: uploadError } = await supabase.storage.from('temple-photos').upload(path, file)
       if (uploadError) throw uploadError
 
       const { data: publicUrlData } = supabase.storage.from('temple-photos').getPublicUrl(path)

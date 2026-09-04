@@ -106,7 +106,15 @@ export function HomePage() {
   }
   const isBrowsing = Object.values(filters).some(Boolean) || openNow
 
-  const { data: templesRaw, isLoading } = useTemples(filters)
+  const {
+    data: templesPages,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useTemples(filters)
+  const templesRaw = templesPages?.pages.flatMap((p) => p.temples)
+  const totalCount = templesPages?.pages[0]?.totalCount ?? 0
   const temples = openNow
     ? templesRaw?.filter((t) => getOpenStatus(t, nowIstMinutes) === 'open')
     : templesRaw
@@ -396,7 +404,11 @@ export function HomePage() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-charcoal-700/70">
-          {isLoading ? 'Searching…' : `${temples?.length ?? 0} temple${temples?.length === 1 ? '' : 's'} found`}
+          {isLoading
+            ? 'Searching…'
+            : openNow
+              ? `${temples?.length ?? 0} temple${temples?.length === 1 ? '' : 's'} open right now (of ${templesRaw?.length ?? 0} loaded)`
+              : `${totalCount} temple${totalCount === 1 ? '' : 's'} found`}
         </p>
         <div className="flex gap-1 rounded-lg border border-cream-200 bg-white p-1">
           <button
@@ -431,6 +443,14 @@ export function HomePage() {
           {temples.map((temple) => (
             <TempleCard key={temple.id} temple={temple} cover={covers?.[temple.id]} />
           ))}
+        </div>
+      )}
+
+      {hasNextPage && !isLoading && (
+        <div className="flex justify-center">
+          <Button variant="secondary" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+            {isFetchingNextPage ? 'Loading more…' : 'Load more temples'}
+          </Button>
         </div>
       )}
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { haversineKm } from '../lib/geo'
 import { expandDeitySynonyms } from '../constants/deitySynonyms'
@@ -15,8 +15,19 @@ export interface TempleFilters {
   hasRiver?: boolean
 }
 
-async function fetchTemples(filters: TempleFilters): Promise<Temple[]> {
-  let query = supabase.from('temples').select('*').eq('status', 'approved')
+// The homepage grid used to load every matching temple in one query. Fine
+// at a few dozen temples, but that grows without limit as the directory
+// grows — so this fetches one bounded page at a time instead, and
+// useTemples() below stitches pages together as the visitor asks for more.
+const PAGE_SIZE = 24
+
+interface TemplesPage {
+  temples: Temple[]
+  totalCount: number
+}
+
+function buildTempleQuery(filters: TempleFilters) {
+  let query = supabase.from('temples').select('*', { count: 'exact' }).eq('status', 'approved')
 
   if (filters.search && filters.search.trim().length > 0) {
     const term = filters.search.trim()
@@ -40,15 +51,28 @@ async function fetchTemples(filters: TempleFilters): Promise<Temple[]> {
   if (filters.foodTier) query = query.eq('food_tier', filters.foodTier)
   if (filters.hasRiver) query = query.not('nearest_river_name', 'is', null)
 
-  const { data, error } = await query.order('name', { ascending: true })
+  return query
+}
+
+async function fetchTemplesPage(filters: TempleFilters, page: number): Promise<TemplesPage> {
+  const from = page * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
+  const { data, error, count } = await buildTempleQuery(filters)
+    .order('name', { ascending: true })
+    .range(from, to)
   if (error) throw error
-  return data ?? []
+  return { temples: data ?? [], totalCount: count ?? 0 }
 }
 
 export function useTemples(filters: TempleFilters) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['temples', filters],
-    queryFn: () => fetchTemples(filters),
+    queryFn: ({ pageParam }) => fetchTemplesPage(filters, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((sum, p) => sum + p.temples.length, 0)
+      return loaded < lastPage.totalCount ? allPages.length : undefined
+    },
   })
 }
 
