@@ -21,6 +21,7 @@ export interface UserProfile {
   contribution_points: number
   created_at: string
   updated_at: string
+  banned_at: string | null
 }
 
 /** The subset of a profile safe to show publicly next to a contribution. */

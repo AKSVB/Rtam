@@ -13,6 +13,7 @@ export const strings = {
     festivals: 'Festivals',
     tripPlanner: 'Trip Planner',
     moderatorQueue: 'Moderator Queue',
+    adminUsers: 'Manage Users',
     contributors: 'Contributors',
     profile: 'Profile',
     login: 'Log In',

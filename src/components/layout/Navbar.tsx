@@ -58,6 +58,11 @@ export function Navbar() {
               {strings.nav.moderatorQueue}
             </NavLink>
           )}
+          {profile && profile.role === 'admin' && (
+            <NavLink to="/admin/users" className={linkClasses}>
+              {strings.nav.adminUsers}
+            </NavLink>
+          )}
           {user ? (
             <>
               <NavLink to="/profile" className={linkClasses}>
@@ -107,6 +112,11 @@ export function Navbar() {
           {profile && profile.role !== 'member' && (
             <NavLink to="/moderate" className={linkClasses} onClick={() => setMenuOpen(false)}>
               {strings.nav.moderatorQueue}
+            </NavLink>
+          )}
+          {profile && profile.role === 'admin' && (
+            <NavLink to="/admin/users" className={linkClasses} onClick={() => setMenuOpen(false)}>
+              {strings.nav.adminUsers}
             </NavLink>
           )}
           {user ? (

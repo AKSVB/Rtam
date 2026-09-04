@@ -8,6 +8,8 @@ interface AuthContextValue {
   user: User | null
   profile: UserProfile | null
   loading: boolean
+  bannedNotice: string | null
+  clearBannedNotice: () => void
   signUp: (
     email: string,
     password: string,
@@ -27,9 +29,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [bannedNotice, setBannedNotice] = useState<string | null>(null)
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase.from('user_profiles').select('*').eq('id', userId).single()
+    if (data?.banned_at) {
+      // Caught here rather than only relying on RLS write-guards, so a
+      // banned account is signed out the moment its profile loads instead
+      // of only failing silently on its next write attempt.
+      await supabase.auth.signOut()
+      setProfile(null)
+      setBannedNotice('This account has been suspended. Contact the site owner if you think this is a mistake.')
+      return
+    }
     setProfile(data ?? null)
   }
 
@@ -98,6 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         profile,
         loading,
+        bannedNotice,
+        clearBannedNotice: () => setBannedNotice(null),
         signUp,
         signIn,
         signOut,

@@ -2,6 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /profile
 Disallow: /moderate
+Disallow: /admin
 Disallow: /trip
 Disallow: /reset-password
 Disallow: /forgot-password

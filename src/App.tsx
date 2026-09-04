@@ -19,6 +19,9 @@ const TripPlannerPage = lazy(() =>
 const ModeratorQueuePage = lazy(() =>
   import('./pages/ModeratorQueuePage').then((m) => ({ default: m.ModeratorQueuePage })),
 )
+const AdminUsersPage = lazy(() =>
+  import('./pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
+)
 const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })))
 const SignupPage = lazy(() => import('./pages/SignupPage').then((m) => ({ default: m.SignupPage })))
 const ForgotPasswordPage = lazy(() =>
@@ -79,6 +82,14 @@ function App() {
             element={
               <ProtectedRoute requireModerator>
                 <ModeratorQueuePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminUsersPage />
               </ProtectedRoute>
             }
           />
