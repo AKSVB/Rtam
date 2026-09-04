@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -10,6 +11,7 @@ import {
   useTempleReviews,
   useTempleStays,
 } from '../hooks/useTempleDetail'
+import { useJsonLd } from '../hooks/useJsonLd'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { TempleBadges } from '../components/temple/TempleBadges'
 import { PhotoGallery } from '../components/temple/PhotoGallery'
@@ -47,6 +49,41 @@ export function TempleDetailPage() {
   const { data: contributor } = useTempleContributor(temple?.submitted_by)
   const { data: nearby } = useNearbyTemples(temple)
   const { data: puranaVariants } = usePuranaVariants(id)
+
+  const jsonLd = useMemo(() => {
+    if (!temple) return null
+    const ratings = (reviews ?? []).map((r) => r.rating)
+    const data: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'HinduTemple',
+      name: temple.name,
+      description: temple.sthala_purana ?? `${temple.deity} temple in ${temple.town}, ${temple.state}`,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: temple.town,
+        addressRegion: temple.state,
+        addressCountry: temple.country,
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: temple.latitude,
+        longitude: temple.longitude,
+      },
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
+    }
+    if (photos && photos.length > 0) data.image = photos.map((p) => p.url)
+    // Only emit a rating when real reviews exist — never a placeholder.
+    if (ratings.length > 0) {
+      data.aggregateRating = {
+        '@type': 'AggregateRating',
+        ratingValue: (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1),
+        reviewCount: ratings.length,
+      }
+    }
+    return data
+  }, [temple, photos, reviews])
+
+  useJsonLd(jsonLd)
 
   if (isLoading) return <LoadingSpinner label="Loading temple…" />
   if (!temple) return <p className="text-charcoal-700">Temple not found.</p>
