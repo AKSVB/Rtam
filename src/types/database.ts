@@ -61,6 +61,26 @@ export interface Temple {
   best_season_notes: string | null
   sthala_purana: string | null
   etiquette_notes: string | null
+  sthala_purana_source: string | null
+
+  /** IST time-of-day — every temple in this directory is in India. */
+  morning_opens_at: string | null
+  morning_closes_at: string | null
+  evening_opens_at: string | null
+  evening_closes_at: string | null
+  timings_notes: string | null
+
+  accessibility_notes: string | null
+
+  nearest_airport_name: string | null
+  nearest_airport_distance_km: number | null
+  nearest_railway_station_name: string | null
+  nearest_railway_distance_km: number | null
+
+  emergency_contact_notes: string | null
+
+  architecture_style: string | null
+  construction_century: number | null
 
   submitted_by: string | null
   status: SubmissionStatus
@@ -123,6 +143,14 @@ export interface TempleFestival {
   /** Set when the festival typically spans into a second month. */
   secondary_month: number | null
   notes: string | null
+  created_at: string
+}
+
+export interface TemplePuranaVariant {
+  id: string
+  temple_id: string
+  tradition_label: string
+  account: string
   created_at: string
 }
 

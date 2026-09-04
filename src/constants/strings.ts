@@ -70,6 +70,7 @@ export const strings = {
       basics: 'Basics',
       rituals: 'Rituals',
       food: 'Food & Stay',
+      practical: 'Practical Info',
       photos: 'Photos',
       review: 'Review',
     },

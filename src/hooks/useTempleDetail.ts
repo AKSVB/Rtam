@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { haversineKm } from '../lib/geo'
-import type { Temple, TemplePhoto, TempleReview, TempleStay } from '../types/database'
+import type { Temple, TemplePhoto, TemplePuranaVariant, TempleReview, TempleStay } from '../types/database'
 
 export function useTemple(id: string | undefined) {
   return useQuery({
@@ -58,6 +58,22 @@ export function useTemplePhotos(templeId: string | undefined) {
         .select('*')
         .eq('temple_id', templeId)
         .order('created_at', { ascending: false })
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!templeId,
+  })
+}
+
+export function usePuranaVariants(templeId: string | undefined) {
+  return useQuery({
+    queryKey: ['temple-purana-variants', templeId],
+    queryFn: async (): Promise<TemplePuranaVariant[]> => {
+      const { data, error } = await supabase
+        .from('temple_purana_variants')
+        .select('*')
+        .eq('temple_id', templeId)
+        .order('created_at')
       if (error) throw error
       return data ?? []
     },

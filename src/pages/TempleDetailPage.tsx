@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import {
   useNearbyTemples,
+  usePuranaVariants,
   useTemple,
   useTempleContributor,
   useTemplePhotos,
@@ -17,6 +18,8 @@ import { ReviewList } from '../components/temple/ReviewList'
 import { ReviewForm } from '../components/temple/ReviewForm'
 import { WeatherPill } from '../components/temple/WeatherPill'
 import { FreshnessBadge } from '../components/temple/FreshnessBadge'
+import { TempleTimings } from '../components/temple/TempleTimings'
+import { PackingChecklist } from '../components/temple/PackingChecklist'
 import { Button } from '../components/common/Button'
 import { useTripList } from '../hooks/useTripList'
 import { strings } from '../constants/strings'
@@ -43,6 +46,7 @@ export function TempleDetailPage() {
   const { isInTrip, addTemple, removeTemple } = useTripList()
   const { data: contributor } = useTempleContributor(temple?.submitted_by)
   const { data: nearby } = useNearbyTemples(temple)
+  const { data: puranaVariants } = usePuranaVariants(id)
 
   if (isLoading) return <LoadingSpinner label="Loading temple…" />
   if (!temple) return <p className="text-charcoal-700">Temple not found.</p>
@@ -181,6 +185,49 @@ export function TempleDetailPage() {
           label="Samidhadhanam-friendly"
           value={FRIENDLINESS_LABELS[temple.samidhadhanam_friendly]}
         />
+        <InfoRow
+          label="Architecture"
+          value={
+            temple.architecture_style
+              ? `${temple.architecture_style}${temple.construction_century ? ` · ${temple.construction_century}th century CE` : ''}`
+              : null
+          }
+        />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-bold text-charcoal-900">Plan Your Visit</h2>
+        <TempleTimings temple={temple} />
+        {(temple.accessibility_notes ||
+          temple.nearest_airport_name ||
+          temple.nearest_railway_station_name) && (
+          <div className="grid grid-cols-1 gap-6 rounded-xl border border-cream-200 bg-white p-4 md:grid-cols-2">
+            <InfoRow label="Accessibility" value={temple.accessibility_notes} />
+            <InfoRow
+              label="Nearest airport"
+              value={
+                temple.nearest_airport_name
+                  ? `${temple.nearest_airport_name}${temple.nearest_airport_distance_km != null ? ` · ${temple.nearest_airport_distance_km} km` : ''}`
+                  : null
+              }
+            />
+            <InfoRow
+              label="Nearest railway station"
+              value={
+                temple.nearest_railway_station_name
+                  ? `${temple.nearest_railway_station_name}${temple.nearest_railway_distance_km != null ? ` · ${temple.nearest_railway_distance_km} km` : ''}`
+                  : null
+              }
+            />
+          </div>
+        )}
+        {temple.emergency_contact_notes && (
+          <div className="rounded-xl border border-maroon-200 bg-maroon-50 p-4">
+            <h3 className="mb-1 text-sm font-semibold text-maroon-800">In case of emergency</h3>
+            <p className="text-sm text-charcoal-900">{temple.emergency_contact_notes}</p>
+          </div>
+        )}
+        <PackingChecklist temple={temple} />
       </section>
 
       {temple.sthala_purana && (
@@ -191,7 +238,25 @@ export function TempleDetailPage() {
           <p className="whitespace-pre-line leading-relaxed text-charcoal-900">
             {temple.sthala_purana}
           </p>
-          <p className="mt-3 text-xs text-charcoal-700/60">{strings.temple.sthalaPuranaNote}</p>
+          <p className="mt-3 text-xs text-charcoal-700/60">
+            {strings.temple.sthalaPuranaNote}
+            {temple.sthala_purana_source ? ` Source: ${temple.sthala_purana_source}.` : ''}
+          </p>
+
+          {puranaVariants && puranaVariants.length > 0 && (
+            <div className="mt-5 flex flex-col gap-4 border-t border-saffron-400/30 pt-4">
+              {puranaVariants.map((variant) => (
+                <div key={variant.id}>
+                  <h3 className="mb-1 text-sm font-semibold text-maroon-800">
+                    {variant.tradition_label}
+                  </h3>
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-charcoal-900/90">
+                    {variant.account}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 

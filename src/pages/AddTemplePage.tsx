@@ -18,7 +18,7 @@ import {
 } from '../constants/enumLabels'
 import type { FoodTierLevel, FriendlinessLevel, NewTempleInput, Temple } from '../types/database'
 
-const STEPS = ['basics', 'rituals', 'food', 'photos', 'review'] as const
+const STEPS = ['basics', 'rituals', 'food', 'practical', 'photos', 'review'] as const
 type Step = (typeof STEPS)[number]
 
 interface FormState {
@@ -45,7 +45,21 @@ interface FormState {
   river_distance_km: string
   best_season_notes: string
   sthala_purana: string
+  sthala_purana_source: string
   etiquette_notes: string
+  morning_opens_at: string
+  morning_closes_at: string
+  evening_opens_at: string
+  evening_closes_at: string
+  timings_notes: string
+  accessibility_notes: string
+  nearest_airport_name: string
+  nearest_airport_distance_km: string
+  nearest_railway_station_name: string
+  nearest_railway_distance_km: string
+  emergency_contact_notes: string
+  architecture_style: string
+  construction_century: string
 }
 
 const initialState: FormState = {
@@ -72,13 +86,32 @@ const initialState: FormState = {
   river_distance_km: '',
   best_season_notes: '',
   sthala_purana: '',
+  sthala_purana_source: '',
   etiquette_notes: '',
+  morning_opens_at: '',
+  morning_closes_at: '',
+  evening_opens_at: '',
+  evening_closes_at: '',
+  timings_notes: '',
+  accessibility_notes: '',
+  nearest_airport_name: '',
+  nearest_airport_distance_km: '',
+  nearest_railway_station_name: '',
+  nearest_railway_distance_km: '',
+  emergency_contact_notes: '',
+  architecture_style: '',
+  construction_century: '',
 }
 
 function toNullableNumber(value: string): number | null {
   if (value.trim() === '') return null
   const n = Number(value)
   return Number.isFinite(n) ? n : null
+}
+
+/** Postgres returns `time` columns as "HH:MM:SS" — trim to "HH:MM" for an <input type="time">. */
+function toTimeInputValue(value: string | null): string {
+  return value ? value.slice(0, 5) : ''
 }
 
 function formStateFromTemple(t: Temple): FormState {
@@ -106,7 +139,21 @@ function formStateFromTemple(t: Temple): FormState {
     river_distance_km: t.river_distance_km != null ? String(t.river_distance_km) : '',
     best_season_notes: t.best_season_notes ?? '',
     sthala_purana: t.sthala_purana ?? '',
+    sthala_purana_source: t.sthala_purana_source ?? '',
     etiquette_notes: t.etiquette_notes ?? '',
+    morning_opens_at: toTimeInputValue(t.morning_opens_at),
+    morning_closes_at: toTimeInputValue(t.morning_closes_at),
+    evening_opens_at: toTimeInputValue(t.evening_opens_at),
+    evening_closes_at: toTimeInputValue(t.evening_closes_at),
+    timings_notes: t.timings_notes ?? '',
+    accessibility_notes: t.accessibility_notes ?? '',
+    nearest_airport_name: t.nearest_airport_name ?? '',
+    nearest_airport_distance_km: t.nearest_airport_distance_km != null ? String(t.nearest_airport_distance_km) : '',
+    nearest_railway_station_name: t.nearest_railway_station_name ?? '',
+    nearest_railway_distance_km: t.nearest_railway_distance_km != null ? String(t.nearest_railway_distance_km) : '',
+    emergency_contact_notes: t.emergency_contact_notes ?? '',
+    architecture_style: t.architecture_style ?? '',
+    construction_century: t.construction_century != null ? String(t.construction_century) : '',
   }
 }
 
@@ -198,7 +245,21 @@ export function AddTemplePage() {
         river_distance_km: toNullableNumber(form.river_distance_km),
         best_season_notes: form.best_season_notes.trim() || null,
         sthala_purana: form.sthala_purana.trim() || null,
+        sthala_purana_source: form.sthala_purana_source.trim() || null,
         etiquette_notes: form.etiquette_notes.trim() || null,
+        morning_opens_at: form.morning_opens_at || null,
+        morning_closes_at: form.morning_closes_at || null,
+        evening_opens_at: form.evening_opens_at || null,
+        evening_closes_at: form.evening_closes_at || null,
+        timings_notes: form.timings_notes.trim() || null,
+        accessibility_notes: form.accessibility_notes.trim() || null,
+        nearest_airport_name: form.nearest_airport_name.trim() || null,
+        nearest_airport_distance_km: toNullableNumber(form.nearest_airport_distance_km),
+        nearest_railway_station_name: form.nearest_railway_station_name.trim() || null,
+        nearest_railway_distance_km: toNullableNumber(form.nearest_railway_distance_km),
+        emergency_contact_notes: form.emergency_contact_notes.trim() || null,
+        architecture_style: form.architecture_style.trim() || null,
+        construction_century: toNullableNumber(form.construction_century),
       }
 
       const templeId = isEditing
@@ -527,6 +588,18 @@ export function AddTemplePage() {
             </FormField>
 
             <FormField
+              label="Sthala Puranam source"
+              htmlFor="sthala_purana_source"
+              helpText="If it comes from a specific text (e.g. Skanda Purana) say so — otherwise 'Local/regional tradition' is fine."
+            >
+              <TextInput
+                id="sthala_purana_source"
+                value={form.sthala_purana_source}
+                onChange={(e) => update('sthala_purana_source', e.target.value)}
+              />
+            </FormField>
+
+            <FormField
               label="Dress code / etiquette"
               htmlFor="etiquette_notes"
               helpText="Anything a first-time visitor should know before arriving — dress code, ID or entry restrictions, what not to carry in."
@@ -538,6 +611,145 @@ export function AddTemplePage() {
                 placeholder="e.g. Men must be bare-chested; only Hindus permitted inside…"
               />
             </FormField>
+          </>
+        )}
+
+        {step === 'practical' && (
+          <>
+            <p className="text-sm text-charcoal-700/70">
+              Everything here is optional — fill in what you know.
+            </p>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField label="Morning darshan opens" htmlFor="morning_opens_at">
+                <TextInput
+                  id="morning_opens_at"
+                  type="time"
+                  value={form.morning_opens_at}
+                  onChange={(e) => update('morning_opens_at', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Morning darshan closes" htmlFor="morning_closes_at">
+                <TextInput
+                  id="morning_closes_at"
+                  type="time"
+                  value={form.morning_closes_at}
+                  onChange={(e) => update('morning_closes_at', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Evening darshan opens" htmlFor="evening_opens_at">
+                <TextInput
+                  id="evening_opens_at"
+                  type="time"
+                  value={form.evening_opens_at}
+                  onChange={(e) => update('evening_opens_at', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Evening darshan closes" htmlFor="evening_closes_at">
+                <TextInput
+                  id="evening_closes_at"
+                  type="time"
+                  value={form.evening_closes_at}
+                  onChange={(e) => update('evening_closes_at', e.target.value)}
+                />
+              </FormField>
+            </div>
+            <FormField
+              label="Timings notes"
+              htmlFor="timings_notes"
+              helpText="Exceptions, festival-day changes, or just 'confirm locally' if you're not fully sure."
+            >
+              <TextArea
+                id="timings_notes"
+                value={form.timings_notes}
+                onChange={(e) => update('timings_notes', e.target.value)}
+              />
+            </FormField>
+
+            <FormField
+              label="Accessibility notes"
+              htmlFor="accessibility_notes"
+              helpText="Wheelchair access, step counts, palanquin/pony/ropeway services for hill temples, etc."
+            >
+              <TextArea
+                id="accessibility_notes"
+                value={form.accessibility_notes}
+                onChange={(e) => update('accessibility_notes', e.target.value)}
+              />
+            </FormField>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField label="Nearest airport" htmlFor="nearest_airport_name">
+                <TextInput
+                  id="nearest_airport_name"
+                  value={form.nearest_airport_name}
+                  onChange={(e) => update('nearest_airport_name', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Distance to airport (km)" htmlFor="nearest_airport_distance_km">
+                <TextInput
+                  id="nearest_airport_distance_km"
+                  type="number"
+                  step="any"
+                  value={form.nearest_airport_distance_km}
+                  onChange={(e) => update('nearest_airport_distance_km', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Nearest railway station" htmlFor="nearest_railway_station_name">
+                <TextInput
+                  id="nearest_railway_station_name"
+                  value={form.nearest_railway_station_name}
+                  onChange={(e) => update('nearest_railway_station_name', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Distance to station (km)" htmlFor="nearest_railway_distance_km">
+                <TextInput
+                  id="nearest_railway_distance_km"
+                  type="number"
+                  step="any"
+                  value={form.nearest_railway_distance_km}
+                  onChange={(e) => update('nearest_railway_distance_km', e.target.value)}
+                />
+              </FormField>
+            </div>
+
+            <FormField
+              label="Emergency / local-contact notes"
+              htmlFor="emergency_contact_notes"
+              helpText="Mainly relevant for remote or high-altitude temples — registration process, nearest medical post, etc. Prefer pointing to 112 (India's emergency number) and official processes over specific phone numbers, which go stale."
+            >
+              <TextArea
+                id="emergency_contact_notes"
+                value={form.emergency_contact_notes}
+                onChange={(e) => update('emergency_contact_notes', e.target.value)}
+              />
+            </FormField>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                label="Architecture style"
+                htmlFor="architecture_style"
+                helpText="e.g. Dravidian, Nagara, Kalinga, Kerala, Vesara, Modern"
+              >
+                <TextInput
+                  id="architecture_style"
+                  value={form.architecture_style}
+                  onChange={(e) => update('architecture_style', e.target.value)}
+                />
+              </FormField>
+              <FormField
+                label="Construction century (CE)"
+                htmlFor="construction_century"
+                helpText="Leave blank if genuinely uncertain — don't guess"
+              >
+                <TextInput
+                  id="construction_century"
+                  type="number"
+                  value={form.construction_century}
+                  onChange={(e) => update('construction_century', e.target.value)}
+                />
+              </FormField>
+            </div>
           </>
         )}
 
