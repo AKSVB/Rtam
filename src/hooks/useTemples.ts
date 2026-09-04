@@ -129,3 +129,31 @@ export function useTemplesNearLocation(
     enabled: !!coords,
   })
 }
+
+/**
+ * All approved temples tagged with a well-known pilgrimage circuit,
+ * grouped by tag — powers the "curated circuits" quick-start on the trip
+ * planner (one query instead of one per tag).
+ */
+export function useTemplesBySignificance() {
+  return useQuery({
+    queryKey: ['temples-by-significance'],
+    queryFn: async (): Promise<Record<string, Pick<Temple, 'id' | 'name' | 'state'>[]>> => {
+      const { data, error } = await supabase
+        .from('temples')
+        .select('id, name, state, significance')
+        .eq('status', 'approved')
+        .not('significance', 'eq', '{}')
+      if (error) throw error
+      const byTag: Record<string, Pick<Temple, 'id' | 'name' | 'state'>[]> = {}
+      for (const t of data ?? []) {
+        for (const tag of t.significance) {
+          if (!byTag[tag]) byTag[tag] = []
+          byTag[tag].push({ id: t.id, name: t.name, state: t.state })
+        }
+      }
+      return byTag
+    },
+    staleTime: 30 * 60_000,
+  })
+}

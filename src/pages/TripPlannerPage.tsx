@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useTripList } from '../hooks/useTripList'
 import { useTemplePhotoCovers } from '../hooks/useTemplePhotoCovers'
+import { useTemplesBySignificance } from '../hooks/useTemples'
 import { useToast } from '../context/ToastContext'
 import { TempleCard } from '../components/temple/TempleCard'
 import { TempleMap } from '../components/temple/TempleMap'
@@ -16,8 +17,9 @@ import type { Temple } from '../types/database'
 export function TripPlannerPage() {
   const [searchParams] = useSearchParams()
   const sharedIds = searchParams.get('temples')?.split(',').filter(Boolean)
-  const { templeIds: myTempleIds, removeTemple } = useTripList()
+  const { templeIds: myTempleIds, removeTemple, addMany } = useTripList()
   const { data: covers } = useTemplePhotoCovers()
+  const { data: circuits } = useTemplesBySignificance()
   const { toast } = useToast()
   const [copied, setCopied] = useState(false)
 
@@ -60,6 +62,29 @@ export function TripPlannerPage() {
           </Button>
         )}
       </div>
+
+      {!isSharedView && circuits && Object.keys(circuits).length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-charcoal-700/60">
+            Or start from a curated circuit
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(circuits).map(([tag, temples]) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => {
+                  addMany(temples.map((t) => t.id))
+                  toast(`Added the ${tag} circuit (${temples.length} temples) to your trip.`, 'success')
+                }}
+                className="min-h-9 rounded-full border border-gold-400/50 bg-gold-400/10 px-3 text-sm font-medium text-maroon-800 hover:bg-gold-400/20"
+              >
+                ✦ {tag} ({temples.length})
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {isLoading ? (
         <LoadingSpinner label="Loading your trip…" />

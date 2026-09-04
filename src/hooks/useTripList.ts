@@ -92,7 +92,15 @@ export function useTripList() {
     [templeIds, persist],
   )
 
+  /** Adds every id not already in the trip — used to load a curated circuit in one go. */
+  const addMany = useCallback(
+    (ids: string[]) => {
+      void persist(Array.from(new Set([...templeIds, ...ids])))
+    },
+    [templeIds, persist],
+  )
+
   const isInTrip = useCallback((templeId: string) => templeIds.includes(templeId), [templeIds])
 
-  return { templeIds, addTemple, removeTemple, isInTrip }
+  return { templeIds, addTemple, removeTemple, addMany, isInTrip }
 }
