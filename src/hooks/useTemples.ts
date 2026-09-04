@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { haversineKm } from '../lib/geo'
+import { expandDeitySynonyms } from '../constants/deitySynonyms'
 import type { FoodTierLevel, FriendlinessLevel, Temple } from '../types/database'
 
 export interface TempleFilters {
@@ -19,9 +20,17 @@ async function fetchTemples(filters: TempleFilters): Promise<Temple[]> {
 
   if (filters.search && filters.search.trim().length > 0) {
     const term = filters.search.trim()
-    query = query.or(
-      `name.ilike.%${term}%,deity.ilike.%${term}%,town.ilike.%${term}%,district.ilike.%${term}%,state.ilike.%${term}%`,
-    )
+    const clauses = [
+      `name.ilike.%${term}%`,
+      `deity.ilike.%${term}%`,
+      `town.ilike.%${term}%`,
+      `district.ilike.%${term}%`,
+      `state.ilike.%${term}%`,
+      // A search for "Shiva" should also surface temples recorded under an
+      // epithet like "Mahadev" or "Nataraja" — see deitySynonyms.ts.
+      ...expandDeitySynonyms(term).map((alias) => `deity.ilike.%${alias}%`),
+    ]
+    query = query.or(clauses.join(','))
   }
   if (filters.state) query = query.eq('state', filters.state)
   if (filters.significance) query = query.contains('significance', [filters.significance])

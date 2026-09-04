@@ -11,6 +11,7 @@ import {
 import { useTemplePhotoCovers } from '../hooks/useTemplePhotoCovers'
 import { useSiteStats } from '../hooks/useSiteStats'
 import { useToast } from '../context/ToastContext'
+import { currentIstMinutes, getOpenStatus } from '../lib/templeTimings'
 import { TempleCard } from '../components/temple/TempleCard'
 import { TempleMap } from '../components/temple/TempleMap'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
@@ -87,6 +88,9 @@ export function HomePage() {
   const [locating, setLocating] = useState(false)
   const { toast } = useToast()
 
+  const [openNow, setOpenNow] = useState(false)
+  const [nowIstMinutes] = useState(() => currentIstMinutes())
+
   const filters: TempleFilters = {
     search,
     state: state || undefined,
@@ -96,9 +100,12 @@ export function HomePage() {
     foodTier: foodTier || undefined,
     hasRiver: hasRiver || undefined,
   }
-  const isBrowsing = Object.values(filters).some(Boolean)
+  const isBrowsing = Object.values(filters).some(Boolean) || openNow
 
-  const { data: temples, isLoading } = useTemples(filters)
+  const { data: templesRaw, isLoading } = useTemples(filters)
+  const temples = openNow
+    ? templesRaw?.filter((t) => getOpenStatus(t, nowIstMinutes) === 'open')
+    : templesRaw
   const { data: states } = useTempleStates()
   const { data: covers } = useTemplePhotoCovers()
   const { data: stats } = useSiteStats()
@@ -140,6 +147,7 @@ export function HomePage() {
     setSamidhadhanam('')
     setFoodTier('')
     setHasRiver(false)
+    setOpenNow(false)
   }
 
   return (
@@ -365,6 +373,16 @@ export function HomePage() {
             className="h-5 w-5 rounded border-stone-300"
           />
           {strings.search.filters.hasRiver}
+        </label>
+
+        <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-charcoal-900">
+          <input
+            type="checkbox"
+            checked={openNow}
+            onChange={(e) => setOpenNow(e.target.checked)}
+            className="h-5 w-5 rounded border-stone-300"
+          />
+          Open right now
         </label>
 
         <Button variant="ghost" type="button" onClick={clearFilters}>
