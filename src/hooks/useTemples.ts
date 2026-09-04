@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { haversineKm } from '../lib/geo'
 import type { FoodTierLevel, FriendlinessLevel, Temple } from '../types/database'
 
 export interface TempleFilters {
@@ -105,4 +106,26 @@ export function useCircuitSpotlight(tags: readonly string[], limit = 4) {
   })
 
   return { tag, ...query }
+}
+
+/** Nearest approved temples to an arbitrary point — used for the "temples near me" homepage action. */
+export function useTemplesNearLocation(
+  coords: { latitude: number; longitude: number } | null,
+  limit = 8,
+) {
+  return useQuery({
+    queryKey: ['temples-near-location', coords?.latitude, coords?.longitude, limit],
+    queryFn: async (): Promise<(Temple & { distanceKm: number })[]> => {
+      const { data, error } = await supabase.from('temples').select('*').eq('status', 'approved')
+      if (error) throw error
+      return (data ?? [])
+        .map((t) => ({
+          ...t,
+          distanceKm: haversineKm([coords!.latitude, coords!.longitude], [t.latitude, t.longitude]),
+        }))
+        .sort((a, b) => a.distanceKm - b.distanceKm)
+        .slice(0, limit)
+    },
+    enabled: !!coords,
+  })
 }

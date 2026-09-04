@@ -4,11 +4,13 @@ import {
   useCircuitSpotlight,
   useRecentlyAddedTemples,
   useTemples,
+  useTemplesNearLocation,
   useTempleStates,
   type TempleFilters,
 } from '../hooks/useTemples'
 import { useTemplePhotoCovers } from '../hooks/useTemplePhotoCovers'
 import { useSiteStats } from '../hooks/useSiteStats'
+import { useToast } from '../context/ToastContext'
 import { TempleCard } from '../components/temple/TempleCard'
 import { TempleMap } from '../components/temple/TempleMap'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
@@ -81,6 +83,9 @@ export function HomePage() {
   const [hasRiver, setHasRiver] = useState(false)
   const [view, setView] = useState<ViewMode>('list')
   const [heroImage] = useState(() => HERO_IMAGES[Math.floor(Math.random() * HERO_IMAGES.length)])
+  const [nearMeCoords, setNearMeCoords] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [locating, setLocating] = useState(false)
+  const { toast } = useToast()
 
   const filters: TempleFilters = {
     search,
@@ -99,6 +104,34 @@ export function HomePage() {
   const { data: stats } = useSiteStats()
   const { data: recent } = useRecentlyAddedTemples()
   const spotlight = useCircuitSpotlight(SIGNIFICANCE_TAGS)
+  const { data: nearMe, isLoading: nearMeLoading } = useTemplesNearLocation(nearMeCoords)
+
+  const findNearMe = () => {
+    if (!navigator.geolocation) {
+      toast("Your browser doesn't support location — try searching by state instead.", 'error')
+      return
+    }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false)
+        setNearMeCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+      },
+      (err) => {
+        setLocating(false)
+        toast(
+          err.code === err.PERMISSION_DENIED
+            ? "Location access was denied — you can still search by state or temple name."
+            : "Couldn't get your location — try again, or search by state instead.",
+          'error',
+        )
+      },
+      { timeout: 10_000 },
+    )
+  }
 
   const clearFilters = () => {
     setState('')
@@ -149,6 +182,16 @@ export function HomePage() {
               />
             </div>
 
+            <button
+              type="button"
+              onClick={findNearMe}
+              disabled={locating}
+              className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-full border border-gold-400/40 bg-white px-4 text-sm font-semibold text-maroon-800 shadow-sm hover:bg-gold-400/10 disabled:opacity-60"
+            >
+              <span aria-hidden>📍</span>
+              {locating ? 'Finding your location…' : 'Temples near me'}
+            </button>
+
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {SIGNIFICANCE_TAGS.map((tag) => (
                 <button
@@ -174,6 +217,24 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Temples near me (only once the user has asked for it) ───────── */}
+      {nearMeCoords && (
+        <section>
+          <h2 className="mb-4 font-display text-2xl font-semibold text-charcoal-900">
+            📍 Temples Near You
+          </h2>
+          {nearMeLoading ? (
+            <LoadingSpinner label="Finding nearby temples…" />
+          ) : nearMe && nearMe.length > 0 ? (
+            <TempleStrip temples={nearMe} covers={covers} />
+          ) : (
+            <p className="rounded-xl border border-dashed border-cream-200 bg-white p-6 text-center text-charcoal-700/70">
+              No temples found near you yet — be the first to add one for your area.
+            </p>
+          )}
+        </section>
+      )}
 
       {/* ── Circuit spotlight (only while not actively browsing) ────────── */}
       {!isBrowsing && spotlight.data && spotlight.data.length > 0 && (
