@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { strings } from '../../constants/strings'
 import { TempleGopuramIcon } from '../temple/TempleGopuramIcon'
+import { InstallAppButton } from './InstallAppButton'
 
 const linkClasses = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -89,6 +90,7 @@ export function Navbar() {
               </NavLink>
             </>
           )}
+          <InstallAppButton />
         </nav>
       </div>
 
@@ -142,6 +144,10 @@ export function Navbar() {
               </NavLink>
             </>
           )}
+          <InstallAppButton
+            className="min-h-11 rounded-lg px-3 py-2 text-left text-sm font-medium text-charcoal-700 hover:bg-gold-400/15 hover:text-maroon-800"
+            onNavigate={() => setMenuOpen(false)}
+          />
         </nav>
       )}
     </header>
