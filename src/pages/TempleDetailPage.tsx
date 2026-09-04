@@ -16,6 +16,7 @@ import { StayCard } from '../components/temple/StayCard'
 import { ReviewList } from '../components/temple/ReviewList'
 import { ReviewForm } from '../components/temple/ReviewForm'
 import { WeatherPill } from '../components/temple/WeatherPill'
+import { FreshnessBadge } from '../components/temple/FreshnessBadge'
 import { Button } from '../components/common/Button'
 import { useTripList } from '../hooks/useTripList'
 import { strings } from '../constants/strings'
@@ -80,8 +81,9 @@ export function TempleDetailPage() {
           {temple.country !== 'India' ? `, ${temple.country}` : ''}
         </p>
 
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap gap-2">
           <WeatherPill latitude={temple.latitude} longitude={temple.longitude} />
+          <FreshnessBadge photos={photos} reviews={reviews} />
         </div>
 
         <div className="mt-4">
