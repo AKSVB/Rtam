@@ -112,6 +112,18 @@ export interface TempleReview {
   user_profiles?: Pick<UserProfile, 'display_name' | 'username'>
 }
 
+export interface TempleFestival {
+  id: string
+  temple_id: string
+  name: string
+  /** 1 = January … 12 = December. The month the festival usually falls in. */
+  month: number
+  /** Set when the festival typically spans into a second month. */
+  secondary_month: number | null
+  notes: string | null
+  created_at: string
+}
+
 export interface TripList {
   id: string
   user_id: string

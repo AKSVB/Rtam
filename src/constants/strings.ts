@@ -10,6 +10,7 @@ export const strings = {
   nav: {
     home: 'Home',
     addTemple: 'Add a Temple',
+    festivals: 'Festivals',
     tripPlanner: 'Trip Planner',
     moderatorQueue: 'Moderator Queue',
     contributors: 'Contributors',

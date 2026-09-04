@@ -13,6 +13,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { ContributorsPage } from './pages/ContributorsPage'
+import { FestivalCalendarPage } from './pages/FestivalCalendarPage'
 import { PublicProfilePage } from './pages/PublicProfilePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
@@ -46,6 +47,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/festivals" element={<FestivalCalendarPage />} />
         <Route path="/trip" element={<TripPlannerPage />} />
         <Route path="/contributors" element={<ContributorsPage />} />
         <Route path="/u/:username" element={<PublicProfilePage />} />

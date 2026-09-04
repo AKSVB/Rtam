@@ -30,6 +30,11 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/festivals" className="hover:text-gold-300 hover:underline">
+                    {strings.nav.festivals}
+                  </Link>
+                </li>
+                <li>
                   <Link to="/trip" className="hover:text-gold-300 hover:underline">
                     {strings.nav.tripPlanner}
                   </Link>

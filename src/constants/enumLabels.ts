@@ -69,3 +69,18 @@ export const SANDHYA_HELP =
 
 export const SAMIDHADHANAM_HELP =
   'Is there space and, ideally, firewood/samidha access for performing Samidhadhanam (Aupasana) at or near this location?'
+
+export const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+] as const

@@ -44,6 +44,9 @@ export function Navbar() {
           <NavLink to="/temples/new" className={linkClasses}>
             {strings.nav.addTemple}
           </NavLink>
+          <NavLink to="/festivals" className={linkClasses}>
+            {strings.nav.festivals}
+          </NavLink>
           <NavLink to="/trip" className={linkClasses}>
             {strings.nav.tripPlanner}
           </NavLink>
@@ -91,6 +94,9 @@ export function Navbar() {
           </NavLink>
           <NavLink to="/temples/new" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.addTemple}
+          </NavLink>
+          <NavLink to="/festivals" className={linkClasses} onClick={() => setMenuOpen(false)}>
+            {strings.nav.festivals}
           </NavLink>
           <NavLink to="/trip" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.tripPlanner}
