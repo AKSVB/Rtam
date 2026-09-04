@@ -71,7 +71,14 @@ export function TempleDetailPage() {
             </Link>
           </div>
         )}
-        <h1 className="text-2xl font-bold text-charcoal-900">{temple.name}</h1>
+        <h1 className="text-2xl font-bold text-charcoal-900">
+          {temple.name}
+          {temple.native_name && (
+            <span className="ml-2 font-display text-xl font-normal text-charcoal-700/70">
+              {temple.native_name}
+            </span>
+          )}
+        </h1>
         <p className="text-charcoal-700/80">
           {temple.deity}
           {temple.sampradaya ? ` · ${temple.sampradaya} sampradaya` : ''}

@@ -32,6 +32,8 @@ export type PublicProfile = Pick<
 export interface Temple {
   id: string
   name: string
+  /** The name in its native/regional script, where known — purely additive, not a replacement. */
+  native_name: string | null
   deity: string
   sampradaya: string | null
   significance: string[]

@@ -23,6 +23,7 @@ type Step = (typeof STEPS)[number]
 
 interface FormState {
   name: string
+  native_name: string
   deity: string
   sampradaya: string
   significance: string[]
@@ -49,6 +50,7 @@ interface FormState {
 
 const initialState: FormState = {
   name: '',
+  native_name: '',
   deity: '',
   sampradaya: '',
   significance: [],
@@ -82,6 +84,7 @@ function toNullableNumber(value: string): number | null {
 function formStateFromTemple(t: Temple): FormState {
   return {
     name: t.name,
+    native_name: t.native_name ?? '',
     deity: t.deity,
     sampradaya: t.sampradaya ?? '',
     significance: t.significance,
@@ -173,6 +176,7 @@ export function AddTemplePage() {
     try {
       const templeInput: NewTempleInput = {
         name: form.name.trim(),
+        native_name: form.native_name.trim() || null,
         deity: form.deity.trim(),
         sampradaya: form.sampradaya.trim() || null,
         significance: form.significance,
@@ -286,6 +290,17 @@ export function AddTemplePage() {
           <>
             <FormField label="Temple name" htmlFor="name" required>
               <TextInput id="name" value={form.name} onChange={(e) => update('name', e.target.value)} />
+            </FormField>
+            <FormField
+              label="Name in native/regional script"
+              htmlFor="native_name"
+              helpText="Optional — how the name is written locally, e.g. in Tamil, Telugu, Kannada, Malayalam, Devanagari, Bengali, or Odia."
+            >
+              <TextInput
+                id="native_name"
+                value={form.native_name}
+                onChange={(e) => update('native_name', e.target.value)}
+              />
             </FormField>
             <FormField label="Presiding deity" htmlFor="deity" required>
               <TextInput id="deity" value={form.deity} onChange={(e) => update('deity', e.target.value)} />
