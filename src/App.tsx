@@ -13,6 +13,9 @@ const TempleDetailPage = lazy(() =>
 )
 const AddTemplePage = lazy(() => import('./pages/AddTemplePage').then((m) => ({ default: m.AddTemplePage })))
 const AddStayPage = lazy(() => import('./pages/AddStayPage').then((m) => ({ default: m.AddStayPage })))
+const SuggestEditPage = lazy(() =>
+  import('./pages/SuggestEditPage').then((m) => ({ default: m.SuggestEditPage })),
+)
 const TripPlannerPage = lazy(() =>
   import('./pages/TripPlannerPage').then((m) => ({ default: m.TripPlannerPage })),
 )
@@ -70,6 +73,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AddStayPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/temples/:id/suggest-edit"
+            element={
+              <ProtectedRoute>
+                <SuggestEditPage />
               </ProtectedRoute>
             }
           />

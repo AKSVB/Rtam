@@ -11,7 +11,7 @@ const JPEG_QUALITY = 0.82
 // re-encode — skip them rather than risk making them larger.
 const SKIP_BELOW_BYTES = 300 * 1024
 
-export async function compressImageForUpload(file: File): Promise<File> {
+export async function compressImageForUpload(file: File, maxDimension: number = MAX_DIMENSION): Promise<File> {
   if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
     return file
   }
@@ -20,7 +20,7 @@ export async function compressImageForUpload(file: File): Promise<File> {
   try {
     const { image, width: srcWidth, height: srcHeight, cleanup } = await loadImage(file)
     try {
-      const scale = Math.min(1, MAX_DIMENSION / Math.max(srcWidth, srcHeight))
+      const scale = Math.min(1, maxDimension / Math.max(srcWidth, srcHeight))
       const width = Math.round(srcWidth * scale)
       const height = Math.round(srcHeight * scale)
 

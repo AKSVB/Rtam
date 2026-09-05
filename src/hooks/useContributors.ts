@@ -9,7 +9,7 @@ export function useLeaderboard(limit = 50) {
     queryFn: async (): Promise<PublicProfile[]> => {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, username, display_name, contribution_points')
+        .select('id, username, display_name, avatar_url, contribution_points')
         .order('contribution_points', { ascending: false })
         .order('username', { ascending: true })
         .limit(limit)
@@ -26,7 +26,7 @@ export function usePublicProfile(username: string | undefined) {
     queryFn: async (): Promise<PublicProfile | null> => {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, username, display_name, contribution_points')
+        .select('id, username, display_name, avatar_url, contribution_points')
         .eq('username', username!.toLowerCase())
         .maybeSingle()
       if (error) throw error

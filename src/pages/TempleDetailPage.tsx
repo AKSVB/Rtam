@@ -22,7 +22,10 @@ import { WeatherPill } from '../components/temple/WeatherPill'
 import { FreshnessBadge } from '../components/temple/FreshnessBadge'
 import { TempleTimings } from '../components/temple/TempleTimings'
 import { PackingChecklist } from '../components/temple/PackingChecklist'
+import { LiveStatusReporter } from '../components/temple/LiveStatusReporter'
 import { Button } from '../components/common/Button'
+import { Avatar } from '../components/common/Avatar'
+import { LevelBadge } from '../components/common/LevelBadge'
 import { useTripList } from '../hooks/useTripList'
 import { strings } from '../constants/strings'
 import { FOOD_TIER_LABELS, FRIENDLINESS_LABELS } from '../constants/enumLabels'
@@ -138,8 +141,15 @@ export function TempleDetailPage() {
           <TempleBadges temple={temple} />
         </div>
 
+        {temple.status === 'approved' && (
+          <div className="mt-4 max-w-md">
+            <LiveStatusReporter templeId={temple.id} />
+          </div>
+        )}
+
         {contributor?.username && (
-          <p className="mt-3 text-sm text-charcoal-700/70">
+          <div className="mt-3 flex items-center gap-2 text-sm text-charcoal-700/70">
+            <Avatar url={contributor.avatar_url} name={contributor.display_name} size={24} />
             Added by{' '}
             <Link
               to={`/u/${contributor.username}`}
@@ -147,7 +157,17 @@ export function TempleDetailPage() {
             >
               {contributor.display_name} @{contributor.username}
             </Link>
-          </p>
+            <LevelBadge points={contributor.contribution_points} />
+          </div>
+        )}
+
+        {temple.status === 'approved' && user && (
+          <Link
+            to={`/temples/${temple.id}/suggest-edit`}
+            className="mt-3 inline-block text-sm font-semibold text-maroon-700 hover:underline"
+          >
+            ✎ Suggest an edit
+          </Link>
         )}
 
         <div className="mt-4 flex flex-wrap gap-2">

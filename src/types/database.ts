@@ -17,6 +17,7 @@ export interface UserProfile {
   username: string
   display_name: string
   home_city: string | null
+  avatar_url: string | null
   role: UserRole
   contribution_points: number
   created_at: string
@@ -27,7 +28,7 @@ export interface UserProfile {
 /** The subset of a profile safe to show publicly next to a contribution. */
 export type PublicProfile = Pick<
   UserProfile,
-  'id' | 'username' | 'display_name' | 'contribution_points'
+  'id' | 'username' | 'display_name' | 'avatar_url' | 'contribution_points'
 >
 
 export interface Temple {
@@ -152,6 +153,31 @@ export interface TemplePuranaVariant {
   temple_id: string
   tradition_label: string
   account: string
+  created_at: string
+}
+
+/** A contributor's proposed patch to an already-approved temple. */
+export interface TempleEditSuggestion {
+  id: string
+  temple_id: string
+  submitted_by: string
+  /** Only the fields the contributor actually changed — see EDITABLE_TEMPLE_FIELDS. */
+  changes: Partial<Temple>
+  note: string | null
+  status: SubmissionStatus
+  moderator_note: string | null
+  reviewed_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** A visitor's point-in-time report of whether a temple is open right now. */
+export interface TempleStatusReport {
+  id: string
+  temple_id: string
+  reported_by: string
+  is_open: boolean
+  note: string | null
   created_at: string
 }
 

@@ -22,7 +22,7 @@ export function useTempleContributor(userId: string | null | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('username, display_name')
+        .select('username, display_name, avatar_url, contribution_points')
         .eq('id', userId)
         .maybeSingle()
       if (error) throw error

@@ -108,7 +108,7 @@ export const strings = {
     points: 'points',
     templesAdded: 'temples added',
     howPointsWork:
-      'Points are awarded automatically: 25 for each temple accepted, 5 per photo, 3 per review.',
+      'Points are awarded automatically: 25 for each temple accepted, 10 for an accepted edit, 5 per photo, 3 per review, 1 per live status check-in.',
     joinedPrompt: 'Add a temple nobody has listed yet',
   },
 

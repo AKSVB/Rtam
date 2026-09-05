@@ -2,6 +2,8 @@ import { Link, useParams } from 'react-router-dom'
 import { useContributorTemples, usePublicProfile } from '../hooks/useContributors'
 import { useTemplePhotoCovers } from '../hooks/useTemplePhotoCovers'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { Avatar } from '../components/common/Avatar'
+import { LevelBadge } from '../components/common/LevelBadge'
 import { TempleCard } from '../components/temple/TempleCard'
 import { strings } from '../constants/strings'
 
@@ -30,17 +32,18 @@ export function PublicProfilePage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-wrap items-center gap-4 rounded-2xl border border-cream-200 bg-white p-6 shadow-sm">
-        <div
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-maroon-700 to-maroon-900 text-2xl font-semibold text-cream-50 ring-2 ring-gold-400/60 ring-offset-2 ring-offset-white"
-          aria-hidden
-        >
-          {profile.display_name.charAt(0).toUpperCase()}
-        </div>
+        <Avatar
+          url={profile.avatar_url}
+          name={profile.display_name}
+          size={64}
+          className="text-2xl ring-offset-2 ring-offset-white"
+        />
         <div className="min-w-0">
           <h1 className="truncate font-display text-2xl font-semibold text-charcoal-900">
             {profile.display_name}
           </h1>
           <p className="text-charcoal-700/70">@{profile.username}</p>
+          <LevelBadge points={profile.contribution_points} className="mt-1" />
         </div>
         <div className="ml-auto rounded-full border border-gold-400 bg-gold-400/15 px-4 py-2 text-sm font-semibold text-maroon-800">
           ✦ {profile.contribution_points} {strings.contributors.points}

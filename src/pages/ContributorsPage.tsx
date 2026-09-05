@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useLeaderboard } from '../hooks/useContributors'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { Avatar } from '../components/common/Avatar'
+import { LevelBadge } from '../components/common/LevelBadge'
 import { strings } from '../constants/strings'
 
 const MEDALS = ['🥇', '🥈', '🥉']
@@ -41,11 +43,13 @@ export function ContributorsPage() {
                 <span className="w-8 shrink-0 text-center text-lg font-bold text-charcoal-700/60">
                   {MEDALS[i] ?? i + 1}
                 </span>
+                <Avatar url={c.avatar_url} name={c.display_name} size={40} />
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate font-bold text-charcoal-900">{c.display_name}</span>
                   <span className="truncate text-sm text-charcoal-700/70">@{c.username}</span>
                 </span>
-                <span className="ml-auto shrink-0 rounded-full border border-saffron-400 bg-saffron-400/15 px-3 py-1 text-sm font-semibold text-maroon-800">
+                <LevelBadge points={c.contribution_points} className="ml-auto shrink-0" />
+                <span className="shrink-0 rounded-full border border-saffron-400 bg-saffron-400/15 px-3 py-1 text-sm font-semibold text-maroon-800">
                   {c.contribution_points} {strings.contributors.points}
                 </span>
               </Link>

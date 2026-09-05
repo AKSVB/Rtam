@@ -1,13 +1,20 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { usePendingStays, usePendingTemples, useReviewStay, useReviewTemple } from '../hooks/useModeration'
+import { usePendingEditSuggestions, useReviewEditSuggestion } from '../hooks/useEditSuggestions'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Button } from '../components/common/Button'
 import { Select, TextInput } from '../components/common/FormField'
 import { strings } from '../constants/strings'
 import { FOOD_TIER_LABELS, FRIENDLINESS_LABELS } from '../constants/enumLabels'
+import { EDITABLE_TEMPLE_FIELDS, formatFieldValue, type EditableTempleField } from '../constants/editableTempleFields'
 import type { FoodTierLevel, FriendlinessLevel, Temple } from '../types/database'
+
+const FIELD_LABELS: Record<string, string> = Object.fromEntries(
+  EDITABLE_TEMPLE_FIELDS.map((f) => [f.key, f.label]),
+)
 
 type TempleEdits = Pick<
   Temple,
@@ -19,13 +26,15 @@ export function ModeratorQueuePage() {
   const { toast } = useToast()
   const { data: pendingTemples, isLoading: templesLoading } = usePendingTemples()
   const { data: pendingStays, isLoading: staysLoading } = usePendingStays()
+  const { data: pendingSuggestions, isLoading: suggestionsLoading } = usePendingEditSuggestions()
   const reviewTemple = useReviewTemple()
   const reviewStay = useReviewStay()
+  const reviewSuggestion = useReviewEditSuggestion()
   const [note, setNote] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<TempleEdits | null>(null)
 
-  if (templesLoading || staysLoading) return <LoadingSpinner label="Loading queue…" />
+  if (templesLoading || staysLoading || suggestionsLoading) return <LoadingSpinner label="Loading queue…" />
 
   const handleTempleDecision = (
     templeId: string,
@@ -47,6 +56,26 @@ export function ModeratorQueuePage() {
     )
     setEditingId(null)
     setDraft(null)
+  }
+
+  const handleSuggestionDecision = (
+    suggestion: NonNullable<typeof pendingSuggestions>[number],
+    status: 'approved' | 'rejected',
+  ) => {
+    if (!profile) return
+    reviewSuggestion.mutate(
+      { suggestion, status, moderatorId: profile.id, moderatorNote: note[suggestion.id] },
+      {
+        onSuccess: () =>
+          toast(
+            status === 'approved'
+              ? `Edit to ${suggestion.temples?.name ?? 'temple'} applied.`
+              : 'Suggestion rejected.',
+            status === 'approved' ? 'success' : 'info',
+          ),
+        onError: () => toast("Couldn't process that suggestion. Please try again.", 'error'),
+      },
+    )
   }
 
   const startEditing = (temple: Temple) => {
@@ -255,6 +284,85 @@ export function ModeratorQueuePage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-charcoal-900">Pending Edit Suggestions</h2>
+        {!pendingSuggestions || pendingSuggestions.length === 0 ? (
+          <p className="text-sm text-charcoal-700/70">{strings.moderator.empty}</p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {pendingSuggestions.map((suggestion) => (
+              <div key={suggestion.id} className="rounded-xl border border-cream-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Link
+                    to={`/temples/${suggestion.temple_id}`}
+                    className="font-semibold text-charcoal-900 hover:underline"
+                  >
+                    {suggestion.temples?.name ?? 'Temple'}
+                  </Link>
+                  <span className="text-xs text-charcoal-700/60">
+                    suggested by a contributor
+                  </span>
+                </div>
+
+                <dl className="mt-3 flex flex-col gap-2 rounded-lg bg-cream-100 p-3 text-sm">
+                  {Object.entries(suggestion.changes).map(([key, value]) => (
+                    <div key={key} className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+                      <dt className="shrink-0 font-semibold text-charcoal-900">
+                        {FIELD_LABELS[key] ?? key}:
+                      </dt>
+                      <dd className="text-charcoal-700/80">
+                        <span className="line-through opacity-60">
+                          {suggestion.temples
+                            ? formatFieldValue(
+                                key as EditableTempleField,
+                                suggestion.temples[key as EditableTempleField],
+                              )
+                            : '—'}
+                        </span>
+                        {' → '}
+                        <span className="font-medium text-emerald-800">
+                          {formatFieldValue(key as EditableTempleField, value as Temple[EditableTempleField])}
+                        </span>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+
+                {suggestion.note && (
+                  <p className="mt-2 text-sm italic text-charcoal-700/70">"{suggestion.note}"</p>
+                )}
+
+                <div className="mt-3 flex flex-col gap-2">
+                  <input
+                    type="text"
+                    placeholder={strings.moderator.feedbackPlaceholder}
+                    value={note[suggestion.id] ?? ''}
+                    onChange={(e) => setNote((prev) => ({ ...prev, [suggestion.id]: e.target.value }))}
+                    className="min-h-9 w-full max-w-sm rounded-md border border-stone-300 px-2 text-xs sm:w-56"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="primary"
+                      className="min-h-9 px-3 py-1 text-xs"
+                      onClick={() => handleSuggestionDecision(suggestion, 'approved')}
+                    >
+                      {strings.moderator.approve}
+                    </Button>
+                    <Button
+                      variant="danger"
+                      className="min-h-9 px-3 py-1 text-xs"
+                      onClick={() => handleSuggestionDecision(suggestion, 'rejected')}
+                    >
+                      {strings.moderator.reject}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>

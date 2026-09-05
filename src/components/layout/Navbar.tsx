@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { strings } from '../../constants/strings'
 import { TempleGopuramIcon } from '../temple/TempleGopuramIcon'
 import { InstallAppButton } from './InstallAppButton'
+import { Avatar } from '../common/Avatar'
 
 const linkClasses = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -67,7 +68,10 @@ export function Navbar() {
           {user ? (
             <>
               <NavLink to="/profile" className={linkClasses}>
-                {strings.nav.profile}
+                <span className="flex items-center gap-2">
+                  {profile && <Avatar url={profile.avatar_url} name={profile.display_name} size={22} />}
+                  {strings.nav.profile}
+                </span>
               </NavLink>
               <button
                 type="button"
