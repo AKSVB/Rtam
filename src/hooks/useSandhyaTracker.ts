@@ -1,23 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { istDateString } from '../lib/sandhya'
 import type { SandhyaLog } from '../types/database'
 
-// Enough history for a meaningful streak calculation and a 14-day strip,
-// without ever growing unbounded for a devotee who's been tracking for years.
-const HISTORY_DAYS = 60
-
+/**
+ * The devotee's full practice history, with no lookback cap — the streak
+ * has no ceiling (every 30-day multiple is its own milestone, indefinitely),
+ * so capping the fetch window would silently undercount anyone whose streak
+ * outlives it. This stays small in practice regardless: one row per day for
+ * a single private user, so even a decade of daily tracking is only a few
+ * thousand rows.
+ */
 export function useSandhyaLogs(userId: string | undefined) {
   return useQuery({
     queryKey: ['sandhya-logs', userId],
     queryFn: async (): Promise<SandhyaLog[]> => {
-      const since = new Date()
-      since.setDate(since.getDate() - HISTORY_DAYS)
       const { data, error } = await supabase
         .from('sandhya_logs')
         .select('*')
         .eq('user_id', userId)
-        .gte('log_date', istDateString(since))
         .order('log_date', { ascending: false })
       if (error) throw error
       return data ?? []
