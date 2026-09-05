@@ -1,7 +1,16 @@
 import { useState } from 'react'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 
-export function InstallAppButton({ className = '', onNavigate }: { className?: string; onNavigate?: () => void }) {
+export function InstallAppButton({
+  className = '',
+  compact = false,
+  onNavigate,
+}: {
+  className?: string
+  /** Icon-only, for tight spaces like the mobile header bar. */
+  compact?: boolean
+  onNavigate?: () => void
+}) {
   const { canInstall, canPromptNatively, showIosInstructions, promptInstall } = useInstallPrompt()
   const [showIosHelp, setShowIosHelp] = useState(false)
 
@@ -18,17 +27,19 @@ export function InstallAppButton({ className = '', onNavigate }: { className?: s
     }
   }
 
+  const defaultClassName = compact
+    ? 'flex min-h-11 min-w-11 items-center justify-center rounded-lg text-lg text-maroon-800 hover:bg-gold-400/15'
+    : 'min-h-11 rounded-lg border border-gold-400/60 px-3 py-2 text-sm font-medium text-maroon-800 hover:bg-gold-400/15'
+
   return (
     <div className="relative">
       <button
         type="button"
         onClick={handleClick}
-        className={
-          className ||
-          'min-h-11 rounded-lg border border-gold-400/60 px-3 py-2 text-sm font-medium text-maroon-800 hover:bg-gold-400/15'
-        }
+        aria-label={compact ? 'Install app' : undefined}
+        className={className || defaultClassName}
       >
-        ⭳ Install App
+        {compact ? '⭳' : '⭳ Install App'}
       </button>
 
       {showIosHelp && (

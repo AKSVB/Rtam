@@ -29,15 +29,18 @@ export function Navbar() {
           {strings.appName}
         </Link>
 
-        <button
-          type="button"
-          className="min-h-11 min-w-11 rounded-lg p-2 text-maroon-800 hover:bg-gold-400/15 md:hidden"
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-label="Toggle menu"
-          aria-expanded={menuOpen}
-        >
-          <span className="text-xl">{menuOpen ? '✕' : '☰'}</span>
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <InstallAppButton compact />
+          <button
+            type="button"
+            className="min-h-11 min-w-11 rounded-lg p-2 text-maroon-800 hover:bg-gold-400/15"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+          >
+            <span className="text-xl">{menuOpen ? '✕' : '☰'}</span>
+          </button>
+        </div>
 
         <nav className="hidden items-center gap-1 md:flex">
           <NavLink to="/" end className={linkClasses}>
@@ -148,10 +151,6 @@ export function Navbar() {
               </NavLink>
             </>
           )}
-          <InstallAppButton
-            className="min-h-11 rounded-lg px-3 py-2 text-left text-sm font-medium text-charcoal-700 hover:bg-gold-400/15 hover:text-maroon-800"
-            onNavigate={() => setMenuOpen(false)}
-          />
         </nav>
       )}
     </header>
