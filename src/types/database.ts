@@ -20,8 +20,13 @@ export interface UserProfile {
   avatar_url: string | null
   role: UserRole
   contribution_points: number
-  /** Null = not yet asked. Gates the Trikala Sandhya tracker on the profile page. */
-  upanayanam_completed: boolean | null
+  /**
+   * Null = not yet asked. 'not_applicable' covers anyone the ceremony
+   * doesn't apply to (most women, castes that don't perform it) — distinct
+   * from 'no', which reads as "not yet". Gates the Trikala Sandhya tracker
+   * ('yes' only).
+   */
+  upanayanam_status: 'yes' | 'no' | 'not_applicable' | null
   sandhya_tejas_points: number
   last_tejas_milestone: number
   created_at: string

@@ -15,18 +15,25 @@ const SANDHYAS = [
 
 const SANDHYAVANDANAM_VIDEO_URL = 'https://www.youtube.com/watch?v=IwPT0UqDWN8'
 
+type UpanayanamStatus = 'yes' | 'no' | 'not_applicable'
+
+const NOT_SHOWN_COPY: Record<'no' | 'not_applicable', string> = {
+  no: 'The Trikala Sandhya tracker will be here whenever Upanayanam is complete.',
+  not_applicable: 'The Trikala Sandhya tracker is for those who observe it as a nitya karma after Upanayanam.',
+}
+
 function UpanayanamGate({
   userId,
   onAnswered,
 }: {
   userId: string
-  onAnswered: (value: boolean) => void
+  onAnswered: (value: UpanayanamStatus) => void
 }) {
-  const [saving, setSaving] = useState<boolean | null>(null)
+  const [saving, setSaving] = useState<UpanayanamStatus | null>(null)
 
-  const answer = async (value: boolean) => {
+  const answer = async (value: UpanayanamStatus) => {
     setSaving(value)
-    await supabase.from('user_profiles').update({ upanayanam_completed: value }).eq('id', userId)
+    await supabase.from('user_profiles').update({ upanayanam_status: value }).eq('id', userId)
     onAnswered(value)
     setSaving(null)
   }
@@ -43,12 +50,15 @@ function UpanayanamGate({
         Trikala Sandhyavandanam is a nitya karma taken up after the sacred thread ceremony. Answer honestly
         — we'll only show the daily tracker if it applies to you, and you can change this anytime.
       </p>
-      <div className="mt-4 flex justify-center gap-3">
-        <Button onClick={() => answer(true)} disabled={saving !== null}>
-          {saving === true ? 'Saving…' : 'Yes'}
+      <div className="mt-4 flex flex-wrap justify-center gap-3">
+        <Button onClick={() => answer('yes')} disabled={saving !== null}>
+          {saving === 'yes' ? 'Saving…' : 'Yes'}
         </Button>
-        <Button variant="secondary" onClick={() => answer(false)} disabled={saving !== null}>
-          {saving === false ? 'Saving…' : 'Not yet'}
+        <Button variant="secondary" onClick={() => answer('no')} disabled={saving !== null}>
+          {saving === 'no' ? 'Saving…' : 'Not yet'}
+        </Button>
+        <Button variant="ghost" onClick={() => answer('not_applicable')} disabled={saving !== null}>
+          {saving === 'not_applicable' ? 'Saving…' : 'Not applicable'}
         </Button>
       </div>
     </div>
@@ -60,29 +70,27 @@ export function TrikalaSandhyaTracker() {
   const { toast } = useToast()
   const { data: logs, isLoading } = useSandhyaLogs(profile?.id)
   const upsertLog = useUpsertSandhyaLog(profile?.id)
-  const [localAnswer, setLocalAnswer] = useState<boolean | null>(null)
+  const [localAnswer, setLocalAnswer] = useState<UpanayanamStatus | null>(null)
 
   if (!profile) return null
 
-  const upanayanamCompleted = localAnswer ?? profile.upanayanam_completed
+  const upanayanamStatus = localAnswer ?? profile.upanayanam_status
 
-  if (upanayanamCompleted === null || upanayanamCompleted === undefined) {
+  const resetAnswer = async () => {
+    await supabase.from('user_profiles').update({ upanayanam_status: null }).eq('id', profile.id)
+    setLocalAnswer(null)
+    await refreshProfile()
+  }
+
+  if (upanayanamStatus === null || upanayanamStatus === undefined) {
     return <UpanayanamGate userId={profile.id} onAnswered={setLocalAnswer} />
   }
 
-  if (upanayanamCompleted === false) {
+  if (upanayanamStatus === 'no' || upanayanamStatus === 'not_applicable') {
     return (
       <div className="flex items-center justify-between gap-3 rounded-xl border border-cream-200 bg-white p-4 text-sm text-charcoal-700/70">
-        <span>Trikala Sandhya tracker is available once Upanayanam is complete.</span>
-        <button
-          type="button"
-          className="shrink-0 font-semibold text-maroon-700 hover:underline"
-          onClick={async () => {
-            await supabase.from('user_profiles').update({ upanayanam_completed: null }).eq('id', profile.id)
-            setLocalAnswer(null)
-            await refreshProfile()
-          }}
-        >
+        <span>{NOT_SHOWN_COPY[upanayanamStatus]}</span>
+        <button type="button" className="shrink-0 font-semibold text-maroon-700 hover:underline" onClick={resetAnswer}>
           This changed
         </button>
       </div>
@@ -130,13 +138,9 @@ export function TrikalaSandhyaTracker() {
         <button
           type="button"
           className="text-xs text-charcoal-700/50 hover:text-maroon-700 hover:underline"
-          onClick={async () => {
-            await supabase.from('user_profiles').update({ upanayanam_completed: null }).eq('id', profile.id)
-            setLocalAnswer(null)
-            await refreshProfile()
-          }}
+          onClick={resetAnswer}
         >
-          not applicable?
+          change answer
         </button>
       </div>
 
