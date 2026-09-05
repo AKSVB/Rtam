@@ -230,6 +230,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rtamtemples.com/temples/ed8309c9-24e2-40a1-8985-1ff2a9b4f6d6</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rtamtemples.com/temples/f85e560c-98e3-48b2-99fa-b3adbe711a32</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
@@ -405,6 +411,12 @@
   </url>
   <url>
     <loc>https://rtamtemples.com/temples/28fc0dcf-f7c7-4f3b-a84b-df1508fd1e98</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/8c8ba1a2-8c44-40b5-ba2e-ba7a3fe761e4</loc>
     <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -710,12 +722,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://rtamtemples.com/temples/d9062a23-e690-45f5-8b5f-b947e0a11a2e</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://rtamtemples.com/temples/222ac511-ea7a-406b-bfd1-0ff1a74995dc</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
@@ -824,6 +830,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rtamtemples.com/temples/82900795-deb6-4bbe-99b5-1be41d4f3002</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rtamtemples.com/temples/0314c2a7-7b0b-419a-be3c-98c8ee452e19</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
@@ -831,12 +843,6 @@
   </url>
   <url>
     <loc>https://rtamtemples.com/temples/e7bfe446-5e82-4d2b-978f-7bbaa8c0f88d</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://rtamtemples.com/temples/ed8309c9-24e2-40a1-8985-1ff2a9b4f6d6</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -974,8 +980,20 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rtamtemples.com/temples/6b28ecc6-fe63-4384-bfbc-81d54fb72b10</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rtamtemples.com/temples/2bcba433-93be-476b-9487-34e4eb156978</loc>
     <lastmod>2026-09-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/c7932ab5-b522-468f-9a7f-fcc05147a93d</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -1156,6 +1174,12 @@
   <url>
     <loc>https://rtamtemples.com/temples/69b525d0-5261-4d1b-a7ee-ea50fa406520</loc>
     <lastmod>2026-09-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/d9062a23-e690-45f5-8b5f-b947e0a11a2e</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
