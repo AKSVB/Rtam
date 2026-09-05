@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext'
 import { supabase } from '../lib/supabase'
 import { useUploadAvatar } from '../hooks/useAvatar'
 import { useMyEditSuggestions } from '../hooks/useEditSuggestions'
+import { TrikalaSandhyaTracker } from '../components/profile/TrikalaSandhyaTracker'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Badge } from '../components/common/Badge'
 import { Avatar } from '../components/common/Avatar'
@@ -117,6 +118,8 @@ export function ProfilePage() {
           </p>
         </div>
       </div>
+
+      <TrikalaSandhyaTracker />
 
       <form onSubmit={handleSave} className="flex flex-col gap-4 rounded-xl border border-cream-200 bg-white p-5">
         <FormField label="Display name" htmlFor="displayName" required>

@@ -20,9 +20,25 @@ export interface UserProfile {
   avatar_url: string | null
   role: UserRole
   contribution_points: number
+  /** Null = not yet asked. Gates the Trikala Sandhya tracker on the profile page. */
+  upanayanam_completed: boolean | null
+  sandhya_tejas_points: number
+  last_tejas_milestone: number
   created_at: string
   updated_at: string
   banned_at: string | null
+}
+
+/** One devotee's own record of a single day's Trikala Sandhya, private to them. */
+export interface SandhyaLog {
+  id: string
+  user_id: string
+  log_date: string
+  morning: boolean
+  madhyahnika: boolean
+  evening: boolean
+  created_at: string
+  updated_at: string
 }
 
 /** The subset of a profile safe to show publicly next to a contribution. */
