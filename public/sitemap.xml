@@ -739,12 +739,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://rtamtemples.com/temples/23b592b1-e8ad-4b28-9263-82623c076ba5</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://rtamtemples.com/temples/8c9eb4dd-c0ca-430a-b8f0-6cbdfbc01c65</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
@@ -753,12 +747,6 @@
   <url>
     <loc>https://rtamtemples.com/temples/b786646d-e6c7-40e1-a46d-286d5842271a</loc>
     <lastmod>2026-09-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://rtamtemples.com/temples/2d964cc4-8f9f-44dc-ac0d-5456af1cfb01</loc>
-    <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -807,6 +795,12 @@
   <url>
     <loc>https://rtamtemples.com/temples/decbc5b4-6921-47ab-a489-37a4d28309e2</loc>
     <lastmod>2026-09-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/2d964cc4-8f9f-44dc-ac0d-5456af1cfb01</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -919,6 +913,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rtamtemples.com/temples/2c4b0cfc-bdb7-4813-86a0-6ad547d8e09b</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rtamtemples.com/temples/6acc0178-baa1-4382-90cc-2e86991a5886</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
@@ -943,13 +943,67 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rtamtemples.com/temples/d914575c-df77-46e4-a226-a62bcd5bf313</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rtamtemples.com/temples/24fef099-2b8b-4bc5-b211-e523ffee24ee</loc>
     <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rtamtemples.com/temples/8a84f127-788d-47c7-b6ea-dbc9c206416f</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rtamtemples.com/temples/a3aa62d3-dce1-462d-9a60-ac95d5db9df6</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/5c9f9de7-fa40-404a-9a6f-a78ba70a7484</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/b3bfff8e-2f03-44c8-8b03-e5c013c105be</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/f70a47f5-1b8c-4770-a4be-98d4b2a1e75b</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/a815d929-2ada-4232-9b00-dfba83db5d8a</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/3496b80e-6ab7-4ef0-a5c6-034c0a274ccb</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/23b592b1-e8ad-4b28-9263-82623c076ba5</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/52f27845-ce73-45f8-90df-0c22c5bc7bb2</loc>
     <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -980,12 +1034,6 @@
   </url>
   <url>
     <loc>https://rtamtemples.com/temples/5b42d3fe-bd5e-4f67-b8be-a8dc417c2dc8</loc>
-    <lastmod>2026-09-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://rtamtemples.com/temples/52f27845-ce73-45f8-90df-0c22c5bc7bb2</loc>
     <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -1075,6 +1123,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://rtamtemples.com/temples/8e3e589f-4a60-40c8-8e84-a7af70121bd5</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rtamtemples.com/temples/6bd342b4-0b3e-483c-8813-9d6e4730707a</loc>
     <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
@@ -1143,6 +1197,12 @@
   <url>
     <loc>https://rtamtemples.com/temples/cc2c02ca-091d-4547-92e9-5ee659a3efad</loc>
     <lastmod>2026-09-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/temples/63dd4ffa-f554-4c17-aa77-7362b3f12d17</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -1279,12 +1339,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://rtamtemples.com/temples/8e3e589f-4a60-40c8-8e84-a7af70121bd5</loc>
-    <lastmod>2026-09-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://rtamtemples.com/temples/e7bfe446-5e82-4d2b-978f-7bbaa8c0f88d</loc>
     <lastmod>2026-09-05</lastmod>
     <changefreq>monthly</changefreq>
@@ -1365,12 +1419,22 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://rtamtemples.com/circuits/Chota%20Char%20Dham</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://rtamtemples.com/circuits/Jyotirlinga</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://rtamtemples.com/circuits/Nava%20Kailasam</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/circuits/Nava%20Narasimha</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
