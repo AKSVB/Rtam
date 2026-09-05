@@ -105,6 +105,11 @@ export const CIRCUIT_INFO: Record<string, CircuitInfo> = {
       'The Uttarakhand Himalayan pilgrimage circuit of Yamunotri, Gangotri, Kedarnath, and Badrinath — the "small four abodes," distinct from the pan-India Char Dham.',
     expectedCount: 4,
   },
+  'Saptha Sthana Mylapore': {
+    blurb:
+      'Seven Shiva temples in and around Mylapore, Chennai, traditionally said to have been worshipped by the Saptarishis (seven sages) — six small neighbourhood shrines plus the much larger Kapaleeshwarar Temple.',
+    expectedCount: 7,
+  },
 }
 
 export const DEFAULT_CIRCUIT_BLURB =
