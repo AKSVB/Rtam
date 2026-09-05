@@ -73,6 +73,7 @@ export const SIGNIFICANCE_TAGS = [
   'Navagraha Sthalam',
   'Nava Tirupati',
   'Trilinga Kshetra',
+  'Nava Kailasam',
 ] as const
 
 export const SANDHYA_HELP =

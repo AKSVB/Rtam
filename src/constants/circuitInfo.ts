@@ -90,6 +90,11 @@ export const CIRCUIT_INFO: Record<string, CircuitInfo> = {
       'Three ancient Shiva temples — Srisailam, Draksharamam, and Kaleshwaram — traditionally said to mark the historical boundaries of the Telugu-speaking land ("Trilinga Desham").',
     expectedCount: 3,
   },
+  'Nava Kailasam': {
+    blurb:
+      'Nine Shiva temples strung along the Thamirabarani river in Tirunelveli and Thoothukudi, Tamil Nadu — tradition holds a disciple of Agastya installed a linga wherever each of nine flowers he floated downriver came to rest.',
+    expectedCount: 9,
+  },
 }
 
 export const DEFAULT_CIRCUIT_BLURB =
