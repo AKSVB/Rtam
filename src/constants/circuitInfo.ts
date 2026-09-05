@@ -100,6 +100,11 @@ export const CIRCUIT_INFO: Record<string, CircuitInfo> = {
       'Nine distinct shrines to Narasimha, Vishnu\'s man-lion avatara, scattered across the forested hills of Ahobilam, Andhra Pradesh — the site where he is held to have slain the demon king Hiranyakashipu.',
     expectedCount: 9,
   },
+  'Chota Char Dham': {
+    blurb:
+      'The Uttarakhand Himalayan pilgrimage circuit of Yamunotri, Gangotri, Kedarnath, and Badrinath — the "small four abodes," distinct from the pan-India Char Dham.',
+    expectedCount: 4,
+  },
 }
 
 export const DEFAULT_CIRCUIT_BLURB =
