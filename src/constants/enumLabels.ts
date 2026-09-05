@@ -54,7 +54,8 @@ export const FOOD_TIER_HELP: Record<FoodTierLevel, string> = {
 
 // Well-known pilgrimage groupings a temple can be tagged with. Free-form in
 // the database (text[]), but the UI offers this curated list so filtering
-// and badges stay consistent — contributors can still add other tags.
+// and badges stay consistent — contributors can still add other tags
+// directly if they know the exact spelling used elsewhere in the circuit.
 export const SIGNIFICANCE_TAGS = [
   'Jyotirlinga',
   'Shakti Peetha',
@@ -62,6 +63,16 @@ export const SIGNIFICANCE_TAGS = [
   'Char Dham',
   'Sapta Puri',
   'Char Peetham',
+  'Ashtavinayak',
+  'Arupadaiveedu',
+  'Panch Kedar',
+  'Panch Badri',
+  'Panch Prayag',
+  'Pancharama Kshetra',
+  'Pancharanga Kshetram',
+  'Navagraha Sthalam',
+  'Nava Tirupati',
+  'Trilinga Kshetra',
 ] as const
 
 export const SANDHYA_HELP =

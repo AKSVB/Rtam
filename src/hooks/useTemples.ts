@@ -190,3 +190,22 @@ export function useTemplesBySignificance() {
     staleTime: 30 * 60_000,
   })
 }
+
+/** Every approved temple carrying a given significance tag, full rows — powers the circuit detail page. */
+export function useTemplesByTag(tag: string | undefined) {
+  return useQuery({
+    queryKey: ['temples-by-tag', tag],
+    queryFn: async (): Promise<Temple[]> => {
+      const { data, error } = await supabase
+        .from('temples')
+        .select('*')
+        .eq('status', 'approved')
+        .contains('significance', [tag])
+        .order('name', { ascending: true })
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!tag,
+    staleTime: 30 * 60_000,
+  })
+}

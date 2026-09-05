@@ -52,6 +52,9 @@ export function Navbar() {
           <NavLink to="/festivals" className={linkClasses}>
             {strings.nav.festivals}
           </NavLink>
+          <NavLink to="/circuits" className={linkClasses}>
+            {strings.nav.circuits}
+          </NavLink>
           <NavLink to="/trip" className={linkClasses}>
             {strings.nav.tripPlanner}
           </NavLink>
@@ -111,6 +114,9 @@ export function Navbar() {
           </NavLink>
           <NavLink to="/festivals" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.festivals}
+          </NavLink>
+          <NavLink to="/circuits" className={linkClasses} onClick={() => setMenuOpen(false)}>
+            {strings.nav.circuits}
           </NavLink>
           <NavLink to="/trip" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.tripPlanner}

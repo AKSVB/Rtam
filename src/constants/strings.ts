@@ -11,6 +11,7 @@ export const strings = {
     home: 'Home',
     addTemple: 'Add a Temple',
     festivals: 'Festivals',
+    circuits: 'Circuits',
     tripPlanner: 'Trip Planner',
     moderatorQueue: 'Moderator Queue',
     adminUsers: 'Manage Users',
@@ -117,5 +118,18 @@ export const strings = {
     empty: 'Your trip list is empty. Browse temples and add them here.',
     shareLink: 'Copy shareable link',
     linkCopied: 'Link copied!',
+  },
+
+  circuits: {
+    title: 'Pilgrimage Circuits',
+    subtitle:
+      'Named groups of temples traditionally visited together — browse a circuit, see it on the map, and add the whole thing to your trip in one go.',
+    addAllToTrip: 'Add all to my trip',
+    addedToTrip: 'circuit added to your trip.',
+    viewTrip: 'View my trip',
+    complete: 'Complete',
+    incomplete: 'temples listed so far',
+    notFound: "We don't have a circuit by that name yet.",
+    backToCircuits: '← All circuits',
   },
 } as const

@@ -40,6 +40,10 @@ const ContributorsPage = lazy(() =>
 const FestivalCalendarPage = lazy(() =>
   import('./pages/FestivalCalendarPage').then((m) => ({ default: m.FestivalCalendarPage })),
 )
+const CircuitsPage = lazy(() => import('./pages/CircuitsPage').then((m) => ({ default: m.CircuitsPage })))
+const CircuitDetailPage = lazy(() =>
+  import('./pages/CircuitDetailPage').then((m) => ({ default: m.CircuitDetailPage })),
+)
 const PublicProfilePage = lazy(() =>
   import('./pages/PublicProfilePage').then((m) => ({ default: m.PublicProfilePage })),
 )
@@ -85,6 +89,8 @@ function App() {
             }
           />
           <Route path="/festivals" element={<FestivalCalendarPage />} />
+          <Route path="/circuits" element={<CircuitsPage />} />
+          <Route path="/circuits/:tag" element={<CircuitDetailPage />} />
           <Route path="/trip" element={<TripPlannerPage />} />
           <Route path="/contributors" element={<ContributorsPage />} />
           <Route path="/u/:username" element={<PublicProfilePage />} />

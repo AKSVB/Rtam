@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { Temple } from '../../types/database'
 import { Badge } from '../common/Badge'
 import {
@@ -23,9 +24,9 @@ export function TempleBadges({ temple }: { temple: Temple }) {
   return (
     <div className="flex flex-wrap gap-2">
       {temple.significance.map((tag) => (
-        <Badge key={tag} tone="significance">
-          ✦ {tag}
-        </Badge>
+        <Link key={tag} to={`/circuits/${encodeURIComponent(tag)}`}>
+          <Badge tone="significance">✦ {tag}</Badge>
+        </Link>
       ))}
       <Badge tone={friendlinessTone(temple.sandhya_friendly)}>
         {FRIENDLINESS_BADGE_LABELS.sandhya[temple.sandhya_friendly]}

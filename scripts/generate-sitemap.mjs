@@ -33,6 +33,7 @@ const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
 const STATIC_URLS = [
   { loc: '/', changefreq: 'daily', priority: '1.0' },
   { loc: '/festivals', changefreq: 'weekly', priority: '0.6' },
+  { loc: '/circuits', changefreq: 'weekly', priority: '0.6' },
   { loc: '/contributors', changefreq: 'daily', priority: '0.6' },
   { loc: '/trip', changefreq: 'monthly', priority: '0.4' },
   { loc: '/signup', changefreq: 'monthly', priority: '0.3' },
@@ -58,8 +59,23 @@ async function fetchApprovedTemples() {
   return res.json()
 }
 
+async function fetchCircuitTags(temples) {
+  if (temples.length === 0) return []
+  if (!supabaseUrl || !supabaseAnonKey) return []
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/temples?select=significance&status=eq.approved&significance=not.eq.%7B%7D`,
+    { headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` } },
+  )
+  if (!res.ok) return []
+  const rows = await res.json()
+  const tags = new Set()
+  for (const row of rows) for (const tag of row.significance ?? []) tags.add(tag)
+  return [...tags].sort()
+}
+
 async function main() {
   const temples = await fetchApprovedTemples()
+  const circuitTags = await fetchCircuitTags(temples)
 
   const urlEntries = [
     ...STATIC_URLS.map(
@@ -69,12 +85,18 @@ async function main() {
       const lastmod = t.updated_at ? `\n    <lastmod>${t.updated_at.slice(0, 10)}</lastmod>` : ''
       return `  <url>\n    <loc>${SITE_URL}/temples/${escapeXml(t.id)}</loc>${lastmod}\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>`
     }),
+    ...circuitTags.map(
+      (tag) =>
+        `  <url>\n    <loc>${SITE_URL}/circuits/${encodeURIComponent(tag)}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>`,
+    ),
   ]
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlEntries.join('\n')}\n</urlset>\n`
 
   writeFileSync(path.join(root, 'public', 'sitemap.xml'), xml)
-  console.log(`Wrote sitemap.xml with ${STATIC_URLS.length} static pages + ${temples.length} temple pages.`)
+  console.log(
+    `Wrote sitemap.xml with ${STATIC_URLS.length} static pages + ${temples.length} temple pages + ${circuitTags.length} circuit pages.`,
+  )
 }
 
 main()
