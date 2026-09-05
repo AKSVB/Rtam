@@ -19,7 +19,7 @@ export const CIRCUIT_INFO: Record<string, CircuitInfo> = {
   },
   'Shakti Peetha': {
     blurb:
-      'Sites where a part of the goddess Sati is said to have fallen after Shiva carried her body across the cosmos in grief. Traditions vary on the exact count (commonly 18 or 51); this list covers the widely cited Ashtadasha (18) Shakti Peethas that lie within India.',
+      'Sites where a part of the goddess Sati is said to have fallen after Shiva carried her body across the cosmos in grief. Traditions vary on the exact count and even on which sites qualify — commonly cited lists range from 18 (Ashtadasha) to 51 — so this list draws from several overlapping traditions rather than one fixed set.',
   },
   'Pancha Bhoota Sthalam': {
     blurb:
