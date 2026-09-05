@@ -1,6 +1,28 @@
 import { useState } from 'react'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 
+// A plain glyph (e.g. "⭳") isn't reliably rendered by every mobile
+// browser/font — some show a blank box or an unrelated symbol instead.
+// An inline SVG renders identically everywhere.
+function DownloadIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M12 3v11.5" />
+      <path d="M7.5 10.5 12 15l4.5-4.5" />
+      <path d="M4.5 19.5h15" />
+    </svg>
+  )
+}
+
 export function InstallAppButton({
   className = '',
   compact = false,
@@ -28,8 +50,8 @@ export function InstallAppButton({
   }
 
   const defaultClassName = compact
-    ? 'flex min-h-11 min-w-11 items-center justify-center rounded-lg text-lg text-maroon-800 hover:bg-gold-400/15'
-    : 'min-h-11 rounded-lg border border-gold-400/60 px-3 py-2 text-sm font-medium text-maroon-800 hover:bg-gold-400/15'
+    ? 'flex min-h-11 min-w-11 items-center justify-center rounded-lg text-maroon-800 hover:bg-gold-400/15'
+    : 'inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-gold-400/60 px-3 py-2 text-sm font-medium text-maroon-800 hover:bg-gold-400/15'
 
   return (
     <div className="relative">
@@ -39,7 +61,8 @@ export function InstallAppButton({
         aria-label={compact ? 'Install app' : undefined}
         className={className || defaultClassName}
       >
-        {compact ? '⭳' : '⭳ Install App'}
+        <DownloadIcon className={compact ? 'h-6 w-6' : 'h-4 w-4'} />
+        {!compact && 'Install App'}
       </button>
 
       {showIosHelp && (
