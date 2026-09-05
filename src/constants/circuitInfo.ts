@@ -95,6 +95,11 @@ export const CIRCUIT_INFO: Record<string, CircuitInfo> = {
       'Nine Shiva temples strung along the Thamirabarani river in Tirunelveli and Thoothukudi, Tamil Nadu — tradition holds a disciple of Agastya installed a linga wherever each of nine flowers he floated downriver came to rest.',
     expectedCount: 9,
   },
+  'Nava Narasimha': {
+    blurb:
+      'Nine distinct shrines to Narasimha, Vishnu\'s man-lion avatara, scattered across the forested hills of Ahobilam, Andhra Pradesh — the site where he is held to have slain the demon king Hiranyakashipu.',
+    expectedCount: 9,
+  },
 }
 
 export const DEFAULT_CIRCUIT_BLURB =
