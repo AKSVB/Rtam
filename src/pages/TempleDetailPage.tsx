@@ -23,6 +23,7 @@ import { FreshnessBadge } from '../components/temple/FreshnessBadge'
 import { TempleTimings } from '../components/temple/TempleTimings'
 import { PackingChecklist } from '../components/temple/PackingChecklist'
 import { LiveStatusReporter } from '../components/temple/LiveStatusReporter'
+import { SandhyavandanamPrompt } from '../components/temple/SandhyavandanamPrompt'
 import { Button } from '../components/common/Button'
 import { Avatar } from '../components/common/Avatar'
 import { LevelBadge } from '../components/common/LevelBadge'
@@ -95,6 +96,8 @@ export function TempleDetailPage() {
 
   return (
     <div className="flex flex-col gap-8">
+      <SandhyavandanamPrompt templeId={temple.id} deity={temple.deity} templeName={temple.name} />
+
       <div>
         {temple.status === 'pending' && (
           <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
