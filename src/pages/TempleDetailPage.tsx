@@ -165,12 +165,20 @@ export function TempleDetailPage() {
         )}
 
         {temple.status === 'approved' && user && (
-          <Link
-            to={`/temples/${temple.id}/suggest-edit`}
-            className="mt-3 inline-block text-sm font-semibold text-maroon-700 hover:underline"
-          >
-            ✎ Suggest an edit
-          </Link>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+            <Link
+              to={`/temples/${temple.id}/suggest-edit`}
+              className="text-sm font-semibold text-maroon-700 hover:underline"
+            >
+              ✎ Suggest an edit
+            </Link>
+            <Link
+              to={`/dharmic-feed/add?type=samishti_sandhyavandanam&templeId=${temple.id}`}
+              className="text-sm font-semibold text-maroon-700 hover:underline"
+            >
+              🕉 Propose Samishti Sandhyavandanam here
+            </Link>
+          </div>
         )}
 
         <div className="mt-4 flex flex-wrap gap-2">

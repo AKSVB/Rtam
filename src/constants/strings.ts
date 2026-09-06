@@ -14,6 +14,8 @@ export const strings = {
     circuits: 'Circuits',
     explore: 'Explore',
     quiz: 'Temple Quiz',
+    samishti: 'Samishti Sandhyavandanam',
+    dharmicFeed: 'Dharmic Activities Feed',
     tripPlanner: 'Trip Planner',
     moderatorQueue: 'Moderator Queue',
     adminUsers: 'Manage Users',
@@ -111,7 +113,7 @@ export const strings = {
     points: 'points',
     templesAdded: 'temples added',
     howPointsWork:
-      'Points are awarded automatically: 25 for each temple accepted, 10 for an accepted edit, 5 per photo, 3 per review, 1 per live status check-in.',
+      'Points are awarded automatically: 25 for each temple accepted, 15 for an accepted Samishti Sandhyavandanam proposal, 10 for an accepted edit, 8 for another accepted dharmic activity post, 5 per photo, 3 per review, 1 per live status check-in.',
     joinedPrompt: 'Add a temple nobody has listed yet',
   },
 
@@ -153,5 +155,50 @@ export const strings = {
           : score >= total * 0.4
             ? 'Not bad — browse a few circuits and try again.'
             : 'Room to grow — explore the temple pages and come back for another round.',
+  },
+
+  samishti: {
+    title: 'Samishti Sandhyavandanam',
+    subtitle:
+      'Group Sandhya Vandanam gatherings, proposed by the community. Upvote the ones you\'d actually attend, and find the nearest one to you.',
+    proposeTemple: 'Propose a temple',
+    upcoming: 'Upcoming',
+    interested: 'interested',
+    markInterested: "I'm interested",
+    alreadyInterested: "✓ You're interested",
+    viewTemple: 'View temple',
+    empty: 'No Samishti Sandhyavandanam gatherings proposed yet — be the first.',
+    sortByInterest: 'Most interest',
+    sortByDate: 'Soonest first',
+    sortByDistance: 'Nearest to me',
+  },
+
+  dharmic: {
+    title: 'Dharmic Activities Feed',
+    subtitle:
+      'Pravachanams, anugraha bhashanams, bhajans and utsavams happening around the country — posted by the community. Share your location to see what\'s near you first.',
+    addUpdate: 'Post an update',
+    filterAll: 'All',
+    empty: 'No upcoming activities posted yet — be the first to share one.',
+    nearMe: 'Use my location',
+    locating: 'Locating…',
+    distanceAway: (km: number) => (km < 1 ? 'Less than 1 km away' : `${Math.round(km)} km away`),
+  },
+
+  addActivity: {
+    title: 'Post a Dharmic Activity',
+    submitSuccessBody: 'Thanks! Your post is awaiting moderator review and will appear once approved.',
+    activityType: 'Type of activity',
+    activityTitle: 'Title',
+    activityTitlePlaceholder: 'e.g. "Pravachanam by Chaganti Koteswara Rao garu"',
+    speakerName: 'Speaker / Mathadhipati name',
+    temple: 'Temple',
+    useCustomVenue: 'This is at a different venue, not a listed temple',
+    venueName: 'Venue name',
+    date: 'Date',
+    time: 'Time',
+    description: 'Details',
+    sourceUrl: 'Link (YouTube, Facebook event, etc.)',
+    submit: 'Submit',
   },
 } as const

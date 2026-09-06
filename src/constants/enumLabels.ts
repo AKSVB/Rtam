@@ -1,4 +1,4 @@
-import type { FoodTierLevel, FriendlinessLevel } from '../types/database'
+import type { DharmicActivityType, FoodTierLevel, FriendlinessLevel } from '../types/database'
 
 // Human-readable labels for raw enum values. Keeping these centralized means
 // the UI never shows a raw db value like "brahmin_run_kitchen" to a user.
@@ -85,6 +85,22 @@ export const SANDHYA_HELP =
 
 export const SAMIDHADHANAM_HELP =
   'Is there space and, ideally, firewood/samidha access for performing Samidhadhanam (Aupasana) at or near this location?'
+
+export const DHARMIC_ACTIVITY_TYPE_LABELS: Record<DharmicActivityType, string> = {
+  samishti_sandhyavandanam: 'Samishti Sandhyavandanam',
+  pravachanam: 'Pravachanam',
+  anugraha_bhashanam: 'Anugraha Bhashanam',
+  bhajan_utsavam: 'Bhajan / Utsavam',
+  other: 'Other',
+}
+
+export const DHARMIC_ACTIVITY_TYPE_ICONS: Record<DharmicActivityType, string> = {
+  samishti_sandhyavandanam: '🕉',
+  pravachanam: '📖',
+  anugraha_bhashanam: '🙏',
+  bhajan_utsavam: '🎶',
+  other: '✦',
+}
 
 export const MONTH_NAMES = [
   'January',

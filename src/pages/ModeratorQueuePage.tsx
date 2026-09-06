@@ -4,11 +4,12 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { usePendingStays, usePendingTemples, useReviewStay, useReviewTemple } from '../hooks/useModeration'
 import { usePendingEditSuggestions, useReviewEditSuggestion } from '../hooks/useEditSuggestions'
+import { usePendingDharmicActivities, useReviewDharmicActivity } from '../hooks/useDharmicActivities'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Button } from '../components/common/Button'
 import { Select, TextInput } from '../components/common/FormField'
 import { strings } from '../constants/strings'
-import { FOOD_TIER_LABELS, FRIENDLINESS_LABELS } from '../constants/enumLabels'
+import { DHARMIC_ACTIVITY_TYPE_LABELS, FOOD_TIER_LABELS, FRIENDLINESS_LABELS } from '../constants/enumLabels'
 import { EDITABLE_TEMPLE_FIELDS, formatFieldValue, type EditableTempleField } from '../constants/editableTempleFields'
 import type { FoodTierLevel, FriendlinessLevel, Temple } from '../types/database'
 
@@ -27,14 +28,17 @@ export function ModeratorQueuePage() {
   const { data: pendingTemples, isLoading: templesLoading } = usePendingTemples()
   const { data: pendingStays, isLoading: staysLoading } = usePendingStays()
   const { data: pendingSuggestions, isLoading: suggestionsLoading } = usePendingEditSuggestions()
+  const { data: pendingActivities, isLoading: activitiesLoading } = usePendingDharmicActivities()
   const reviewTemple = useReviewTemple()
   const reviewStay = useReviewStay()
   const reviewSuggestion = useReviewEditSuggestion()
+  const reviewActivity = useReviewDharmicActivity()
   const [note, setNote] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<TempleEdits | null>(null)
 
-  if (templesLoading || staysLoading || suggestionsLoading) return <LoadingSpinner label="Loading queue…" />
+  if (templesLoading || staysLoading || suggestionsLoading || activitiesLoading)
+    return <LoadingSpinner label="Loading queue…" />
 
   const handleTempleDecision = (
     templeId: string,
@@ -74,6 +78,24 @@ export function ModeratorQueuePage() {
             status === 'approved' ? 'success' : 'info',
           ),
         onError: () => toast("Couldn't process that suggestion. Please try again.", 'error'),
+      },
+    )
+  }
+
+  const handleActivityDecision = (
+    activityId: string,
+    activityTitle: string,
+    status: 'approved' | 'rejected',
+  ) => {
+    reviewActivity.mutate(
+      { activityId, status, moderatorNote: note[activityId] },
+      {
+        onSuccess: () =>
+          toast(
+            status === 'approved' ? `${activityTitle} approved and published.` : `${activityTitle} rejected.`,
+            status === 'approved' ? 'success' : 'info',
+          ),
+        onError: () => toast(`Couldn't update ${activityTitle}. Please try again.`, 'error'),
       },
     )
   }
@@ -356,6 +378,69 @@ export function ModeratorQueuePage() {
                       variant="danger"
                       className="min-h-9 px-3 py-1 text-xs"
                       onClick={() => handleSuggestionDecision(suggestion, 'rejected')}
+                    >
+                      {strings.moderator.reject}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-charcoal-900">Pending Dharmic Activities</h2>
+        {!pendingActivities || pendingActivities.length === 0 ? (
+          <p className="text-sm text-charcoal-700/70">{strings.moderator.empty}</p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {pendingActivities.map((activity) => (
+              <div key={activity.id} className="rounded-xl border border-cream-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-saffron-500">
+                      {DHARMIC_ACTIVITY_TYPE_LABELS[activity.activity_type]}
+                    </span>
+                    <p className="font-semibold text-charcoal-900">{activity.title}</p>
+                    <p className="text-xs text-charcoal-700/70">
+                      {activity.temples?.name ?? activity.venue_name} — {activity.town}, {activity.state} ·{' '}
+                      {activity.activity_date}
+                      {activity.activity_time && ` ${activity.activity_time.slice(0, 5)}`}
+                    </p>
+                  </div>
+                  {activity.temple_id && (
+                    <Link
+                      to={`/temples/${activity.temple_id}`}
+                      className="text-xs font-semibold text-maroon-700 hover:underline"
+                    >
+                      View temple
+                    </Link>
+                  )}
+                </div>
+                {activity.description && (
+                  <p className="mt-2 text-sm text-charcoal-700/80">{activity.description}</p>
+                )}
+                <div className="mt-3 flex flex-col gap-2">
+                  <input
+                    type="text"
+                    placeholder={strings.moderator.feedbackPlaceholder}
+                    value={note[activity.id] ?? ''}
+                    onChange={(e) => setNote((prev) => ({ ...prev, [activity.id]: e.target.value }))}
+                    className="min-h-9 w-full max-w-sm rounded-md border border-stone-300 px-2 text-xs sm:w-56"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="primary"
+                      className="min-h-9 px-3 py-1 text-xs"
+                      onClick={() => handleActivityDecision(activity.id, activity.title, 'approved')}
+                    >
+                      {strings.moderator.approve}
+                    </Button>
+                    <Button
+                      variant="danger"
+                      className="min-h-9 px-3 py-1 text-xs"
+                      onClick={() => handleActivityDecision(activity.id, activity.title, 'rejected')}
                     >
                       {strings.moderator.reject}
                     </Button>

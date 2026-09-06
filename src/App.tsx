@@ -48,6 +48,15 @@ const PublicProfilePage = lazy(() =>
   import('./pages/PublicProfilePage').then((m) => ({ default: m.PublicProfilePage })),
 )
 const QuizPage = lazy(() => import('./pages/QuizPage').then((m) => ({ default: m.QuizPage })))
+const SamishtiSandhyaPage = lazy(() =>
+  import('./pages/SamishtiSandhyaPage').then((m) => ({ default: m.SamishtiSandhyaPage })),
+)
+const DharmicFeedPage = lazy(() =>
+  import('./pages/DharmicFeedPage').then((m) => ({ default: m.DharmicFeedPage })),
+)
+const AddDharmicActivityPage = lazy(() =>
+  import('./pages/AddDharmicActivityPage').then((m) => ({ default: m.AddDharmicActivityPage })),
+)
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
 
 function App() {
@@ -95,6 +104,16 @@ function App() {
           <Route path="/trip" element={<TripPlannerPage />} />
           <Route path="/contributors" element={<ContributorsPage />} />
           <Route path="/quiz" element={<QuizPage />} />
+          <Route path="/samishti-sandhyavandanam" element={<SamishtiSandhyaPage />} />
+          <Route path="/dharmic-feed" element={<DharmicFeedPage />} />
+          <Route
+            path="/dharmic-feed/add"
+            element={
+              <ProtectedRoute>
+                <AddDharmicActivityPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/u/:username" element={<PublicProfilePage />} />
           <Route
             path="/moderate"

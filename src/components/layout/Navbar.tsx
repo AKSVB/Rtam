@@ -73,6 +73,12 @@ function ExploreMenu() {
           <NavLink to="/quiz" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
             {strings.nav.quiz}
           </NavLink>
+          <NavLink to="/samishti-sandhyavandanam" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
+            {strings.nav.samishti}
+          </NavLink>
+          <NavLink to="/dharmic-feed" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
+            {strings.nav.dharmicFeed}
+          </NavLink>
         </div>
       )}
     </div>
@@ -186,6 +192,12 @@ export function Navbar() {
           </NavLink>
           <NavLink to="/quiz" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.quiz}
+          </NavLink>
+          <NavLink to="/samishti-sandhyavandanam" className={linkClasses} onClick={() => setMenuOpen(false)}>
+            {strings.nav.samishti}
+          </NavLink>
+          <NavLink to="/dharmic-feed" className={linkClasses} onClick={() => setMenuOpen(false)}>
+            {strings.nav.dharmicFeed}
           </NavLink>
           {profile && profile.role !== 'member' && (
             <NavLink to="/moderate" className={linkClasses} onClick={() => setMenuOpen(false)}>

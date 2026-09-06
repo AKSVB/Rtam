@@ -221,3 +221,51 @@ export type NewStayInput = Omit<
   TempleStay,
   'id' | 'submitted_by' | 'status' | 'moderator_note' | 'created_at' | 'updated_at'
 >
+
+export type DharmicActivityType =
+  | 'samishti_sandhyavandanam'
+  | 'pravachanam'
+  | 'anugraha_bhashanam'
+  | 'bhajan_utsavam'
+  | 'other'
+
+/**
+ * A Samishti Sandhyavandanam proposal (always at a listed temple), or a
+ * general dharmic-activities feed post (pravachanam, anugraha bhashanam,
+ * bhajan/utsavam...), which may cite a listed temple or a freeform venue.
+ * Every row carries its own latitude/longitude/state/town regardless of
+ * which, so the feed can be proximity-sorted without a join.
+ */
+export interface DharmicActivity {
+  id: string
+  activity_type: DharmicActivityType
+  title: string
+  speaker_name: string | null
+  temple_id: string | null
+  venue_name: string | null
+  latitude: number
+  longitude: number
+  state: string
+  town: string
+  activity_date: string
+  activity_time: string | null
+  description: string | null
+  source_url: string | null
+  submitted_by: string
+  status: SubmissionStatus
+  moderator_note: string | null
+  created_at: string
+  updated_at: string
+  temples?: Pick<Temple, 'name'> | null
+}
+
+export interface DharmicActivityVote {
+  activity_id: string
+  user_id: string
+  created_at: string
+}
+
+export type NewDharmicActivityInput = Omit<
+  DharmicActivity,
+  'id' | 'submitted_by' | 'status' | 'moderator_note' | 'created_at' | 'updated_at' | 'temples'
+>

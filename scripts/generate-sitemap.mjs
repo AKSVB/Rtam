@@ -35,6 +35,8 @@ const STATIC_URLS = [
   { loc: '/festivals', changefreq: 'weekly', priority: '0.6' },
   { loc: '/circuits', changefreq: 'weekly', priority: '0.6' },
   { loc: '/contributors', changefreq: 'daily', priority: '0.6' },
+  { loc: '/samishti-sandhyavandanam', changefreq: 'daily', priority: '0.6' },
+  { loc: '/dharmic-feed', changefreq: 'daily', priority: '0.6' },
   { loc: '/trip', changefreq: 'monthly', priority: '0.4' },
   { loc: '/signup', changefreq: 'monthly', priority: '0.3' },
 ]
