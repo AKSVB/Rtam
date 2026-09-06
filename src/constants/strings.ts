@@ -16,6 +16,7 @@ export const strings = {
     quiz: 'Temple Quiz',
     samishti: 'Samishti Sandhyavandanam',
     dharmicFeed: 'Dharmic Activities Feed',
+    dharmaWall: 'Dharma Wall',
     tripPlanner: 'Trip Planner',
     moderatorQueue: 'Moderator Queue',
     adminUsers: 'Manage Users',
@@ -113,7 +114,7 @@ export const strings = {
     points: 'points',
     templesAdded: 'temples added',
     howPointsWork:
-      'Points are awarded automatically: 25 for each temple accepted, 15 for an accepted Samishti Sandhyavandanam proposal, 10 for an accepted edit, 8 for another accepted dharmic activity post, 5 per photo, 3 per review, 1 per live status check-in.',
+      'Points are awarded automatically: 25 for each temple accepted, 15 for an accepted Samishti Sandhyavandanam proposal, 10 for an accepted edit, 8 for another accepted dharmic activity post, 5 per photo (temple or Dharma Wall), 3 per review, 1 per live status check-in.',
     joinedPrompt: 'Add a temple nobody has listed yet',
   },
 

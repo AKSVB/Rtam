@@ -79,6 +79,9 @@ function ExploreMenu() {
           <NavLink to="/dharmic-feed" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
             {strings.nav.dharmicFeed}
           </NavLink>
+          <NavLink to="/dharma-wall" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
+            {strings.nav.dharmaWall}
+          </NavLink>
         </div>
       )}
     </div>
@@ -198,6 +201,9 @@ export function Navbar() {
           </NavLink>
           <NavLink to="/dharmic-feed" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.dharmicFeed}
+          </NavLink>
+          <NavLink to="/dharma-wall" className={linkClasses} onClick={() => setMenuOpen(false)}>
+            {strings.nav.dharmaWall}
           </NavLink>
           {profile && profile.role !== 'member' && (
             <NavLink to="/moderate" className={linkClasses} onClick={() => setMenuOpen(false)}>

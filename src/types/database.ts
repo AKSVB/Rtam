@@ -269,3 +269,31 @@ export type NewDharmicActivityInput = Omit<
   DharmicActivity,
   'id' | 'submitted_by' | 'status' | 'moderator_note' | 'created_at' | 'updated_at' | 'temples'
 >
+
+/** A photo shared to the Dharma Wall — published immediately, no moderation queue, same as TempleReview. */
+export interface CommunityPost {
+  id: string
+  user_id: string
+  image_url: string
+  caption: string | null
+  temple_id: string | null
+  activity_id: string | null
+  created_at: string
+  user_profiles?: Pick<UserProfile, 'display_name' | 'username' | 'avatar_url'>
+  temples?: Pick<Temple, 'name'> | null
+}
+
+export interface CommunityPostLike {
+  post_id: string
+  user_id: string
+  created_at: string
+}
+
+export interface CommunityPostComment {
+  id: string
+  post_id: string
+  user_id: string
+  comment: string
+  created_at: string
+  user_profiles?: Pick<UserProfile, 'display_name' | 'username' | 'avatar_url'>
+}

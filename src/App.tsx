@@ -57,6 +57,8 @@ const DharmicFeedPage = lazy(() =>
 const AddDharmicActivityPage = lazy(() =>
   import('./pages/AddDharmicActivityPage').then((m) => ({ default: m.AddDharmicActivityPage })),
 )
+const DharmaWallPage = lazy(() => import('./pages/DharmaWallPage').then((m) => ({ default: m.DharmaWallPage })))
+const PostDetailPage = lazy(() => import('./pages/PostDetailPage').then((m) => ({ default: m.PostDetailPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
 
 function App() {
@@ -114,6 +116,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/dharma-wall" element={<DharmaWallPage />} />
+          <Route path="/dharma-wall/:id" element={<PostDetailPage />} />
           <Route path="/u/:username" element={<PublicProfilePage />} />
           <Route
             path="/moderate"
