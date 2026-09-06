@@ -77,6 +77,7 @@ export const SIGNIFICANCE_TAGS = [
   'Nava Narasimha',
   'Chota Char Dham',
   'Saptha Sthana Mylapore',
+  'Malai Nadu Divya Desam',
 ] as const
 
 export const SANDHYA_HELP =

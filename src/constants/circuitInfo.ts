@@ -110,6 +110,11 @@ export const CIRCUIT_INFO: Record<string, CircuitInfo> = {
       'Seven Shiva temples in and around Mylapore, Chennai, traditionally said to have been worshipped by the Saptarishis (seven sages) — six small neighbourhood shrines plus the much larger Kapaleeshwarar Temple.',
     expectedCount: 7,
   },
+  'Malai Nadu Divya Desam': {
+    blurb:
+      'Thirteen of the 108 Divya Desams (Vishnu shrines glorified by the Alvar poet-saints) located in and around Kerala, two of them just across the border in today\'s Kanyakumari district, Tamil Nadu.',
+    expectedCount: 13,
+  },
 }
 
 export const DEFAULT_CIRCUIT_BLURB =
