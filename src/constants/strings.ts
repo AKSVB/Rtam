@@ -12,6 +12,7 @@ export const strings = {
     addTemple: 'Add a Temple',
     festivals: 'Festivals',
     circuits: 'Circuits',
+    explore: 'Explore',
     tripPlanner: 'Trip Planner',
     moderatorQueue: 'Moderator Queue',
     adminUsers: 'Manage Users',
