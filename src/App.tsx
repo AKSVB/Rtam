@@ -47,6 +47,7 @@ const CircuitDetailPage = lazy(() =>
 const PublicProfilePage = lazy(() =>
   import('./pages/PublicProfilePage').then((m) => ({ default: m.PublicProfilePage })),
 )
+const QuizPage = lazy(() => import('./pages/QuizPage').then((m) => ({ default: m.QuizPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
 
 function App() {
@@ -93,6 +94,7 @@ function App() {
           <Route path="/circuits/:tag" element={<CircuitDetailPage />} />
           <Route path="/trip" element={<TripPlannerPage />} />
           <Route path="/contributors" element={<ContributorsPage />} />
+          <Route path="/quiz" element={<QuizPage />} />
           <Route path="/u/:username" element={<PublicProfilePage />} />
           <Route
             path="/moderate"

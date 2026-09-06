@@ -70,6 +70,9 @@ function ExploreMenu() {
           <NavLink to="/contributors" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
             {strings.nav.contributors}
           </NavLink>
+          <NavLink to="/quiz" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
+            {strings.nav.quiz}
+          </NavLink>
         </div>
       )}
     </div>
@@ -180,6 +183,9 @@ export function Navbar() {
           </NavLink>
           <NavLink to="/contributors" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.contributors}
+          </NavLink>
+          <NavLink to="/quiz" className={linkClasses} onClick={() => setMenuOpen(false)}>
+            {strings.nav.quiz}
           </NavLink>
           {profile && profile.role !== 'member' && (
             <NavLink to="/moderate" className={linkClasses} onClick={() => setMenuOpen(false)}>

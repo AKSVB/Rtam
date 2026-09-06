@@ -13,6 +13,7 @@ export const strings = {
     festivals: 'Festivals',
     circuits: 'Circuits',
     explore: 'Explore',
+    quiz: 'Temple Quiz',
     tripPlanner: 'Trip Planner',
     moderatorQueue: 'Moderator Queue',
     adminUsers: 'Manage Users',
@@ -132,5 +133,25 @@ export const strings = {
     incomplete: 'temples listed so far',
     notFound: "We don't have a circuit by that name yet.",
     backToCircuits: '← All circuits',
+  },
+
+  quiz: {
+    title: 'Temple Quiz',
+    subtitle: "Guess the temple from its photo — a new round every time you play.",
+    question: 'Which temple is this?',
+    correct: 'Correct!',
+    incorrect: 'Not quite — this is',
+    nextQuestion: 'Next question',
+    seeResults: 'See results',
+    playAgain: 'Play again',
+    notEnoughTemples: 'Not enough photographed temples yet to run a quiz — check back soon.',
+    resultsMessage: (score: number, total: number) =>
+      score === total
+        ? 'Perfect score! You know your temples.'
+        : score >= total * 0.7
+          ? "Great run — you know your temples well."
+          : score >= total * 0.4
+            ? 'Not bad — browse a few circuits and try again.'
+            : 'Room to grow — explore the temple pages and come back for another round.',
   },
 } as const
