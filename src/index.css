@@ -139,17 +139,17 @@ button {
    the real work here; the animations are a bonus that switches off
    entirely for anyone who has asked their OS for reduced motion.
 
-   The muggu grid is drawn as an SVG tile: four twisted comma-shaped
-   petals pinwheeling out from each dot to the midpoint of its four
-   neighbours, so the repeat forms a trellis of small spinning flower
-   knots meeting tip-to-tip — closer to a real melikala ("twisted-loop")
-   muggu than a plain lattice weave. Used as a CSS mask (not a
-   background-image) so it can still be tinted and faded purely through
-   the element's text-color utility, matching the rest of this file's
-   currentColor-driven motifs. */
+   The muggu grid is drawn as an SVG tile: from each dot, four thin loops
+   reach out to the tile's four corners — the shared diagonal neighbours —
+   so the repeat forms a diagonal diamond lattice of crossing loops
+   meeting at every dot, the way a real melikala/chukkala muggu is
+   threaded around a diamond-oriented pulli grid, rather than an
+   orthogonal weave. Used as a CSS mask (not a background-image) so it
+   can still be tinted and faded purely through the element's text-color
+   utility, matching the rest of this file's currentColor-driven motifs. */
 
 .ambient-muggu {
-  --muggu-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M24,24 C34,18 36,8 24,0 C18,10 16,18 24,24 Z M24,24 C30,34 40,36 48,24 C38,18 30,16 24,24 Z M24,24 C14,30 12,40 24,48 C30,38 32,30 24,24 Z M24,24 C18,14 8,12 0,24 C10,30 18,32 24,24 Z' fill='black'/%3E%3C/svg%3E");
+  --muggu-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cg fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M24,24 Q41.7,30.3 48,48 Q30.3,41.7 24,24'/%3E%3Cpath d='M24,24 Q17.7,6.3 0,0 Q6.3,17.7 24,24'/%3E%3Cpath d='M24,24 Q41.7,17.7 48,0 Q30.3,6.3 24,24'/%3E%3Cpath d='M24,24 Q17.7,41.7 0,48 Q6.3,30.3 24,24'/%3E%3C/g%3E%3Ccircle cx='24' cy='24' r='1.8' fill='black'/%3E%3Ccircle cx='0' cy='0' r='1.4' fill='black'/%3E%3Ccircle cx='48' cy='0' r='1.4' fill='black'/%3E%3Ccircle cx='0' cy='48' r='1.4' fill='black'/%3E%3Ccircle cx='48' cy='48' r='1.4' fill='black'/%3E%3C/svg%3E");
   -webkit-mask-image: var(--muggu-tile);
   mask-image: var(--muggu-tile);
   -webkit-mask-repeat: repeat;
