@@ -34,7 +34,10 @@ async function fetchPostsPage(page: number, userId: string | undefined): Promise
   const [{ data, error, count }, likeCounts, myLikedIds] = await Promise.all([
     supabase
       .from('community_posts')
-      .select('*, user_profiles(display_name, username, avatar_url), temples(name)', { count: 'exact' })
+      .select(
+        '*, user_profiles!community_posts_user_id_fkey(display_name, username, avatar_url), temples(name)',
+        { count: 'exact' },
+      )
       .order('created_at', { ascending: false })
       .range(from, to),
     fetchLikeCounts(),
@@ -67,7 +70,7 @@ export function useCommunityPost(postId: string | undefined) {
     queryFn: async (): Promise<CommunityPost> => {
       const { data, error } = await supabase
         .from('community_posts')
-        .select('*, user_profiles(display_name, username, avatar_url), temples(name)')
+        .select('*, user_profiles!community_posts_user_id_fkey(display_name, username, avatar_url), temples(name)')
         .eq('id', postId)
         .single()
       if (error) throw error
