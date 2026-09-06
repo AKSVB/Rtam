@@ -1,9 +1,10 @@
-// A fixed, whole-site decorative layer: the kolam weave drifting almost
-// imperceptibly, plus a sparse rise of gold motes evoking diya light or
-// incense smoke. Deliberately abstract rather than figurative — moving
-// deity imagery as generic wallpaper would read as kitsch rather than
-// as decoration. See the "Ambient background" section of src/index.css
-// for the animations and the site's broader decorative-motif conventions.
+// A fixed, whole-site decorative layer: a melikala-muggu-style looped
+// rangoli grid drifting almost imperceptibly, plus a sparse rise of gold
+// motes evoking diya light or incense smoke. Deliberately abstract rather
+// than figurative — moving deity imagery as generic wallpaper would read
+// as kitsch rather than as decoration. See the "Ambient background"
+// section of src/index.css for the animations and the site's broader
+// decorative-motif conventions.
 //
 import type { CSSProperties } from 'react'
 
@@ -26,7 +27,7 @@ const MOTES = [
 export function AmbientBackground() {
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
-      <div className="ambient-kolam absolute inset-0 text-gold-500/[0.05]" />
+      <div className="ambient-muggu absolute inset-0 text-gold-500/[0.09]" />
       {MOTES.map((mote, i) => (
         <span
           key={i}

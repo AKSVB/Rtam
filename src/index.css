@@ -130,28 +130,44 @@ button {
 }
 
 /* ── Ambient background ──────────────────────────────────────────────
-   A site-wide, fixed decorative layer: the kolam weave drifting almost
-   imperceptibly, plus a sparse handful of gold motes rising like diya
-   light or incense smoke. Deliberately abstract (no figurative deity
-   imagery — that would read as kitsch, or as trivialising sacred
-   imagery, painted on as generic wallpaper) and kept faint enough to
-   never compete with foreground text. Opacity does the real work here;
-   the animations are a bonus that switches off entirely for anyone who
-   has asked their OS for reduced motion. */
+   A site-wide, fixed decorative layer: a melikala-muggu-style looped
+   rangoli grid drifting almost imperceptibly, plus a sparse handful of
+   gold motes rising like diya light or incense smoke. Deliberately
+   abstract (no figurative deity imagery — that would read as kitsch, or
+   as trivialising sacred imagery, painted on as generic wallpaper) and
+   kept faint enough to never compete with foreground text. Opacity does
+   the real work here; the animations are a bonus that switches off
+   entirely for anyone who has asked their OS for reduced motion.
 
-.ambient-kolam {
-  background-image:
-    repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 1px, transparent 22px),
-    repeating-linear-gradient(-45deg, currentColor 0, currentColor 1px, transparent 1px, transparent 22px);
-  background-position: 0 0;
+   The muggu grid is drawn as an SVG tile — a dot with a looped petal
+   reaching to its right and bottom neighbour, so the repeated tile forms
+   a continuous grid of interlocking loops around every dot, the way a
+   real chukkala/melikala muggu is threaded around a pulli grid — used as
+   a CSS mask (not a background-image) so it can still be tinted and
+   faded purely through the element's text-color utility, matching the
+   rest of this file's currentColor-driven motifs. */
+
+.ambient-muggu {
+  --muggu-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0,0 Q20,-10 40,0 Q20,10 0,0 M0,0 Q-10,20 0,40 Q10,20 0,0' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round'/%3E%3Ccircle cx='0' cy='0' r='1.6' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-image: var(--muggu-tile);
+  mask-image: var(--muggu-tile);
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  -webkit-mask-size: 40px 40px;
+  mask-size: 40px 40px;
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+  background-color: currentColor;
 }
 
-@keyframes kolam-drift {
+@keyframes muggu-drift {
   from {
-    background-position: 0 0;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
   }
   to {
-    background-position: 220px 220px;
+    -webkit-mask-position: 40px 40px;
+    mask-position: 40px 40px;
   }
 }
 
@@ -184,8 +200,8 @@ button {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .ambient-kolam {
-    animation: kolam-drift 90s linear infinite;
+  .ambient-muggu {
+    animation: muggu-drift 90s linear infinite;
   }
   .ambient-mote {
     animation: mote-rise var(--mote-duration, 18s) ease-in var(--mote-delay, 0s) infinite;
