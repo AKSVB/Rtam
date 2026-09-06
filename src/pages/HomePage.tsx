@@ -4,6 +4,7 @@ import {
   useCircuitSpotlight,
   useRecentlyAddedTemples,
   useTemples,
+  useTemplesForMap,
   useTemplesNearLocation,
   useTempleStates,
   type TempleFilters,
@@ -136,6 +137,13 @@ export function HomePage() {
   const temples = openNow
     ? templesRaw?.filter((t) => getOpenStatus(t, nowIstMinutes) === 'open')
     : templesRaw
+
+  // The map needs every matching temple at once, not just the pages the
+  // list view has paged through so far — see useTemplesForMap.
+  const { data: mapTemplesRaw, isLoading: mapLoading } = useTemplesForMap(filters, view === 'map')
+  const mapTemples = openNow
+    ? mapTemplesRaw?.filter((t) => getOpenStatus(t, nowIstMinutes) === 'open')
+    : mapTemplesRaw
   const { data: states } = useTempleStates()
   const { data: covers } = useTemplePhotoCovers()
   const { data: stats } = useSiteStats()
@@ -446,16 +454,24 @@ export function HomePage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {view === 'map' ? (
+        mapLoading ? (
+          <LoadingSpinner label="Loading map…" />
+        ) : !mapTemples || mapTemples.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-cream-200 bg-white p-8 text-center text-charcoal-700/70">
+            {strings.search.noResults}
+          </p>
+        ) : (
+          <Suspense fallback={<LoadingSpinner label="Loading map…" />}>
+            <TempleMap temples={mapTemples} />
+          </Suspense>
+        )
+      ) : isLoading ? (
         <LoadingSpinner label="Loading temples…" />
       ) : !temples || temples.length === 0 ? (
         <p className="rounded-xl border border-dashed border-cream-200 bg-white p-8 text-center text-charcoal-700/70">
           {strings.search.noResults}
         </p>
-      ) : view === 'map' ? (
-        <Suspense fallback={<LoadingSpinner label="Loading map…" />}>
-          <TempleMap temples={temples} />
-        </Suspense>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {temples.map((temple) => (
@@ -464,7 +480,7 @@ export function HomePage() {
         </div>
       )}
 
-      {hasNextPage && !isLoading && (
+      {view === 'list' && hasNextPage && !isLoading && (
         <div className="flex justify-center">
           <Button variant="secondary" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
             {isFetchingNextPage ? 'Loading more…' : 'Load more temples'}

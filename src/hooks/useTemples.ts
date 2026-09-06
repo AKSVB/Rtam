@@ -76,6 +76,27 @@ export function useTemples(filters: TempleFilters) {
   })
 }
 
+// The map view needs every matching temple plotted at once — unlike the
+// list, which only needs one page at a time — so this bypasses useTemples'
+// pagination and fetches the full matching set in a single query. A cap
+// well above the current directory size guards against an unbounded
+// result if the temple count grows much larger without this being revisited.
+const MAP_QUERY_LIMIT = 5000
+
+export function useTemplesForMap(filters: TempleFilters, enabled = true) {
+  return useQuery({
+    queryKey: ['temples-for-map', filters],
+    queryFn: async (): Promise<Temple[]> => {
+      const { data, error } = await buildTempleQuery(filters)
+        .order('name', { ascending: true })
+        .limit(MAP_QUERY_LIMIT)
+      if (error) throw error
+      return data ?? []
+    },
+    enabled,
+  })
+}
+
 export function useTempleStates() {
   return useQuery({
     queryKey: ['temple-states'],
