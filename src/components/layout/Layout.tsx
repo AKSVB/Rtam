@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 import { PanchangBar } from './PanchangBar'
+import { AmbientBackground } from './AmbientBackground'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 
@@ -18,6 +19,7 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-cream-50">
+      <AmbientBackground />
       <PanchangBar />
       <Navbar />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
