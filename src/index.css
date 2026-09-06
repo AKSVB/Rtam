@@ -139,22 +139,23 @@ button {
    the real work here; the animations are a bonus that switches off
    entirely for anyone who has asked their OS for reduced motion.
 
-   The muggu grid is drawn as an SVG tile — a dot with a looped petal
-   reaching to its right and bottom neighbour, so the repeated tile forms
-   a continuous grid of interlocking loops around every dot, the way a
-   real chukkala/melikala muggu is threaded around a pulli grid — used as
-   a CSS mask (not a background-image) so it can still be tinted and
-   faded purely through the element's text-color utility, matching the
-   rest of this file's currentColor-driven motifs. */
+   The muggu grid is drawn as an SVG tile: four twisted comma-shaped
+   petals pinwheeling out from each dot to the midpoint of its four
+   neighbours, so the repeat forms a trellis of small spinning flower
+   knots meeting tip-to-tip — closer to a real melikala ("twisted-loop")
+   muggu than a plain lattice weave. Used as a CSS mask (not a
+   background-image) so it can still be tinted and faded purely through
+   the element's text-color utility, matching the rest of this file's
+   currentColor-driven motifs. */
 
 .ambient-muggu {
-  --muggu-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0,0 Q20,-10 40,0 Q20,10 0,0 M0,0 Q-10,20 0,40 Q10,20 0,0' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round'/%3E%3Ccircle cx='0' cy='0' r='1.6' fill='black'/%3E%3C/svg%3E");
+  --muggu-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M24,24 C34,18 36,8 24,0 C18,10 16,18 24,24 Z M24,24 C30,34 40,36 48,24 C38,18 30,16 24,24 Z M24,24 C14,30 12,40 24,48 C30,38 32,30 24,24 Z M24,24 C18,14 8,12 0,24 C10,30 18,32 24,24 Z' fill='black'/%3E%3C/svg%3E");
   -webkit-mask-image: var(--muggu-tile);
   mask-image: var(--muggu-tile);
   -webkit-mask-repeat: repeat;
   mask-repeat: repeat;
-  -webkit-mask-size: 40px 40px;
-  mask-size: 40px 40px;
+  -webkit-mask-size: 48px 48px;
+  mask-size: 48px 48px;
   -webkit-mask-position: 0 0;
   mask-position: 0 0;
   background-color: currentColor;
@@ -166,8 +167,8 @@ button {
     mask-position: 0 0;
   }
   to {
-    -webkit-mask-position: 40px 40px;
-    mask-position: 40px 40px;
+    -webkit-mask-position: 48px 48px;
+    mask-position: 48px 48px;
   }
 }
 
