@@ -11,7 +11,42 @@ const JPEG_QUALITY = 0.82
 // re-encode — skip them rather than risk making them larger.
 const SKIP_BELOW_BYTES = 300 * 1024
 
+// Anything but a fresh iPhone camera shot is a decent chance of being HEIC —
+// the format iOS has saved photos in by default since 2017. No browser but
+// Safari can decode HEIC into a <canvas> or even show it in a plain <img>,
+// so left alone, uploading one of these "older" photos would silently
+// "succeed" (the bytes reach storage fine) while rendering as a broken
+// image everywhere, including for the person who just posted it — which is
+// indistinguishable from the upload having failed. Converting to JPEG
+// first, before the resize step below, is what actually fixes that.
+function isHeic(file: File): boolean {
+  const type = file.type.toLowerCase()
+  if (type === 'image/heic' || type === 'image/heif') return true
+  // Some browsers report HEIC files with an empty or generic MIME type
+  // (e.g. iOS Safari in some contexts), so fall back to the extension.
+  return /\.hei[cf]$/i.test(file.name)
+}
+
+async function convertHeicToJpeg(file: File): Promise<File> {
+  const heic2any = (await import('heic2any')).default
+  const result = await heic2any({ blob: file, toType: 'image/jpeg', quality: JPEG_QUALITY })
+  const blob = Array.isArray(result) ? result[0] : result
+  const newName = file.name.replace(/\.[^.]+$/, '') + '.jpg'
+  return new File([blob], newName, { type: 'image/jpeg' })
+}
+
 export async function compressImageForUpload(file: File, maxDimension: number = MAX_DIMENSION): Promise<File> {
+  if (isHeic(file)) {
+    try {
+      file = await convertHeicToJpeg(file)
+    } catch {
+      // Conversion failed, so we're back to an undisplayable file — but
+      // that's the same outcome as before this existed. Still upload it
+      // rather than block the post entirely over a best-effort conversion.
+      return file
+    }
+  }
+
   if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
     return file
   }

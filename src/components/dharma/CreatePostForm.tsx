@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { useCreateCommunityPost } from '../../hooks/useCommunityPosts'
+import { compressImageForUpload } from '../../lib/imageCompression'
 import { TemplePicker } from '../common/TemplePicker'
 import { TextArea } from '../common/FormField'
 import { Button } from '../common/Button'
@@ -14,6 +15,7 @@ export function CreatePostForm() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  const [processing, setProcessing] = useState(false)
   const [caption, setCaption] = useState('')
   const [temple, setTemple] = useState<Temple | null>(null)
 
@@ -25,16 +27,38 @@ export function CreatePostForm() {
     )
   }
 
-  const chooseFile = (f: File | null) => {
-    setFile(f)
+  const setPreviewFor = (f: File | null) => {
     setPreview((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return f ? URL.createObjectURL(f) : null
     })
   }
 
+  // Normalises (and, for HEIC, converts) the photo right when it's picked —
+  // not just at submit time — so the preview itself is guaranteed to
+  // display. An unconverted HEIC photo (the default format for anything
+  // but a fresh iPhone camera shot) would otherwise show as a broken image
+  // immediately, which reads as "the upload is broken" well before anyone
+  // reaches the Post button.
+  const chooseFile = async (picked: File | null) => {
+    if (!picked) {
+      setFile(null)
+      setPreviewFor(null)
+      return
+    }
+    setProcessing(true)
+    try {
+      const normalized = await compressImageForUpload(picked)
+      setFile(normalized)
+      setPreviewFor(normalized)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   const reset = () => {
-    chooseFile(null)
+    setFile(null)
+    setPreviewFor(null)
     setCaption('')
     setTemple(null)
   }
@@ -52,7 +76,11 @@ export function CreatePostForm() {
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-cream-200 bg-white p-4">
-      {preview ? (
+      {processing ? (
+        <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-cream-200 py-8 text-sm font-semibold text-charcoal-700/70">
+          Processing photo…
+        </div>
+      ) : preview ? (
         <div className="relative">
           <img src={preview} alt="Preview" className="max-h-72 w-full rounded-lg object-cover" />
           <button
@@ -77,9 +105,13 @@ export function CreatePostForm() {
         type="file"
         accept="image/*"
         hidden
-        onChange={(e) => chooseFile(e.target.files?.[0] ?? null)}
+        onChange={(e) => {
+          const picked = e.target.files?.[0] ?? null
+          e.target.value = ''
+          chooseFile(picked)
+        }}
       />
-      {file && (
+      {file && !processing && (
         <>
           <TextArea
             placeholder="Say something about it (optional)…"
