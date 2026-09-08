@@ -21,6 +21,21 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://rtamtemples.com/samishti-sandhyavandanam</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/dharmic-feed</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rtamtemples.com/dharma-wall</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://rtamtemples.com/trip</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
