@@ -5,37 +5,143 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 // Ṛtam's palette, as literal hex — this file can't reach into Tailwind's
 // CSS custom properties, so the values are copied from src/index.css and
 // must be kept in sync by hand if that palette ever changes.
-const GOLD = 0xd4af37
 const GOLD_LIGHT = 0xe6c778
-const MAROON = 0x7a1f2b
-const VERMILION = 0xe2572b
-const PEACOCK = 0x1f7a6c
-const TURMERIC = 0xf6c945
 const CREAM = 0xfdfbf7
 
-/** One flattened diamond "petal" shape, used to build the lotus ring via InstancedMesh. */
-function petalGeometry() {
-  const shape = new THREE.Shape()
-  shape.moveTo(0, 0)
-  shape.quadraticCurveTo(0.35, 0.55, 0, 1.15)
-  shape.quadraticCurveTo(-0.35, 0.55, 0, 0)
-  return new THREE.ExtrudeGeometry(shape, { depth: 0.04, bevelEnabled: false })
+// Ashima Arts / Stefan Gustavson's classic 3D simplex noise (MIT-licensed,
+// the standard GLSL implementation used across WebGL shader work) — drives
+// both the surface turbulence (vertex shader) and the granulation pattern
+// (fragment shader) of the plasma core below.
+const SNOISE_GLSL = /* glsl */ `
+vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+float snoise(vec3 v){
+  const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+  vec3 i  = floor(v + dot(v, C.yyy));
+  vec3 x0 = v - i + dot(i, C.xxx);
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min(g.xyz, l.zxy);
+  vec3 i2 = max(g.xyz, l.zxy);
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy;
+  vec3 x3 = x0 - D.yyy;
+  i = mod289(i);
+  vec4 p = permute(permute(permute(
+            i.z + vec4(0.0, i1.z, i2.z, 1.0))
+          + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+          + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+  float n_ = 0.142857142857;
+  vec3 ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_);
+  vec4 x = x_ * ns.x + ns.yyyy;
+  vec4 y = y_ * ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+  vec3 p0 = vec3(a0.xy, h.x);
+  vec3 p1 = vec3(a0.zw, h.y);
+  vec3 p2 = vec3(a1.xy, h.z);
+  vec3 p3 = vec3(a1.zw, h.w);
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+  p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
 }
+`
+
+const PLASMA_VERTEX = /* glsl */ `
+  uniform float uTime;
+  uniform float uPulse;
+  varying vec3 vNormal;
+  varying vec3 vViewPos;
+  varying float vNoise;
+  ${SNOISE_GLSL}
+  void main() {
+    float n = snoise(normal * 2.1 + uTime * 0.12);
+    float fine = snoise(normal * 5.5 - uTime * 0.25) * 0.4;
+    vNoise = n + fine;
+    float displacement = vNoise * 0.085 + uPulse * 0.05;
+    vec3 displaced = position + normal * displacement;
+    vNormal = normalize(normalMatrix * normal);
+    vec4 mv = modelViewMatrix * vec4(displaced, 1.0);
+    vViewPos = mv.xyz;
+    gl_Position = projectionMatrix * mv;
+  }
+`
+
+const PLASMA_FRAGMENT = /* glsl */ `
+  uniform float uPulse;
+  varying vec3 vNormal;
+  varying vec3 vViewPos;
+  varying float vNoise;
+  void main() {
+    vec3 viewDir = normalize(-vViewPos);
+    float fresnel = pow(1.0 - max(dot(normalize(vNormal), viewDir), 0.0), 2.1);
+
+    vec3 deep = vec3(0.62, 0.13, 0.09);
+    vec3 mid = vec3(0.93, 0.60, 0.12);
+    vec3 bright = vec3(1.0, 0.95, 0.78);
+
+    float t = clamp(vNoise * 0.5 + 0.55, 0.0, 1.0);
+    vec3 color = mix(deep, mid, t);
+    color = mix(color, bright, pow(fresnel, 1.4));
+    color += bright * fresnel * (0.7 + uPulse * 0.5);
+    color += bright * 0.12 * uPulse;
+
+    gl_FragColor = vec4(color, 1.0);
+  }
+`
+
+const GLOW_VERTEX = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vViewPos;
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vViewPos = mv.xyz;
+    gl_Position = projectionMatrix * mv;
+  }
+`
+
+const GLOW_FRAGMENT = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uPower;
+  uniform float uIntensity;
+  varying vec3 vNormal;
+  varying vec3 vViewPos;
+  void main() {
+    vec3 viewDir = normalize(-vViewPos);
+    float fresnel = pow(1.0 - max(dot(normalize(vNormal), viewDir), 0.0), uPower);
+    gl_FragColor = vec4(uColor, fresnel * uIntensity);
+  }
+`
 
 /**
- * An interactive, genuinely-3D "Surya Mandala" — an armillary-sphere-like
- * arrangement of tilted, crossing rings around a glowing sun core, with an
- * orbiting lotus-petal ring and a starfield behind it. Built in raw
- * Three.js (no React Three Fiber: its peer-dependency range doesn't yet
- * cover React 19.3, and this is a single self-contained scene that doesn't
- * benefit much from a declarative wrapper).
+ * A "ball of illuminating solar radiation" — Savitṛ, the pre-dawn light
+ * of the Gayatri Mantra (Rigveda 3.62.10), rendered as a genuinely
+ * volumetric object rather than a flat motif: a plasma-shader sphere
+ * whose surface is displaced and coloured by 3D simplex noise (so its
+ * turbulence is real geometry, not a texture), wrapped in two additive
+ * fresnel-glow shells for corona, with small flare tongues that rise and
+ * fall off its surface and a breathing overall pulse.
  *
- * The camera — not the object — is what orbits: drag rotates all the way
- * around the sphere of rings, scroll/pinch dollies in and out, and it
- * auto-rotates slowly when idle so the 3D depth reads even without input.
- * Degrades to a single static (but still drag-orbitable) frame under
- * prefers-reduced-motion, and reports failure so the caller can fall back
- * to the plain photo hero if WebGL isn't available at all.
+ * OrbitControls drives the camera fully around it in 3D. Built in raw
+ * Three.js (no React Three Fiber: its peer-dependency range doesn't yet
+ * cover React 19.3). Degrades to a single static (but still orbitable)
+ * frame under prefers-reduced-motion, and reports failure so the caller
+ * can fall back to the plain photo hero if WebGL isn't available at all.
  */
 export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -56,11 +162,8 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     const isNarrow = container.clientWidth < 480
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100)
-    // An elevated 3/4 angle rather than head-on — this is what makes the
-    // rings read immediately as tilted circles in space rather than flat
-    // ellipses painted on a backdrop.
-    camera.position.set(5.5, 3.2, 8.5)
+    const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100)
+    camera.position.set(3.6, 1.8, 5.6)
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setClearColor(0x000000, 0)
@@ -69,111 +172,103 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
 
-    // ── Orbit controls — the camera, not the object, is what the user
-    // drags around, which is what actually sells the "3D" of it. ─────────
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.target.set(0, 0, 0)
     controls.enablePan = false
-    controls.minDistance = 5
-    controls.maxDistance = 15
-    controls.minPolarAngle = Math.PI * 0.12
+    controls.minDistance = 3.2
+    controls.maxDistance = 9
+    controls.minPolarAngle = Math.PI * 0.15
     controls.maxPolarAngle = Math.PI * 0.85
     controls.enableDamping = !prefersReducedMotion
     controls.dampingFactor = 0.08
     controls.autoRotate = !prefersReducedMotion
-    controls.autoRotateSpeed = 0.7
+    controls.autoRotateSpeed = 0.5
     controls.update()
 
-    // ── Lighting ────────────────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(CREAM, 0.55))
-    const sunLight = new THREE.PointLight(GOLD_LIGHT, 70, 40, 2)
-    sunLight.position.set(0, 0, 0)
-    scene.add(sunLight)
-    const rimLight = new THREE.DirectionalLight(VERMILION, 0.4)
-    rimLight.position.set(-6, 4, -4)
-    scene.add(rimLight)
+    scene.add(new THREE.AmbientLight(CREAM, 0.3))
 
-    const mandala = new THREE.Group()
-    scene.add(mandala)
+    const core = new THREE.Group()
+    scene.add(core)
 
-    // ── Sun core ────────────────────────────────────────────────────────
-    const core = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(0.85, 2),
-      new THREE.MeshStandardMaterial({
-        color: TURMERIC,
-        emissive: GOLD,
-        emissiveIntensity: 1.4,
-        roughness: 0.35,
-        metalness: 0.2,
+    // ── Plasma sphere — the light itself, not a symbol of it ─────────────
+    const coreRadius = 1.3
+    const plasmaUniforms = { uTime: { value: 0 }, uPulse: { value: 0 } }
+    const plasma = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(coreRadius, isNarrow ? 3 : 4),
+      new THREE.ShaderMaterial({
+        uniforms: plasmaUniforms,
+        vertexShader: PLASMA_VERTEX,
+        fragmentShader: PLASMA_FRAGMENT,
       }),
     )
-    mandala.add(core)
+    core.add(plasma)
 
-    const coreGlow = new THREE.Mesh(
-      new THREE.SphereGeometry(1.15, 24, 24),
-      new THREE.MeshBasicMaterial({ color: GOLD_LIGHT, transparent: true, opacity: 0.22 }),
+    // ── Corona: two additive fresnel-glow shells, breathing slightly out
+    // of phase with each other and the core. ──────────────────────────────
+    const innerGlowUniforms = { uColor: { value: new THREE.Color(0xf6c945) }, uPower: { value: 1.6 }, uIntensity: { value: 1.1 } }
+    const innerGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(coreRadius * 1.28, 48, 48),
+      new THREE.ShaderMaterial({
+        uniforms: innerGlowUniforms,
+        vertexShader: GLOW_VERTEX,
+        fragmentShader: GLOW_FRAGMENT,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.FrontSide,
+      }),
     )
-    mandala.add(coreGlow)
+    core.add(innerGlow)
 
-    // ── Concentric rings — an armillary sphere: each tilted on TWO axes
-    // and offset in depth, so from any orbit angle they visibly cross and
-    // overlap rather than nesting flat inside each other. ────────────────
-    const ringConfigs = [
-      { radius: 1.9, tube: 0.032, color: GOLD, rotX: 0.35, rotY: 0.15, y: 0, speed: 0.11 },
-      { radius: 2.6, tube: 0.026, color: VERMILION, rotX: -0.6, rotY: 0.7, y: 0.08, speed: -0.075 },
-      { radius: 3.3, tube: 0.022, color: PEACOCK, rotX: 1.05, rotY: -0.35, y: -0.12, speed: 0.055 },
-      { radius: 4.0, tube: 0.02, color: MAROON, rotX: -1.25, rotY: 0.5, y: 0.15, speed: -0.04 },
-    ]
-    const rings = ringConfigs.map((cfg) => {
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(cfg.radius, cfg.tube, 16, 100),
-        new THREE.MeshStandardMaterial({
-          color: cfg.color,
-          emissive: cfg.color,
-          emissiveIntensity: 0.45,
-          roughness: 0.4,
-          transparent: true,
-          opacity: 0.9,
-        }),
-      )
-      ring.rotation.x = cfg.rotX
-      ring.rotation.y = cfg.rotY
-      ring.position.y = cfg.y
-      mandala.add(ring)
-      return { mesh: ring, speed: cfg.speed }
-    })
+    const outerGlowUniforms = { uColor: { value: new THREE.Color(0xe2572b) }, uPower: { value: 2.4 }, uIntensity: { value: 0.85 } }
+    const outerGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(coreRadius * 1.75, 48, 48),
+      new THREE.ShaderMaterial({
+        uniforms: outerGlowUniforms,
+        vertexShader: GLOW_VERTEX,
+        fragmentShader: GLOW_FRAGMENT,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.FrontSide,
+      }),
+    )
+    core.add(outerGlow)
 
-    // ── Lotus petal ring (instanced for one draw call) ───────────────────
-    const petalCount = isNarrow ? 10 : 16
-    const petalRadius = 2.6
-    const petals = new THREE.InstancedMesh(
-      petalGeometry(),
-      new THREE.MeshStandardMaterial({
+    // ── Flare tongues — small bright cones that rise off the surface
+    // along its own normal and recede, each on its own cycle. ────────────
+    const flareCount = isNarrow ? 16 : 28
+    const flares = new THREE.InstancedMesh(
+      new THREE.ConeGeometry(0.045, 1, 6),
+      new THREE.MeshBasicMaterial({
         color: GOLD_LIGHT,
-        emissive: GOLD,
-        emissiveIntensity: 0.25,
-        roughness: 0.5,
-        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
       }),
-      petalCount,
+      flareCount,
     )
-    const dummy = new THREE.Object3D()
-    for (let i = 0; i < petalCount; i++) {
-      const angle = (i / petalCount) * Math.PI * 2
-      dummy.position.set(Math.cos(angle) * petalRadius, Math.sin(angle) * petalRadius, -0.3)
-      dummy.rotation.z = angle - Math.PI / 2
-      dummy.scale.setScalar(0.75)
-      dummy.updateMatrix()
-      petals.setMatrixAt(i, dummy.matrix)
+    const flareDirs: THREE.Vector3[] = []
+    const flarePhase: number[] = []
+    const flareSpeed: number[] = []
+    for (let i = 0; i < flareCount; i++) {
+      const dir = new THREE.Vector3(
+        Math.random() * 2 - 1,
+        Math.random() * 2 - 1,
+        Math.random() * 2 - 1,
+      ).normalize()
+      flareDirs.push(dir)
+      flarePhase.push(Math.random())
+      flareSpeed.push(0.25 + Math.random() * 0.35)
     }
-    petals.rotation.x = 0.1
-    mandala.add(petals)
+    core.add(flares)
 
     // ── Starfield ───────────────────────────────────────────────────────
     const starCount = isNarrow ? 260 : 500
     const starPositions = new Float32Array(starCount * 3)
     for (let i = 0; i < starCount; i++) {
-      const radius = 7 + Math.random() * 11
+      const radius = 6 + Math.random() * 10
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(Math.random() * 2 - 1)
       starPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta)
@@ -182,14 +277,10 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     }
     const starGeometry = new THREE.BufferGeometry()
     starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
-    const starMaterial = new THREE.PointsMaterial({
-      color: GOLD_LIGHT,
-      size: 0.05,
-      transparent: true,
-      opacity: 0.8,
-      sizeAttenuation: true,
-    })
-    const stars = new THREE.Points(starGeometry, starMaterial)
+    const stars = new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({ color: GOLD_LIGHT, size: 0.045, transparent: true, opacity: 0.7, sizeAttenuation: true }),
+    )
     scene.add(stars)
 
     // ── Resize ──────────────────────────────────────────────────────────
@@ -205,7 +296,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     const resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(container)
 
-    // ── Tap/click pulse — a little tactile flash on top of the orbit drag ─
+    // ── Tap/click pulse ────────────────────────────────────────────────
     let pulse = 0
     const handlePointerDown = () => {
       pulse = 1
@@ -215,21 +306,38 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     // ── Animation loop ──────────────────────────────────────────────────
     let frameId = 0
     const clock = new THREE.Clock()
+    const dummy = new THREE.Object3D()
 
     const renderFrame = () => {
       const elapsed = clock.getElapsedTime()
       controls.update()
 
-      mandala.rotation.y += 0.0012
-      for (const { mesh, speed } of rings) {
-        mesh.rotation.z += speed * 0.02
-      }
-      petals.rotation.z -= 0.0035
-
       pulse *= 0.94
-      const material = core.material as THREE.MeshStandardMaterial
-      material.emissiveIntensity = 1.4 + Math.sin(elapsed * 1.2) * 0.2 + pulse * 1.5
-      core.scale.setScalar(1 + Math.sin(elapsed * 1.2) * 0.02 + pulse * 0.08)
+      // A slow "breathing" pulse — the illumination that awakens the
+      // intellect, not a mechanical blink.
+      const breath = Math.sin(elapsed * 0.55) * 0.5 + 0.5
+      const pulseValue = breath * 0.6 + pulse * 0.7
+      plasmaUniforms.uTime.value = elapsed
+      plasmaUniforms.uPulse.value = pulseValue
+      innerGlowUniforms.uIntensity.value = 1.0 + breath * 0.35 + pulse * 0.6
+      outerGlowUniforms.uIntensity.value = 0.7 + breath * 0.3 + pulse * 0.5
+      const scale = 1 + breath * 0.02 + pulse * 0.05
+      core.scale.setScalar(scale)
+
+      for (let i = 0; i < flareCount; i++) {
+        const t = (elapsed * flareSpeed[i] + flarePhase[i]) % 1
+        const envelope = Math.sin(t * Math.PI) // 0 -> 1 -> 0
+        const dir = flareDirs[i]
+        const reach = coreRadius * (1 + envelope * 0.9)
+        dummy.position.copy(dir).multiplyScalar(reach)
+        dummy.lookAt(dummy.position.clone().add(dir))
+        dummy.scale.set(0.6 + envelope * 0.5, 0.15 + envelope * 1.3, 0.6 + envelope * 0.5)
+        dummy.updateMatrix()
+        flares.setMatrixAt(i, dummy.matrix)
+      }
+      flares.instanceMatrix.needsUpdate = true
+
+      stars.rotation.y += 0.0004
 
       renderer.render(scene, camera)
       frameId = requestAnimationFrame(renderFrame)
@@ -237,8 +345,6 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
 
     if (prefersReducedMotion) {
       renderer.render(scene, camera)
-      // No ambient animation, but a drag/scroll from the user should still
-      // re-render — OrbitControls fires 'change' on every user-driven move.
       controls.addEventListener('change', () => renderer.render(scene, camera))
     } else {
       frameId = requestAnimationFrame(renderFrame)
