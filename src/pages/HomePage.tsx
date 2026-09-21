@@ -20,6 +20,10 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner'
 // default), so it's worth its own chunk rather than shipping in the main
 // bundle for every visitor.
 const TempleMap = lazy(() => import('../components/temple/TempleMap').then((m) => ({ default: m.TempleMap })))
+// Same reasoning for three.js — only the homepage hero needs it.
+const SuryaMandalaHero = lazy(() =>
+  import('../components/home/SuryaMandalaHero').then((m) => ({ default: m.SuryaMandalaHero })),
+)
 import { Select, TextInput } from '../components/common/FormField'
 import { Button } from '../components/common/Button'
 import { strings } from '../constants/strings'
@@ -107,6 +111,7 @@ export function HomePage() {
   const [hasRiver, setHasRiver] = useState(false)
   const [view, setView] = useState<ViewMode>('list')
   const [heroImage] = useState(() => HERO_IMAGES[Math.floor(Math.random() * HERO_IMAGES.length)])
+  const [mandalaFailed, setMandalaFailed] = useState(false)
   const [nearMeCoords, setNearMeCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locating, setLocating] = useState(false)
   const { toast } = useToast()
@@ -192,22 +197,44 @@ export function HomePage() {
     <div className="flex flex-col gap-10">
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="relative -mx-4 overflow-hidden rounded-b-3xl sm:-mx-6">
-        <div className="relative h-48 w-full sm:h-64">
-          <img
-            key={heroImage.url}
-            src={heroImage.url}
-            alt={heroImage.alt}
-            className="h-full w-full object-cover"
-          />
+        <div className="relative h-64 w-full bg-maroon-900 sm:h-96">
+          {mandalaFailed ? (
+            <>
+              <img
+                key={heroImage.url}
+                src={heroImage.url}
+                alt={heroImage.alt}
+                className="h-full w-full object-cover"
+              />
+              <a
+                href={heroImage.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="absolute bottom-2.5 right-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/90 backdrop-blur-sm hover:bg-black/55"
+              >
+                {heroImage.name} · {heroImage.credit} · {heroImage.license}
+              </a>
+            </>
+          ) : (
+            <>
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    'radial-gradient(circle at 50% 45%, var(--color-gold-400) 0%, var(--color-maroon-900) 65%, var(--color-maroon-900) 100%)',
+                  opacity: 0.55,
+                }}
+              />
+              <Suspense fallback={null}>
+                <SuryaMandalaHero onFailed={() => setMandalaFailed(true)} />
+              </Suspense>
+              <p className="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-black/30 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur-sm">
+                Surya Maṇḍala — drag to turn
+              </p>
+            </>
+          )}
           <div className="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-vermilion-400 via-gold-400 to-peacock-500" />
-          <a
-            href={heroImage.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            className="absolute bottom-2.5 right-3 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/90 backdrop-blur-sm hover:bg-black/55"
-          >
-            {heroImage.name} · {heroImage.credit} · {heroImage.license}
-          </a>
         </div>
 
         <div className="bg-gradient-to-b from-cream-100 to-cream-50 px-4 pb-10 pt-8 sm:px-6">
