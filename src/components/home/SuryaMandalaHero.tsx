@@ -6,7 +6,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 // CSS custom properties, so the values are copied from src/index.css and
 // must be kept in sync by hand if that palette ever changes.
 const GOLD_LIGHT = 0xe6c778
-const CREAM = 0xfdfbf7
 
 // Ashima Arts / Stefan Gustavson's classic 3D simplex noise (MIT-licensed,
 // the standard GLSL implementation used across WebGL shader work) — drives
@@ -61,20 +60,52 @@ float snoise(vec3 v){
 }
 `
 
-const PLASMA_VERTEX = /* glsl */ `
+// Multi-octave displacement: a big, slow-moving low-frequency term does
+// the actual "lumpy solid ball" shaping (this is what breaks the silhouette
+// away from a smooth circle), with a finer, faster term layered on top for
+// boiling plasma detail. Shared between the true vertex position and two
+// nearby samples so the vertex shader can build a real, displacement-aware
+// normal instead of reusing the sphere's smooth analytic one.
+const DISPLACE_FN = /* glsl */ `
   uniform float uTime;
   uniform float uPulse;
+  ${SNOISE_GLSL}
+  float displace(vec3 p) {
+    float big = snoise(p * 1.15 + uTime * 0.05) * 0.62;
+    float mid = snoise(p * 2.4 - uTime * 0.09) * 0.28;
+    float fine = snoise(p * 5.5 + uTime * 0.2) * 0.12;
+    return (big + mid + fine) * (0.16 + uPulse * 0.05);
+  }
+`
+
+const PLASMA_VERTEX = /* glsl */ `
   varying vec3 vNormal;
   varying vec3 vViewPos;
-  varying float vNoise;
-  ${SNOISE_GLSL}
+  varying float vElevation;
+  ${DISPLACE_FN}
   void main() {
-    float n = snoise(normal * 2.1 + uTime * 0.12);
-    float fine = snoise(normal * 5.5 - uTime * 0.25) * 0.4;
-    vNoise = n + fine;
-    float displacement = vNoise * 0.085 + uPulse * 0.05;
-    vec3 displaced = position + normal * displacement;
-    vNormal = normalize(normalMatrix * normal);
+    vec3 n = normalize(normal);
+    float e = displace(n);
+    vElevation = e;
+    vec3 displaced = position + n * e;
+
+    // Finite-difference two nearby points on the sphere to rebuild a normal
+    // that actually reflects the bumps above, not the underlying smooth
+    // icosahedron — without this, lighting reads flat no matter how lumpy
+    // the silhouette gets.
+    vec3 up = abs(n.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent = normalize(cross(up, n));
+    vec3 bitangent = cross(n, tangent);
+    float eps = 0.06;
+    vec3 nT = normalize(n + tangent * eps);
+    vec3 nB = normalize(n + bitangent * eps);
+    vec3 pT = nT * (1.0 + displace(nT));
+    vec3 pB = nB * (1.0 + displace(nB));
+    vec3 pC = n * (1.0 + e);
+    vec3 newNormal = normalize(cross(pB - pC, pT - pC));
+    if (dot(newNormal, n) < 0.0) newNormal = -newNormal;
+
+    vNormal = normalize(normalMatrix * newNormal);
     vec4 mv = modelViewMatrix * vec4(displaced, 1.0);
     vViewPos = mv.xyz;
     gl_Position = projectionMatrix * mv;
@@ -83,22 +114,33 @@ const PLASMA_VERTEX = /* glsl */ `
 
 const PLASMA_FRAGMENT = /* glsl */ `
   uniform float uPulse;
+  uniform vec3 uLightDir;
   varying vec3 vNormal;
   varying vec3 vViewPos;
-  varying float vNoise;
+  varying float vElevation;
   void main() {
-    vec3 viewDir = normalize(-vViewPos);
-    float fresnel = pow(1.0 - max(dot(normalize(vNormal), viewDir), 0.0), 2.1);
+    vec3 N = normalize(vNormal);
+    vec3 V = normalize(-vViewPos);
+    vec3 L = normalize(uLightDir);
 
-    vec3 deep = vec3(0.62, 0.13, 0.09);
-    vec3 mid = vec3(0.93, 0.60, 0.12);
-    vec3 bright = vec3(1.0, 0.95, 0.78);
+    float diff = dot(N, L);
+    // Wrap lighting so the night side still glows like banked embers
+    // rather than going flat black — this is a sun, not a moon.
+    float wrap = 0.45;
+    float lighting = clamp((diff + wrap) / (1.0 + wrap), 0.0, 1.0);
 
-    float t = clamp(vNoise * 0.5 + 0.55, 0.0, 1.0);
-    vec3 color = mix(deep, mid, t);
-    color = mix(color, bright, pow(fresnel, 1.4));
-    color += bright * fresnel * (0.7 + uPulse * 0.5);
-    color += bright * 0.12 * uPulse;
+    vec3 ember = vec3(0.30, 0.05, 0.03);
+    vec3 core = vec3(0.95, 0.42, 0.08);
+    vec3 hot = vec3(1.0, 0.82, 0.42);
+    vec3 white = vec3(1.0, 0.97, 0.88);
+
+    float elev = clamp(vElevation * 1.6 + 0.5, 0.0, 1.0);
+    vec3 color = mix(ember, core, lighting);
+    color = mix(color, hot, pow(lighting, 1.3));
+    color = mix(color, white, pow(lighting, 3.0) * elev * 0.6);
+
+    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.3);
+    color += hot * fresnel * (0.35 + uPulse * 0.4) * (0.4 + lighting * 0.6);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -130,12 +172,16 @@ const GLOW_FRAGMENT = /* glsl */ `
 
 /**
  * A "ball of illuminating solar radiation" — Savitṛ, the pre-dawn light
- * of the Gayatri Mantra (Rigveda 3.62.10), rendered as a genuinely
- * volumetric object rather than a flat motif: a plasma-shader sphere
- * whose surface is displaced and coloured by 3D simplex noise (so its
- * turbulence is real geometry, not a texture), wrapped in two additive
- * fresnel-glow shells for corona, with small flare tongues that rise and
- * fall off its surface and a breathing overall pulse.
+ * of the Gayatri Mantra (Rigveda 3.62.10), rendered as one solid,
+ * genuinely volumetric body rather than a flat motif or appendages
+ * stuck onto one: a high-resolution icosphere displaced by multi-octave
+ * 3D simplex noise (so the lumpy, boiling silhouette is real geometry,
+ * not a texture), with a hand-rebuilt normal so it actually shades like
+ * the bumps it has. Lit from a fixed direction while the sphere itself
+ * slowly rotates, so a real lit/dark terminator sweeps across the
+ * surface continuously — that motion, not a rim glow, is what reads as
+ * "solid 3D" rather than "flat circle." Two additive fresnel shells give
+ * it a soft corona, and the whole thing breathes on a slow pulse.
  *
  * OrbitControls drives the camera fully around it in 3D. Built in raw
  * Three.js (no React Three Fiber: its peer-dependency range doesn't yet
@@ -185,16 +231,22 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     controls.autoRotateSpeed = 0.5
     controls.update()
 
-    scene.add(new THREE.AmbientLight(CREAM, 0.3))
-
     const core = new THREE.Group()
     scene.add(core)
 
-    // ── Plasma sphere — the light itself, not a symbol of it ─────────────
+    // ── Plasma sphere — the light itself, not a symbol of it. Lit by a
+    // fixed light direction in view space, so as the sphere self-rotates
+    // a real terminator (lit/dark boundary) sweeps across its bumpy
+    // surface — the strongest possible cue that this is a solid 3D body,
+    // not a flat glowing disc. ─────────────────────────────────────────
     const coreRadius = 1.3
-    const plasmaUniforms = { uTime: { value: 0 }, uPulse: { value: 0 } }
+    const plasmaUniforms = {
+      uTime: { value: 0 },
+      uPulse: { value: 0 },
+      uLightDir: { value: new THREE.Vector3(0.6, 0.45, 0.9).normalize() },
+    }
     const plasma = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(coreRadius, isNarrow ? 3 : 4),
+      new THREE.IcosahedronGeometry(coreRadius, isNarrow ? 4 : 5),
       new THREE.ShaderMaterial({
         uniforms: plasmaUniforms,
         vertexShader: PLASMA_VERTEX,
@@ -234,35 +286,6 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       }),
     )
     core.add(outerGlow)
-
-    // ── Flare tongues — small bright cones that rise off the surface
-    // along its own normal and recede, each on its own cycle. ────────────
-    const flareCount = isNarrow ? 16 : 28
-    const flares = new THREE.InstancedMesh(
-      new THREE.ConeGeometry(0.045, 1, 6),
-      new THREE.MeshBasicMaterial({
-        color: GOLD_LIGHT,
-        transparent: true,
-        opacity: 0.85,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-      flareCount,
-    )
-    const flareDirs: THREE.Vector3[] = []
-    const flarePhase: number[] = []
-    const flareSpeed: number[] = []
-    for (let i = 0; i < flareCount; i++) {
-      const dir = new THREE.Vector3(
-        Math.random() * 2 - 1,
-        Math.random() * 2 - 1,
-        Math.random() * 2 - 1,
-      ).normalize()
-      flareDirs.push(dir)
-      flarePhase.push(Math.random())
-      flareSpeed.push(0.25 + Math.random() * 0.35)
-    }
-    core.add(flares)
 
     // ── Starfield ───────────────────────────────────────────────────────
     const starCount = isNarrow ? 260 : 500
@@ -306,10 +329,10 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     // ── Animation loop ──────────────────────────────────────────────────
     let frameId = 0
     const clock = new THREE.Clock()
-    const dummy = new THREE.Object3D()
 
     const renderFrame = () => {
-      const elapsed = clock.getElapsedTime()
+      const delta = clock.getDelta()
+      const elapsed = clock.elapsedTime
       controls.update()
 
       pulse *= 0.94
@@ -321,21 +344,15 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       plasmaUniforms.uPulse.value = pulseValue
       innerGlowUniforms.uIntensity.value = 1.0 + breath * 0.35 + pulse * 0.6
       outerGlowUniforms.uIntensity.value = 0.7 + breath * 0.3 + pulse * 0.5
-      const scale = 1 + breath * 0.02 + pulse * 0.05
+      const scale = 1 + breath * 0.035 + pulse * 0.07
       core.scale.setScalar(scale)
 
-      for (let i = 0; i < flareCount; i++) {
-        const t = (elapsed * flareSpeed[i] + flarePhase[i]) % 1
-        const envelope = Math.sin(t * Math.PI) // 0 -> 1 -> 0
-        const dir = flareDirs[i]
-        const reach = coreRadius * (1 + envelope * 0.9)
-        dummy.position.copy(dir).multiplyScalar(reach)
-        dummy.lookAt(dummy.position.clone().add(dir))
-        dummy.scale.set(0.6 + envelope * 0.5, 0.15 + envelope * 1.3, 0.6 + envelope * 0.5)
-        dummy.updateMatrix()
-        flares.setMatrixAt(i, dummy.matrix)
-      }
-      flares.instanceMatrix.needsUpdate = true
+      // Self-rotation independent of the orbit camera — under a fixed
+      // light direction this sweeps a real lit/dark terminator across the
+      // bumpy surface, which is what actually sells "solid 3D sphere"
+      // even before the viewer touches it.
+      core.rotation.y += delta * 0.18
+      core.rotation.x += delta * 0.05
 
       stars.rotation.y += 0.0004
 
