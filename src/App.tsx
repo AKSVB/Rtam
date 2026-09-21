@@ -59,6 +59,13 @@ const AddDharmicActivityPage = lazy(() =>
 )
 const DharmaWallPage = lazy(() => import('./pages/DharmaWallPage').then((m) => ({ default: m.DharmaWallPage })))
 const PostDetailPage = lazy(() => import('./pages/PostDetailPage').then((m) => ({ default: m.PostDetailPage })))
+const ConnectionsPage = lazy(() =>
+  import('./pages/ConnectionsPage').then((m) => ({ default: m.ConnectionsPage })),
+)
+const MessagesPage = lazy(() => import('./pages/MessagesPage').then((m) => ({ default: m.MessagesPage })))
+const MessageThreadPage = lazy(() =>
+  import('./pages/MessageThreadPage').then((m) => ({ default: m.MessageThreadPage })),
+)
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
 
 function App() {
@@ -119,6 +126,30 @@ function App() {
           <Route path="/dharma-wall" element={<DharmaWallPage />} />
           <Route path="/dharma-wall/:id" element={<PostDetailPage />} />
           <Route path="/u/:username" element={<PublicProfilePage />} />
+          <Route
+            path="/connections"
+            element={
+              <ProtectedRoute>
+                <ConnectionsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <MessagesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages/:conversationId"
+            element={
+              <ProtectedRoute>
+                <MessageThreadPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/moderate"
             element={

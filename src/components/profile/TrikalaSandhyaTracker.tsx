@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
-import { useSandhyaLogs, useUpsertSandhyaLog } from '../../hooks/useSandhyaTracker'
+import { useSandhyaLogs, useToggleShareStreak, useUpsertSandhyaLog } from '../../hooks/useSandhyaTracker'
 import { computeStreak, getDueReminders, isDayComplete, istDateString } from '../../lib/sandhya'
 import { LoadingSpinner } from '../common/LoadingSpinner'
 import { Button } from '../common/Button'
@@ -70,6 +70,7 @@ export function TrikalaSandhyaTracker() {
   const { toast } = useToast()
   const { data: logs, isLoading } = useSandhyaLogs(profile?.id)
   const upsertLog = useUpsertSandhyaLog(profile?.id)
+  const toggleShareStreak = useToggleShareStreak()
   const [localAnswer, setLocalAnswer] = useState<UpanayanamStatus | null>(null)
 
   if (!profile) return null
@@ -197,6 +198,25 @@ export function TrikalaSandhyaTracker() {
         </span>
         <span className="text-xs text-charcoal-700/50">+108 for every unbroken 30-day streak</span>
       </div>
+
+      <label className="flex items-center gap-2 text-sm text-charcoal-700/80">
+        <input
+          type="checkbox"
+          checked={profile.share_sandhya_streak}
+          disabled={toggleShareStreak.isPending}
+          onChange={(e) =>
+            toggleShareStreak.mutate(
+              { userId: profile.id, share: e.target.checked },
+              {
+                onSuccess: () => refreshProfile(),
+                onError: () => toast("Couldn't update that setting. Please try again.", 'error'),
+              },
+            )
+          }
+          className="h-4 w-4 rounded border-stone-300 text-maroon-700 focus:ring-maroon-500"
+        />
+        Share my streak (just the number, never the daily log) with people who follow me back
+      </label>
 
       <div className="flex items-center gap-1" aria-label="Last 14 days">
         {strip.map(({ dateStr, complete, partial }) => (

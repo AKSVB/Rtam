@@ -17,6 +17,8 @@ export const strings = {
     samishti: 'Samishti Sandhyavandanam',
     dharmicFeed: 'Dharmic Activities Feed',
     dharmaWall: 'Dharma Wall',
+    connections: 'Connections',
+    messages: 'Messages',
     tripPlanner: 'Trip Planner',
     moderatorQueue: 'Moderator Queue',
     adminUsers: 'Manage Users',

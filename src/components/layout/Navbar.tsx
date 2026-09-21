@@ -2,9 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { strings } from '../../constants/strings'
+import { useIncomingFollowRequests } from '../../hooks/useFollows'
+import { useConversations } from '../../hooks/useMessages'
 import { TempleGopuramIcon } from '../temple/TempleGopuramIcon'
 import { InstallAppButton } from './InstallAppButton'
 import { Avatar } from '../common/Avatar'
+
+function NotificationBadge({ count }: { count: number }) {
+  if (count <= 0) return null
+  return (
+    <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-maroon-700 px-1 text-[10px] font-bold text-cream-50">
+      {count > 9 ? '9+' : count}
+    </span>
+  )
+}
 
 const linkClasses = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -92,6 +103,10 @@ export function Navbar() {
   const { user, profile, signOut } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const { data: incomingRequests } = useIncomingFollowRequests(user ? profile?.id : undefined)
+  const { data: conversations } = useConversations(user ? profile?.id : undefined)
+  const unreadMessageCount = conversations?.reduce((sum, c) => sum + c.unreadCount, 0) ?? 0
+  const pendingRequestCount = incomingRequests?.length ?? 0
 
   const handleSignOut = async () => {
     await signOut()
@@ -142,6 +157,14 @@ export function Navbar() {
           )}
           {user ? (
             <>
+              <NavLink to="/messages" className={linkClasses}>
+                💬 {strings.nav.messages}
+                <NotificationBadge count={unreadMessageCount} />
+              </NavLink>
+              <NavLink to="/connections" className={linkClasses}>
+                🤝 {strings.nav.connections}
+                <NotificationBadge count={pendingRequestCount} />
+              </NavLink>
               <NavLink to="/profile" className={linkClasses}>
                 <span className="flex items-center gap-2">
                   {profile && <Avatar url={profile.avatar_url} name={profile.display_name} size={22} />}
@@ -217,6 +240,14 @@ export function Navbar() {
           )}
           {user ? (
             <>
+              <NavLink to="/messages" className={linkClasses} onClick={() => setMenuOpen(false)}>
+                💬 {strings.nav.messages}
+                <NotificationBadge count={unreadMessageCount} />
+              </NavLink>
+              <NavLink to="/connections" className={linkClasses} onClick={() => setMenuOpen(false)}>
+                🤝 {strings.nav.connections}
+                <NotificationBadge count={pendingRequestCount} />
+              </NavLink>
               <NavLink to="/profile" className={linkClasses} onClick={() => setMenuOpen(false)}>
                 {strings.nav.profile}
               </NavLink>

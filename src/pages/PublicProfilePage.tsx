@@ -1,10 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
 import { useContributorTemples, usePublicProfile } from '../hooks/useContributors'
 import { useTemplePhotoCovers } from '../hooks/useTemplePhotoCovers'
+import { useFollowers, useFollowing } from '../hooks/useFollows'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Avatar } from '../components/common/Avatar'
 import { LevelBadge } from '../components/common/LevelBadge'
 import { TempleCard } from '../components/temple/TempleCard'
+import { FollowButton } from '../components/profile/FollowButton'
 import { strings } from '../constants/strings'
 
 export function PublicProfilePage() {
@@ -12,6 +14,8 @@ export function PublicProfilePage() {
   const { data: profile, isLoading } = usePublicProfile(username)
   const { data: temples, isLoading: templesLoading } = useContributorTemples(profile?.id)
   const { data: covers } = useTemplePhotoCovers()
+  const { data: followers } = useFollowers(profile?.id)
+  const { data: following } = useFollowing(profile?.id)
 
   if (isLoading) return <LoadingSpinner label="Loading contributor…" />
 
@@ -44,9 +48,16 @@ export function PublicProfilePage() {
           </h1>
           <p className="text-charcoal-700/70">@{profile.username}</p>
           <LevelBadge points={profile.contribution_points} className="mt-1" />
+          <p className="mt-1 text-sm text-charcoal-700/70">
+            <span className="font-semibold text-charcoal-900">{followers?.length ?? 0}</span> followers ·{' '}
+            <span className="font-semibold text-charcoal-900">{following?.length ?? 0}</span> following
+          </p>
         </div>
-        <div className="ml-auto rounded-full border border-gold-400 bg-gold-400/15 px-4 py-2 text-sm font-semibold text-maroon-800">
-          ✦ {profile.contribution_points} {strings.contributors.points}
+        <div className="ml-auto flex flex-col items-end gap-2">
+          <div className="rounded-full border border-gold-400 bg-gold-400/15 px-4 py-2 text-sm font-semibold text-maroon-800">
+            ✦ {profile.contribution_points} {strings.contributors.points}
+          </div>
+          <FollowButton otherUserId={profile.id} />
         </div>
       </header>
 

@@ -29,6 +29,8 @@ export interface UserProfile {
   upanayanam_status: 'yes' | 'no' | 'not_applicable' | null
   sandhya_tejas_points: number
   last_tejas_milestone: number
+  /** Opt-in: when true, mutual followers can see this user's current streak length via `current_sandhya_streak()`. */
+  share_sandhya_streak: boolean
   created_at: string
   updated_at: string
   banned_at: string | null
@@ -296,4 +298,49 @@ export interface CommunityPostComment {
   comment: string
   created_at: string
   user_profiles?: Pick<UserProfile, 'display_name' | 'username' | 'avatar_url'>
+}
+
+export type FollowRequestStatus = 'pending' | 'accepted' | 'declined'
+
+/**
+ * A request to follow, not yet (or no longer) a connection. Accepting
+ * one creates both `Follow` edges at once — see migration 0079.
+ */
+export interface FollowRequest {
+  id: string
+  requester_id: string
+  addressee_id: string
+  status: FollowRequestStatus
+  created_at: string
+  responded_at: string | null
+  requester?: Pick<UserProfile, 'id' | 'username' | 'display_name' | 'avatar_url'>
+  addressee?: Pick<UserProfile, 'id' | 'username' | 'display_name' | 'avatar_url'>
+}
+
+/** A directed follow edge. Two people "follow each other" (and can message) when both directions exist. */
+export interface Follow {
+  id: string
+  follower_id: string
+  followee_id: string
+  created_at: string
+}
+
+export interface Conversation {
+  id: string
+  user_one_id: string
+  user_two_id: string
+  created_at: string
+  last_message_at: string
+}
+
+export type MessageKind = 'text' | 'streak_reminder'
+
+export interface Message {
+  id: string
+  conversation_id: string
+  sender_id: string
+  kind: MessageKind
+  body: string
+  created_at: string
+  read_at: string | null
 }
