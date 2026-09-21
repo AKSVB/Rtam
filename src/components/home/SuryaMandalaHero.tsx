@@ -414,9 +414,10 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     )
     core.add(outerGlow)
 
-    // ── The divine presence — a soft, non-literal luminous silhouette
-    // that manifests at the peak of each breath and recedes back into
-    // the light. Always faces the camera (billboarded) and draws with
+    // ── The divine presence — a soft, non-literal luminous silhouette,
+    // fixed at the centre and never rotating. Always faces the camera
+    // (billboarded, re-oriented every frame to the camera's current
+    // quaternion rather than inheriting any spin) and draws with
     // depthTest disabled so it reads through the opaque plasma core from
     // any orbit angle, rather than being hidden behind it. ──────────────
     const divineFigureTexture = createDivineFigureTexture()
@@ -434,6 +435,63 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     )
     divineFigure.renderOrder = 10
     scene.add(divineFigure)
+
+    // ── The mandala itself — rings orbiting the fixed centre. Deliberately
+    // its own group, sibling to `core` (the sphere) and the figure, not a
+    // child of either: it must keep turning while she stays still, so it
+    // gets its own independent rotation rather than inheriting the
+    // sphere's self-spin. Two rings at different radii, tilts and speeds
+    // so it reads as a real turning structure rather than one flat disc. ──
+    const mandalaRing = new THREE.Group()
+    scene.add(mandalaRing)
+    const ringConfigs = [
+      { radius: coreRadius * 2.0, tube: 0.02, color: 0xd4af37, tiltX: 0.25, speed: 0.22 },
+      { radius: coreRadius * 2.35, tube: 0.014, color: 0xe2572b, tiltX: -0.18, speed: -0.14 },
+    ]
+    const rings = ringConfigs.map((cfg) => {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(cfg.radius, cfg.tube, 12, 96),
+        new THREE.MeshBasicMaterial({
+          color: cfg.color,
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        }),
+      )
+      ring.rotation.x = Math.PI / 2 + cfg.tiltX
+      mandalaRing.add(ring)
+      return { mesh: ring, speed: cfg.speed }
+    })
+
+    // A ring of evenly-spaced petal marks — a visible "wheel" of light
+    // turning around her, more legibly a mandala than the smooth torus
+    // rings alone.
+    const petalTexture = createTejasTexture()
+    const petalCount = isNarrow ? 12 : 18
+    const petalGeometry = new THREE.PlaneGeometry(0.16, 0.42)
+    const petals = new THREE.InstancedMesh(
+      petalGeometry,
+      new THREE.MeshBasicMaterial({
+        map: petalTexture,
+        color: 0xffd88a,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+      petalCount,
+    )
+    const petalRadius = coreRadius * 2.7
+    const petalDummy = new THREE.Object3D()
+    for (let i = 0; i < petalCount; i++) {
+      const angle = (i / petalCount) * Math.PI * 2
+      petalDummy.position.set(Math.cos(angle) * petalRadius, Math.sin(angle) * petalRadius, 0)
+      petalDummy.rotation.z = angle + Math.PI / 2
+      petalDummy.updateMatrix()
+      petals.setMatrixAt(i, petalDummy.matrix)
+    }
+    mandalaRing.add(petals)
 
     // ── Tejas bursts — pulses of the sun's own radiance erupting outward
     // in random directions, each on an independent cycle: a fast launch
@@ -564,6 +622,14 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       core.rotation.y += delta * 0.18
       core.rotation.x += delta * 0.05
 
+      // The mandala turns around her — she does not turn with it. This
+      // group is a sibling of `core` and the figure, not a child of
+      // either, specifically so its spin is independent of both.
+      mandalaRing.rotation.z += delta * 0.16
+      for (const { mesh, speed } of rings) {
+        mesh.rotation.z += delta * speed
+      }
+
       // The presence stays clearly visible throughout — only a gentle
       // breathing variation in opacity/scale, not a fade to near-zero.
       divineFigure.quaternion.copy(camera.quaternion)
@@ -629,6 +695,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
         }
       })
       tejasTexture.dispose()
+      petalTexture.dispose()
       divineFigureTexture.dispose()
       renderer.dispose()
     }
