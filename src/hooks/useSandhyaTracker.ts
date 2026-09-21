@@ -65,6 +65,28 @@ export function useFriendStreak(targetUserId: string | undefined) {
   })
 }
 
+export interface LeaderboardEntry {
+  user_id: string
+  username: string
+  display_name: string
+  avatar_url: string | null
+  streak: number | null
+  is_self: boolean
+}
+
+/** You plus every mutual follow who's opted into sharing, ranked by current streak. */
+export function useMutualStreakLeaderboard(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['streak-leaderboard', userId],
+    queryFn: async (): Promise<LeaderboardEntry[]> => {
+      const { data, error } = await supabase.rpc('mutual_streak_leaderboard')
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!userId,
+  })
+}
+
 export function useToggleShareStreak() {
   const queryClient = useQueryClient()
   return useMutation({

@@ -1,11 +1,61 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
-import { useSandhyaLogs, useToggleShareStreak, useUpsertSandhyaLog } from '../../hooks/useSandhyaTracker'
+import {
+  useMutualStreakLeaderboard,
+  useSandhyaLogs,
+  useToggleShareStreak,
+  useUpsertSandhyaLog,
+} from '../../hooks/useSandhyaTracker'
 import { computeStreak, getDueReminders, isDayComplete, istDateString } from '../../lib/sandhya'
 import { LoadingSpinner } from '../common/LoadingSpinner'
 import { Button } from '../common/Button'
+import { Avatar } from '../common/Avatar'
+
+const MEDALS = ['🥇', '🥈', '🥉']
+
+/** Duolingo-style ranking of the signed-in user against everyone they mutually follow who shares their streak. */
+function StreakLeaderboard({ userId }: { userId: string }) {
+  const { data: entries, isLoading } = useMutualStreakLeaderboard(userId)
+
+  if (isLoading) return <LoadingSpinner label="Loading leaderboard…" />
+  if (!entries || entries.length <= 1) {
+    return (
+      <p className="text-sm text-charcoal-700/60">
+        Follow people mutually — and have them share their streak — to see how you compare.{' '}
+        <Link to="/connections" className="font-semibold text-maroon-700 hover:underline">
+          Find people
+        </Link>
+        .
+      </p>
+    )
+  }
+
+  return (
+    <ol className="flex flex-col gap-1.5">
+      {entries.map((entry, i) => (
+        <li
+          key={entry.user_id}
+          className={`flex items-center gap-3 rounded-lg px-2 py-1.5 ${
+            entry.is_self ? 'bg-gold-400/10' : ''
+          }`}
+        >
+          <span className="w-6 shrink-0 text-center text-sm font-bold text-charcoal-700/60">
+            {MEDALS[i] ?? i + 1}
+          </span>
+          <Avatar url={entry.avatar_url} name={entry.display_name} size={28} />
+          <span className="min-w-0 flex-1 truncate text-sm font-medium text-charcoal-900">
+            {entry.display_name}
+            {entry.is_self && <span className="font-normal text-charcoal-700/60"> (you)</span>}
+          </span>
+          <span className="shrink-0 text-sm font-semibold text-maroon-800">🔥 {entry.streak ?? 0}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}
 
 const SANDHYAS = [
   { field: 'morning' as const, icon: '🌅', label: 'Prātaḥ (Morning)' },
@@ -228,6 +278,11 @@ export function TrikalaSandhyaTracker() {
             }`}
           />
         ))}
+      </div>
+
+      <div className="border-t border-cream-200 pt-4">
+        <h4 className="mb-2 text-sm font-semibold text-charcoal-700/80">🏆 Streak leaderboard</h4>
+        <StreakLeaderboard userId={profile.id} />
       </div>
     </div>
   )
