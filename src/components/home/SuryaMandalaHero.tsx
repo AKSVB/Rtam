@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 // Ṛtam's palette, as literal hex — this file can't reach into Tailwind's
 // CSS custom properties, so the values are copied from src/index.css and
@@ -22,14 +23,19 @@ function petalGeometry() {
 }
 
 /**
- * An interactive 3D "Surya Mandala" — a rotating sun-wheel of concentric
- * rings and lotus petals over a starfield, built in raw Three.js (no
- * React Three Fiber: its peer-dependency range doesn't yet cover React
- * 19.3, and this is a single self-contained scene that doesn't benefit
- * much from a declarative wrapper). Responds to pointer movement and a
- * tap/click pulse; degrades to a static single frame under
- * prefers-reduced-motion, and reports failure so the caller can fall
- * back to the plain photo hero if WebGL isn't available.
+ * An interactive, genuinely-3D "Surya Mandala" — an armillary-sphere-like
+ * arrangement of tilted, crossing rings around a glowing sun core, with an
+ * orbiting lotus-petal ring and a starfield behind it. Built in raw
+ * Three.js (no React Three Fiber: its peer-dependency range doesn't yet
+ * cover React 19.3, and this is a single self-contained scene that doesn't
+ * benefit much from a declarative wrapper).
+ *
+ * The camera — not the object — is what orbits: drag rotates all the way
+ * around the sphere of rings, scroll/pinch dollies in and out, and it
+ * auto-rotates slowly when idle so the 3D depth reads even without input.
+ * Degrades to a single static (but still drag-orbitable) frame under
+ * prefers-reduced-motion, and reports failure so the caller can fall back
+ * to the plain photo hero if WebGL isn't available at all.
  */
 export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -51,8 +57,10 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
 
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100)
-    camera.position.set(0, 0.6, 10)
-    camera.lookAt(0, 0, 0)
+    // An elevated 3/4 angle rather than head-on — this is what makes the
+    // rings read immediately as tilted circles in space rather than flat
+    // ellipses painted on a backdrop.
+    camera.position.set(5.5, 3.2, 8.5)
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setClearColor(0x000000, 0)
@@ -60,13 +68,30 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     renderer.domElement.style.display = 'block'
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
-    renderer.domElement.style.touchAction = 'pan-y'
+
+    // ── Orbit controls — the camera, not the object, is what the user
+    // drags around, which is what actually sells the "3D" of it. ─────────
+    const controls = new OrbitControls(camera, renderer.domElement)
+    controls.target.set(0, 0, 0)
+    controls.enablePan = false
+    controls.minDistance = 5
+    controls.maxDistance = 15
+    controls.minPolarAngle = Math.PI * 0.12
+    controls.maxPolarAngle = Math.PI * 0.85
+    controls.enableDamping = !prefersReducedMotion
+    controls.dampingFactor = 0.08
+    controls.autoRotate = !prefersReducedMotion
+    controls.autoRotateSpeed = 0.7
+    controls.update()
 
     // ── Lighting ────────────────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(CREAM, 0.5))
-    const sunLight = new THREE.PointLight(GOLD_LIGHT, 60, 30, 2)
-    sunLight.position.set(0, 0, 2)
+    scene.add(new THREE.AmbientLight(CREAM, 0.55))
+    const sunLight = new THREE.PointLight(GOLD_LIGHT, 70, 40, 2)
+    sunLight.position.set(0, 0, 0)
     scene.add(sunLight)
+    const rimLight = new THREE.DirectionalLight(VERMILION, 0.4)
+    rimLight.position.set(-6, 4, -4)
+    scene.add(rimLight)
 
     const mandala = new THREE.Group()
     scene.add(mandala)
@@ -90,20 +115,30 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     )
     mandala.add(coreGlow)
 
-    // ── Concentric rings ────────────────────────────────────────────────
+    // ── Concentric rings — an armillary sphere: each tilted on TWO axes
+    // and offset in depth, so from any orbit angle they visibly cross and
+    // overlap rather than nesting flat inside each other. ────────────────
     const ringConfigs = [
-      { radius: 1.9, tube: 0.03, color: GOLD, tiltX: 0.15, tiltZ: 0.0, speed: 0.09 },
-      { radius: 2.6, tube: 0.025, color: VERMILION, tiltX: -0.35, tiltZ: 0.1, speed: -0.06 },
-      { radius: 3.3, tube: 0.02, color: PEACOCK, tiltX: 0.55, tiltZ: -0.15, speed: 0.045 },
-      { radius: 4.0, tube: 0.018, color: MAROON, tiltX: -0.7, tiltZ: 0.2, speed: -0.03 },
+      { radius: 1.9, tube: 0.032, color: GOLD, rotX: 0.35, rotY: 0.15, y: 0, speed: 0.11 },
+      { radius: 2.6, tube: 0.026, color: VERMILION, rotX: -0.6, rotY: 0.7, y: 0.08, speed: -0.075 },
+      { radius: 3.3, tube: 0.022, color: PEACOCK, rotX: 1.05, rotY: -0.35, y: -0.12, speed: 0.055 },
+      { radius: 4.0, tube: 0.02, color: MAROON, rotX: -1.25, rotY: 0.5, y: 0.15, speed: -0.04 },
     ]
     const rings = ringConfigs.map((cfg) => {
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(cfg.radius, cfg.tube, 12, 96),
-        new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.85 }),
+        new THREE.TorusGeometry(cfg.radius, cfg.tube, 16, 100),
+        new THREE.MeshStandardMaterial({
+          color: cfg.color,
+          emissive: cfg.color,
+          emissiveIntensity: 0.45,
+          roughness: 0.4,
+          transparent: true,
+          opacity: 0.9,
+        }),
       )
-      ring.rotation.x = cfg.tiltX
-      ring.rotation.z = cfg.tiltZ
+      ring.rotation.x = cfg.rotX
+      ring.rotation.y = cfg.rotY
+      ring.position.y = cfg.y
       mandala.add(ring)
       return { mesh: ring, speed: cfg.speed }
     })
@@ -135,21 +170,21 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     mandala.add(petals)
 
     // ── Starfield ───────────────────────────────────────────────────────
-    const starCount = isNarrow ? 220 : 420
+    const starCount = isNarrow ? 260 : 500
     const starPositions = new Float32Array(starCount * 3)
     for (let i = 0; i < starCount; i++) {
-      const radius = 6 + Math.random() * 9
+      const radius = 7 + Math.random() * 11
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(Math.random() * 2 - 1)
       starPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta)
       starPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta)
-      starPositions[i * 3 + 2] = radius * Math.cos(phi) - 4
+      starPositions[i * 3 + 2] = radius * Math.cos(phi)
     }
     const starGeometry = new THREE.BufferGeometry()
     starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
     const starMaterial = new THREE.PointsMaterial({
       color: GOLD_LIGHT,
-      size: 0.045,
+      size: 0.05,
       transparent: true,
       opacity: 0.8,
       sizeAttenuation: true,
@@ -162,44 +197,30 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       const { clientWidth, clientHeight } = container
       if (clientWidth === 0 || clientHeight === 0) return
       camera.aspect = clientWidth / clientHeight
-      // Pull back on tall/narrow layouts so the mandala stays fully in frame.
-      camera.position.z = camera.aspect < 0.9 ? 13 : 10
       camera.updateProjectionMatrix()
       renderer.setSize(clientWidth, clientHeight)
+      if (prefersReducedMotion) renderer.render(scene, camera)
     }
     resize()
     const resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(container)
 
-    // ── Pointer interaction: parallax drag + tap pulse ───────────────────
-    let pointerTargetX = 0
-    let pointerTargetY = 0
-    const handlePointerMove = (e: PointerEvent) => {
-      const rect = container.getBoundingClientRect()
-      pointerTargetX = ((e.clientX - rect.left) / rect.width - 0.5) * 2
-      pointerTargetY = ((e.clientY - rect.top) / rect.height - 0.5) * 2
-    }
+    // ── Tap/click pulse — a little tactile flash on top of the orbit drag ─
     let pulse = 0
     const handlePointerDown = () => {
       pulse = 1
     }
-    container.addEventListener('pointermove', handlePointerMove)
-    container.addEventListener('pointerdown', handlePointerDown)
+    renderer.domElement.addEventListener('pointerdown', handlePointerDown)
 
     // ── Animation loop ──────────────────────────────────────────────────
     let frameId = 0
-    let currentRotY = 0
-    let currentRotX = 0
     const clock = new THREE.Clock()
 
     const renderFrame = () => {
       const elapsed = clock.getElapsedTime()
+      controls.update()
 
-      currentRotY += (pointerTargetX * 0.5 - currentRotY) * 0.04
-      currentRotX += (-pointerTargetY * 0.25 - currentRotX) * 0.04
-      mandala.rotation.y = currentRotY + elapsed * 0.05
-      mandala.rotation.x = currentRotX
-
+      mandala.rotation.y += 0.0012
       for (const { mesh, speed } of rings) {
         mesh.rotation.z += speed * 0.02
       }
@@ -210,14 +231,15 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       material.emissiveIntensity = 1.4 + Math.sin(elapsed * 1.2) * 0.2 + pulse * 1.5
       core.scale.setScalar(1 + Math.sin(elapsed * 1.2) * 0.02 + pulse * 0.08)
 
-      stars.rotation.y += 0.0006
-
       renderer.render(scene, camera)
-      if (!prefersReducedMotion) frameId = requestAnimationFrame(renderFrame)
+      frameId = requestAnimationFrame(renderFrame)
     }
 
     if (prefersReducedMotion) {
       renderer.render(scene, camera)
+      // No ambient animation, but a drag/scroll from the user should still
+      // re-render — OrbitControls fires 'change' on every user-driven move.
+      controls.addEventListener('change', () => renderer.render(scene, camera))
     } else {
       frameId = requestAnimationFrame(renderFrame)
     }
@@ -225,8 +247,8 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     return () => {
       cancelAnimationFrame(frameId)
       resizeObserver.disconnect()
-      container.removeEventListener('pointermove', handlePointerMove)
-      container.removeEventListener('pointerdown', handlePointerDown)
+      renderer.domElement.removeEventListener('pointerdown', handlePointerDown)
+      controls.dispose()
       container.removeChild(renderer.domElement)
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh || obj instanceof THREE.Points || obj instanceof THREE.InstancedMesh) {
@@ -239,5 +261,5 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     }
   }, [onFailed])
 
-  return <div ref={containerRef} className="h-full w-full cursor-grab active:cursor-grabbing" />
+  return <div ref={containerRef} className="h-full w-full cursor-grab touch-none active:cursor-grabbing" />
 }
