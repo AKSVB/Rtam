@@ -197,7 +197,7 @@ export function HomePage() {
     <div className="flex flex-col gap-10">
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="relative -mx-4 overflow-hidden rounded-b-3xl sm:-mx-6">
-        <div className="relative h-64 w-full bg-maroon-900 sm:h-96">
+        <div className="relative h-[420px] w-full bg-maroon-900 sm:h-[600px] lg:h-[760px]">
           {mandalaFailed ? (
             <>
               <img
@@ -229,8 +229,8 @@ export function HomePage() {
               <Suspense fallback={null}>
                 <SuryaMandalaHero onFailed={() => setMandalaFailed(true)} />
               </Suspense>
-              <p className="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-black/30 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur-sm">
-                Surya Maṇḍala — drag to turn
+              <p className="pointer-events-none absolute bottom-2.5 right-3 rounded-full bg-black/30 px-3 py-1 text-[11px] text-white/80 backdrop-blur-sm">
+                Surya Maṇḍala — drag to orbit, move to look around
               </p>
             </>
           )}

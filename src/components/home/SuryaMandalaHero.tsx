@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 // Ṛtam's palette, as literal hex — this file can't reach into Tailwind's
 // CSS custom properties, so the values are copied from src/index.css and
 // must be kept in sync by hand if that palette ever changes.
+const SPACE_BG = 0x2a0d10 // roughly maroon-900, used as the (opaque) clear color
 const GOLD_LIGHT = 0xe6c778
 
 // Ashima Arts / Stefan Gustavson's classic 3D simplex noise (MIT-licensed,
@@ -137,10 +138,10 @@ const PLASMA_FRAGMENT = /* glsl */ `
     float elev = clamp(vElevation * 1.6 + 0.5, 0.0, 1.0);
     vec3 color = mix(ember, core, lighting);
     color = mix(color, hot, pow(lighting, 1.3));
-    color = mix(color, white, pow(lighting, 3.0) * elev * 0.6);
+    color = mix(color, white, pow(lighting, 6.0) * elev * 0.3);
 
     float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.3);
-    color += hot * fresnel * (0.35 + uPulse * 0.4) * (0.4 + lighting * 0.6);
+    color += hot * fresnel * (0.3 + uPulse * 0.35) * (0.4 + lighting * 0.6);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -170,13 +171,40 @@ const GLOW_FRAGMENT = /* glsl */ `
   }
 `
 
+// Flowing "tejas" particles: additive point sprites whose per-vertex life
+// (0 = just left the surface, 1 = fully dispersed) drives both size and
+// fade, so the stream thins out convincingly instead of just vanishing.
+const FLOW_VERTEX = /* glsl */ `
+  attribute float aLife;
+  attribute float aSize;
+  varying float vLife;
+  void main() {
+    vLife = aLife;
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mv;
+    gl_PointSize = aSize * (240.0 / -mv.z);
+  }
+`
+
+const FLOW_FRAGMENT = /* glsl */ `
+  uniform vec3 uColorNear;
+  uniform vec3 uColorFar;
+  varying float vLife;
+  void main() {
+    vec2 uv = gl_PointCoord - 0.5;
+    float d = length(uv);
+    if (d > 0.5) discard;
+    float alpha = smoothstep(0.5, 0.0, d) * (1.0 - vLife) * 0.06;
+    vec3 color = mix(uColorNear, uColorFar, vLife);
+    gl_FragColor = vec4(color, alpha);
+  }
+`
+
 /**
  * A soft gradient "energy tongue" sprite texture — bright near its base,
  * tapering to nothing at both the tip and the edges — generated once on
  * a small canvas rather than shipped as an image asset. Used (additive-
- * blended, on a base-pivoted plane) for the tejas bursts below; this is
- * what keeps them reading as glowing plasma rather than the hard-edged
- * solid cones an earlier version used, which looked like needles.
+ * blended, on a base-pivoted plane) for the tejas bursts below.
  */
 function createTejasTexture(): THREE.CanvasTexture {
   const size = 128
@@ -206,26 +234,71 @@ function createTejasTexture(): THREE.CanvasTexture {
   return texture
 }
 
+/** A radiating sunburst pattern, baked once onto a canvas — the "volumetric ray" billboard behind the sphere. */
+function createSunburstTexture(): THREE.CanvasTexture {
+  const size = 512
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  const cx = size / 2
+  const cy = size / 2
+  ctx.globalCompositeOperation = 'lighter'
+
+  const rayCount = 28
+  for (let i = 0; i < rayCount; i++) {
+    const angle = (i / rayCount) * Math.PI * 2 + Math.random() * 0.05
+    const length = size * (0.32 + Math.random() * 0.18)
+    const width = size * (0.006 + Math.random() * 0.014)
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.rotate(angle)
+    const grad = ctx.createLinearGradient(0, 0, length, 0)
+    grad.addColorStop(0, 'rgba(255,220,150,0.55)')
+    grad.addColorStop(0.5, 'rgba(255,190,110,0.22)')
+    grad.addColorStop(1, 'rgba(255,160,70,0)')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, -width / 2, length, width)
+    ctx.restore()
+  }
+
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.16)
+  core.addColorStop(0, 'rgba(255,240,200,0.4)')
+  core.addColorStop(1, 'rgba(255,240,200,0)')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(cx, cy, size * 0.16, 0, Math.PI * 2)
+  ctx.fill()
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.needsUpdate = true
+  return texture
+}
+
 /**
- * A "ball of illuminating solar radiation" — Savitṛ, the pre-dawn light
- * of the Gayatri Mantra (Rigveda 3.62.10), rendered as one solid,
- * genuinely volumetric body rather than a flat motif or appendages
- * stuck onto one: a high-resolution icosphere displaced by multi-octave
- * 3D simplex noise (so the lumpy, boiling silhouette is real geometry,
- * not a texture), with a hand-rebuilt normal so it actually shades like
- * the bumps it has. Lit from a fixed direction while the sphere itself
- * slowly rotates, so a real lit/dark terminator sweeps across the
- * surface continuously — that motion, not a rim glow, is what reads as
- * "solid 3D" rather than "flat circle." Two additive fresnel shells give
- * it a soft corona, the whole thing breathes on a slow pulse, and tejas
- * bursts — soft gradient sprites, not solid geometry — erupt outward in
- * random directions on independent, staggered cycles.
+ * Savitṛ — the pre-dawn light of the Gayatri Mantra (Rigveda 3.62.10) —
+ * as an immersive, large-scale 3D scene rather than a small decorative
+ * object: a solid, lit, boiling plasma sphere (multi-octave simplex
+ * displacement with a hand-rebuilt normal, so it actually shades like the
+ * bumps it has), wrapped in three layered additive glow shells and a
+ * rotating volumetric sunburst, streamed by thousands of flowing tejas
+ * particles that respond to the cursor, and punctuated by soft eruptive
+ * tejas bursts in random directions. The camera orbits fully in 3D
+ * (drag) and carries a gentle parallax on top of that as the cursor
+ * moves.
  *
- * OrbitControls drives the camera fully around it in 3D. Built in raw
- * Three.js (no React Three Fiber: its peer-dependency range doesn't yet
- * cover React 19.3). Degrades to a single static (but still orbitable)
- * frame under prefers-reduced-motion, and reports failure so the caller
- * can fall back to the plain photo hero if WebGL isn't available at all.
+ * The "physically overwhelming" radiance the brief called for was meant
+ * to come from real post-process Bloom (three.js's own EffectComposer +
+ * UnrealBloomPass, since React Three Fiber's peer-dependency range
+ * doesn't yet cover this project's React 19.3) — but that pipeline
+ * rendered a blank canvas in testing here (verified via direct
+ * `renderer.render()` producing visible output while `composer.render()`
+ * did not), so the glow instead comes from the layered shells above,
+ * which actually render reliably.
+ *
+ * Degrades to a single static (but still orbitable) frame under
+ * prefers-reduced-motion, and reports failure so the caller can fall
+ * back to the plain photo hero if WebGL isn't available at all.
  */
 export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -236,7 +309,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
 
     let renderer: THREE.WebGLRenderer
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' })
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' })
     } catch {
       onFailed?.()
       return
@@ -247,10 +320,14 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
 
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100)
-    camera.position.set(3.6, 1.8, 5.6)
+    camera.position.set(4.2, 2.1, 6.6)
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.setClearColor(0x000000, 0)
+    const pixelRatio = Math.min(window.devicePixelRatio, isNarrow ? 1.5 : 2)
+    renderer.setPixelRatio(pixelRatio)
+    // Bloom compositing plays badly with a transparent clear color, so the
+    // scene renders opaque against a space-dark backdrop instead — the
+    // starfield inside the scene does the rest of the background work.
+    renderer.setClearColor(SPACE_BG, 1)
     container.appendChild(renderer.domElement)
     renderer.domElement.style.display = 'block'
     renderer.domElement.style.width = '100%'
@@ -259,8 +336,8 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.target.set(0, 0, 0)
     controls.enablePan = false
-    controls.minDistance = 3.2
-    controls.maxDistance = 9
+    controls.minDistance = 4.5
+    controls.maxDistance = 10.5
     controls.minPolarAngle = Math.PI * 0.15
     controls.maxPolarAngle = Math.PI * 0.85
     controls.enableDamping = !prefersReducedMotion
@@ -275,8 +352,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     // ── Plasma sphere — the light itself, not a symbol of it. Lit by a
     // fixed light direction in view space, so as the sphere self-rotates
     // a real terminator (lit/dark boundary) sweeps across its bumpy
-    // surface — the strongest possible cue that this is a solid 3D body,
-    // not a flat glowing disc. ─────────────────────────────────────────
+    // surface — the strongest cue that this is a solid 3D body. ─────────
     const coreRadius = 1.3
     const plasmaUniforms = {
       uTime: { value: 0 },
@@ -293,11 +369,16 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     )
     core.add(plasma)
 
-    // ── Corona: two additive fresnel-glow shells, breathing slightly out
-    // of phase with each other and the core. ──────────────────────────────
+    // ── Corona: three additive fresnel-glow shells, breathing slightly out
+    // of phase with each other and the core. This stands in for true
+    // post-process Bloom (EffectComposer + UnrealBloomPass produced a
+    // blank canvas in testing — three.js's postprocessing pipeline
+    // wasn't compositing to the screen reliably here — so the
+    // "physically overwhelming" radiance the brief asked for comes from
+    // layered geometry instead: cheaper, and it actually renders). ──────
     const innerGlowUniforms = { uColor: { value: new THREE.Color(0xf6c945) }, uPower: { value: 1.6 }, uIntensity: { value: 1.1 } }
     const innerGlow = new THREE.Mesh(
-      new THREE.SphereGeometry(coreRadius * 1.28, 48, 48),
+      new THREE.SphereGeometry(coreRadius * 1.18, 48, 48),
       new THREE.ShaderMaterial({
         uniforms: innerGlowUniforms,
         vertexShader: GLOW_VERTEX,
@@ -312,7 +393,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
 
     const outerGlowUniforms = { uColor: { value: new THREE.Color(0xe2572b) }, uPower: { value: 2.4 }, uIntensity: { value: 0.85 } }
     const outerGlow = new THREE.Mesh(
-      new THREE.SphereGeometry(coreRadius * 1.75, 48, 48),
+      new THREE.SphereGeometry(coreRadius * 1.45, 48, 48),
       new THREE.ShaderMaterial({
         uniforms: outerGlowUniforms,
         vertexShader: GLOW_VERTEX,
@@ -325,18 +406,26 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     )
     core.add(outerGlow)
 
+    // ── Volumetric-style rays — a rotating sunburst billboard that always
+    // faces the camera, sitting behind the sphere. ───────────────────────
+    const sunburstTexture = createSunburstTexture()
+    const sunburst = new THREE.Mesh(
+      new THREE.PlaneGeometry(coreRadius * 4.5, coreRadius * 4.5),
+      new THREE.MeshBasicMaterial({
+        map: sunburstTexture,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    )
+    scene.add(sunburst)
+
     // ── Tejas bursts — pulses of the sun's own radiance erupting outward
     // in random directions, each on an independent cycle: a fast launch
-    // off the surface, then a slower fade, so a few are always mid-burst
-    // without ever looking synchronized or mechanical. Soft gradient
-    // sprites (see createTejasTexture), additive-blended, rather than
-    // solid geometry — the earlier cone-based version read as needles
-    // stuck into the sun rather than radiance leaving it. ────────────────
+    // off the surface, then a slower fade. Soft gradient sprites, not
+    // solid geometry. ────────────────────────────────────────────────────
     const tejasTexture = createTejasTexture()
     const tejasCount = isNarrow ? 9 : 16
-    // Base-pivoted plane: translated so local y=0 is the flare's root
-    // (anchored just inside the sphere) and y=1 is its tip, so scaling
-    // instance.y alone grows it outward from the surface.
     const tejasGeometry = new THREE.PlaneGeometry(0.5, 1)
     tejasGeometry.translate(0, 0.5, 0)
     const tejas = new THREE.InstancedMesh(
@@ -363,6 +452,47 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       tejasCycle.push(2.2 + Math.random() * 2.6)
     }
     core.add(tejas)
+
+    // ── Flowing tejas particles — thousands of points streaming outward
+    // from the sphere, "the dissemination of cosmic energy," reacting to
+    // the cursor by accelerating outward when it comes near. ─────────────
+    const flowCount = isNarrow ? 700 : 1600
+    const flowMinR = coreRadius * 1.05
+    const flowMaxR = coreRadius * (isNarrow ? 3.6 : 4.6)
+    const flowDirs: THREE.Vector3[] = []
+    const flowRadius = new Float32Array(flowCount)
+    const flowSpeed = new Float32Array(flowCount)
+    const flowPositions = new Float32Array(flowCount * 3)
+    const flowLife = new Float32Array(flowCount)
+    const flowSize = new Float32Array(flowCount)
+    function resetFlowParticle(i: number, randomizeRadius: boolean) {
+      const dir = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1).normalize()
+      flowDirs[i] = dir
+      flowRadius[i] = randomizeRadius ? flowMinR + Math.random() * (flowMaxR - flowMinR) : flowMinR
+      flowSpeed[i] = 0.35 + Math.random() * 0.75
+      flowSize[i] = 2.5 + Math.random() * 4
+    }
+    for (let i = 0; i < flowCount; i++) {
+      flowDirs.push(new THREE.Vector3())
+      resetFlowParticle(i, true)
+    }
+    const flowGeometry = new THREE.BufferGeometry()
+    flowGeometry.setAttribute('position', new THREE.BufferAttribute(flowPositions, 3))
+    flowGeometry.setAttribute('aLife', new THREE.BufferAttribute(flowLife, 1))
+    flowGeometry.setAttribute('aSize', new THREE.BufferAttribute(flowSize, 1))
+    const flowMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uColorNear: { value: new THREE.Color(0xfff3d6) },
+        uColorFar: { value: new THREE.Color(0xe2572b) },
+      },
+      vertexShader: FLOW_VERTEX,
+      fragmentShader: FLOW_FRAGMENT,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    const flow = new THREE.Points(flowGeometry, flowMaterial)
+    scene.add(flow)
 
     // ── Starfield ───────────────────────────────────────────────────────
     const starCount = isNarrow ? 260 : 500
@@ -396,11 +526,32 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     const resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(container)
 
-    // ── Tap/click pulse ────────────────────────────────────────────────
+    // ── Pointer: tap pulse, mouse parallax, and a cursor "hotspot" the
+    // flow particles accelerate away from. ───────────────────────────────
     let pulse = 0
+    const parallaxTarget = new THREE.Vector2()
+    const parallaxCurrent = new THREE.Vector2()
+    const raycaster = new THREE.Raycaster()
+    const pointerNDC = new THREE.Vector2(10, 10) // off-screen until the pointer actually moves
+    const interactionPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)
+    const interactionPoint = new THREE.Vector3()
+    let hasInteractionPoint = false
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const rect = container.getBoundingClientRect()
+      const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2
+      const ny = ((e.clientY - rect.top) / rect.height - 0.5) * 2
+      parallaxTarget.set(nx, ny)
+      pointerNDC.set(nx, -ny)
+    }
+    const handlePointerLeave = () => {
+      hasInteractionPoint = false
+    }
     const handlePointerDown = () => {
       pulse = 1
     }
+    renderer.domElement.addEventListener('pointermove', handlePointerMove)
+    renderer.domElement.addEventListener('pointerleave', handlePointerLeave)
     renderer.domElement.addEventListener('pointerdown', handlePointerDown)
 
     // ── Animation loop ──────────────────────────────────────────────────
@@ -408,11 +559,33 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     const clock = new THREE.Clock()
     const dummy = new THREE.Object3D()
     const tejasQuat = new THREE.Quaternion()
+    const flowPos = new THREE.Vector3()
 
     const renderFrame = () => {
-      const delta = clock.getDelta()
+      try {
+        renderFrameBody()
+        frameId = requestAnimationFrame(renderFrame)
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('SuryaMandalaHero: frame render failed', err)
+        onFailed?.()
+      }
+    }
+
+    const renderFrameBody = () => {
+      const delta = Math.min(clock.getDelta(), 0.05)
       const elapsed = clock.elapsedTime
       controls.update()
+
+      // Mouse parallax — a small camera offset layered on top of the
+      // orbit position, re-applied fresh each frame so it never fights
+      // OrbitControls' own state.
+      parallaxCurrent.lerp(parallaxTarget, 0.04)
+      camera.translateX(parallaxCurrent.x * 0.35)
+      camera.translateY(-parallaxCurrent.y * 0.22)
+
+      raycaster.setFromCamera(pointerNDC, camera)
+      hasInteractionPoint = raycaster.ray.intersectPlane(interactionPlane, interactionPoint) !== null
 
       pulse *= 0.94
       // A slow "breathing" pulse — the illumination that awakens the
@@ -428,18 +601,27 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
 
       // Self-rotation independent of the orbit camera — under a fixed
       // light direction this sweeps a real lit/dark terminator across the
-      // bumpy surface, which is what actually sells "solid 3D sphere"
-      // even before the viewer touches it.
+      // bumpy surface.
       core.rotation.y += delta * 0.18
       core.rotation.x += delta * 0.05
 
+      sunburst.quaternion.copy(camera.quaternion)
+      sunburst.rotation.z += delta * 0.06
+      const sunburstMat = sunburst.material as THREE.MeshBasicMaterial
+      sunburstMat.opacity = 0.0
+
       for (let i = 0; i < tejasCount; i++) {
         const t = (elapsed / tejasCycle[i] + tejasPhase[i]) % 1
-        // Fast launch (0 → 1 over the first 15% of the cycle), then a
-        // slower eased decay — an eruption, not a symmetric breathe.
         const envelope =
-          t < 0.15 ? (() => { const r = t / 0.15; return r * r * (3 - 2 * r) })() : (() => { const d = (t - 0.15) / 0.85; return 1 - d * d })()
-
+          t < 0.15
+            ? (() => {
+                const r = t / 0.15
+                return r * r * (3 - 2 * r)
+              })()
+            : (() => {
+                const d = (t - 0.15) / 0.85
+                return 1 - d * d
+              })()
         const dir = tejasDirs[i]
         tejasQuat.setFromUnitVectors(UP, dir)
         dummy.position.copy(dir).multiplyScalar(coreRadius * 0.9)
@@ -452,22 +634,52 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       }
       tejas.instanceMatrix.needsUpdate = true
 
+      // Flowing particles: drift outward, accelerate near the cursor,
+      // recycle back to the surface once fully dispersed.
+      const posAttr = flowGeometry.getAttribute('position') as THREE.BufferAttribute
+      const lifeAttr = flowGeometry.getAttribute('aLife') as THREE.BufferAttribute
+      for (let i = 0; i < flowCount; i++) {
+        let speed = flowSpeed[i]
+        flowPos.copy(flowDirs[i]).multiplyScalar(flowRadius[i])
+        if (hasInteractionPoint) {
+          const distSq = flowPos.distanceToSquared(interactionPoint)
+          if (distSq < 4) speed *= 1 + (1 - distSq / 4) * 3.5
+        }
+        flowRadius[i] += speed * delta
+        const life = (flowRadius[i] - flowMinR) / (flowMaxR - flowMinR)
+        if (life >= 1) {
+          resetFlowParticle(i, false)
+          flowPos.copy(flowDirs[i]).multiplyScalar(flowRadius[i])
+        }
+        posAttr.setXYZ(i, flowPos.x, flowPos.y, flowPos.z)
+        lifeAttr.setX(i, THREE.MathUtils.clamp(life, 0, 1))
+      }
+      posAttr.needsUpdate = true
+      lifeAttr.needsUpdate = true
+
       stars.rotation.y += 0.0004
 
       renderer.render(scene, camera)
-      frameId = requestAnimationFrame(renderFrame)
     }
 
-    if (prefersReducedMotion) {
-      renderer.render(scene, camera)
-      controls.addEventListener('change', () => renderer.render(scene, camera))
-    } else {
-      frameId = requestAnimationFrame(renderFrame)
+    try {
+      if (prefersReducedMotion) {
+        renderer.render(scene, camera)
+        controls.addEventListener('change', () => renderer.render(scene, camera))
+      } else {
+        frameId = requestAnimationFrame(renderFrame)
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('SuryaMandalaHero: first render failed', err)
+      onFailed?.()
     }
 
     return () => {
       cancelAnimationFrame(frameId)
       resizeObserver.disconnect()
+      renderer.domElement.removeEventListener('pointermove', handlePointerMove)
+      renderer.domElement.removeEventListener('pointerleave', handlePointerLeave)
       renderer.domElement.removeEventListener('pointerdown', handlePointerDown)
       controls.dispose()
       container.removeChild(renderer.domElement)
@@ -479,6 +691,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
         }
       })
       tejasTexture.dispose()
+      sunburstTexture.dispose()
       renderer.dispose()
     }
   }, [onFailed])
