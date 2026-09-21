@@ -1,28 +1,41 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAllFestivals, type FestivalWithTemple } from '../hooks/useFestivals'
+import { useAllFestivals } from '../hooks/useFestivals'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { MONTH_NAMES } from '../constants/enumLabels'
+import type { Festival } from '../types/database'
 
-function FestivalRow({ festival }: { festival: FestivalWithTemple }) {
+function formatExactDate(dateStr: string): string {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function FestivalRow({ festival }: { festival: Festival }) {
   return (
-    <li className="flex flex-col gap-1 border-b border-cream-200 px-4 py-3 last:border-b-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-      <div className="min-w-0">
-        <p className="font-display text-lg font-semibold text-charcoal-900">{festival.name}</p>
-        {festival.temples && (
-          <Link
-            to={`/temples/${festival.temple_id}`}
-            className="text-sm font-medium text-maroon-700 hover:underline"
-          >
-            {festival.temples.name} · {festival.temples.town}, {festival.temples.state}
-          </Link>
-        )}
-        {festival.notes && <p className="mt-0.5 text-sm text-charcoal-700/70">{festival.notes}</p>}
-      </div>
-      <span className="shrink-0 rounded-full border border-gold-400/50 bg-gold-400/10 px-3 py-1 text-xs font-semibold text-maroon-800">
-        {MONTH_NAMES[festival.month - 1]}
-        {festival.secondary_month ? `–${MONTH_NAMES[festival.secondary_month - 1]}` : ''}
-      </span>
+    <li className="border-b border-cream-200 px-4 py-3 last:border-b-0">
+      <Link
+        to={`/festivals/${festival.slug}`}
+        className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
+      >
+        <div className="min-w-0">
+          <p className="font-display text-lg font-semibold text-charcoal-900 hover:underline">{festival.name}</p>
+          {festival.exact_date ? (
+            <p className="text-sm text-charcoal-700/70">{formatExactDate(festival.exact_date)}</p>
+          ) : (
+            festival.description && (
+              <p className="mt-0.5 line-clamp-1 text-sm text-charcoal-700/70">{festival.description}</p>
+            )
+          )}
+        </div>
+        <span className="shrink-0 rounded-full border border-gold-400/50 bg-gold-400/10 px-3 py-1 text-xs font-semibold text-maroon-800">
+          {festival.exact_date
+            ? formatExactDate(festival.exact_date)
+            : `${MONTH_NAMES[festival.month - 1]}${festival.secondary_month ? `–${MONTH_NAMES[festival.secondary_month - 1]}` : ''}`}
+        </span>
+      </Link>
     </li>
   )
 }
@@ -37,7 +50,7 @@ export function FestivalCalendarPage() {
     (f) => f.month === currentMonth || f.secondary_month === currentMonth,
   )
 
-  const byMonth = new Map<number, FestivalWithTemple[]>()
+  const byMonth = new Map<number, Festival[]>()
   for (const f of festivals ?? []) {
     if (!byMonth.has(f.month)) byMonth.set(f.month, [])
     byMonth.get(f.month)!.push(f)
@@ -48,8 +61,9 @@ export function FestivalCalendarPage() {
       <div>
         <h1 className="font-display text-3xl font-semibold text-charcoal-900">Festival Calendar</h1>
         <p className="mt-2 max-w-2xl text-charcoal-700/80">
-          When to plan around — or plan for. Exact dates follow the lunar and regional calendars and
-          shift every year; months below are the usual window, not a fixed date.
+          One entry per festival — tap through to see which temples celebrate it and what's distinctive
+          about each. Dates with a specific day are sourced from Drikpanchang for the next occurrence;
+          the rest show their usual month window, since the exact date still shifts every year.
         </p>
       </div>
 

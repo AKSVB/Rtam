@@ -159,16 +159,29 @@ export interface TempleReview {
   user_profiles?: Pick<UserProfile, 'display_name' | 'username'>
 }
 
-export interface TempleFestival {
+/** One canonical festival — celebrated at one or more temples via `FestivalTemple`. */
+export interface Festival {
   id: string
-  temple_id: string
+  slug: string
   name: string
   /** 1 = January … 12 = December. The month the festival usually falls in. */
   month: number
   /** Set when the festival typically spans into a second month. */
   secondary_month: number | null
-  notes: string | null
+  /** Precise Gregorian date for the next occurrence, sourced from Drikpanchang. Null if not yet pinned. */
+  exact_date: string | null
+  /** e.g. the tithi, or a note on multi-day span — shown alongside exact_date. */
+  exact_date_note: string | null
+  drikpanchang_url: string | null
+  description: string | null
   created_at: string
+}
+
+/** Links a festival to one temple that celebrates it, with what's distinctive about that temple's observance. */
+export interface FestivalTemple {
+  festival_id: string
+  temple_id: string
+  significance: string | null
 }
 
 export interface TemplePuranaVariant {
