@@ -171,6 +171,42 @@ const GLOW_FRAGMENT = /* glsl */ `
 `
 
 /**
+ * A soft gradient "energy tongue" sprite texture — bright near its base,
+ * tapering to nothing at both the tip and the edges — generated once on
+ * a small canvas rather than shipped as an image asset. Used (additive-
+ * blended, on a base-pivoted plane) for the tejas bursts below; this is
+ * what keeps them reading as glowing plasma rather than the hard-edged
+ * solid cones an earlier version used, which looked like needles.
+ */
+function createTejasTexture(): THREE.CanvasTexture {
+  const size = 128
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+
+  const lengthGradient = ctx.createLinearGradient(0, size, 0, 0)
+  lengthGradient.addColorStop(0, 'rgba(255,150,60,0)')
+  lengthGradient.addColorStop(0.1, 'rgba(255,210,130,0.95)')
+  lengthGradient.addColorStop(0.35, 'rgba(255,190,110,0.7)')
+  lengthGradient.addColorStop(1, 'rgba(255,140,50,0)')
+  ctx.fillStyle = lengthGradient
+  ctx.fillRect(0, 0, size, size)
+
+  const widthGradient = ctx.createLinearGradient(0, 0, size, 0)
+  widthGradient.addColorStop(0, 'rgba(0,0,0,0)')
+  widthGradient.addColorStop(0.5, 'rgba(0,0,0,1)')
+  widthGradient.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.globalCompositeOperation = 'destination-in'
+  ctx.fillStyle = widthGradient
+  ctx.fillRect(0, 0, size, size)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.needsUpdate = true
+  return texture
+}
+
+/**
  * A "ball of illuminating solar radiation" — Savitṛ, the pre-dawn light
  * of the Gayatri Mantra (Rigveda 3.62.10), rendered as one solid,
  * genuinely volumetric body rather than a flat motif or appendages
@@ -181,7 +217,9 @@ const GLOW_FRAGMENT = /* glsl */ `
  * slowly rotates, so a real lit/dark terminator sweeps across the
  * surface continuously — that motion, not a rim glow, is what reads as
  * "solid 3D" rather than "flat circle." Two additive fresnel shells give
- * it a soft corona, and the whole thing breathes on a slow pulse.
+ * it a soft corona, the whole thing breathes on a slow pulse, and tejas
+ * bursts — soft gradient sprites, not solid geometry — erupt outward in
+ * random directions on independent, staggered cycles.
  *
  * OrbitControls drives the camera fully around it in 3D. Built in raw
  * Three.js (no React Three Fiber: its peer-dependency range doesn't yet
@@ -287,6 +325,45 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     )
     core.add(outerGlow)
 
+    // ── Tejas bursts — pulses of the sun's own radiance erupting outward
+    // in random directions, each on an independent cycle: a fast launch
+    // off the surface, then a slower fade, so a few are always mid-burst
+    // without ever looking synchronized or mechanical. Soft gradient
+    // sprites (see createTejasTexture), additive-blended, rather than
+    // solid geometry — the earlier cone-based version read as needles
+    // stuck into the sun rather than radiance leaving it. ────────────────
+    const tejasTexture = createTejasTexture()
+    const tejasCount = isNarrow ? 9 : 16
+    // Base-pivoted plane: translated so local y=0 is the flare's root
+    // (anchored just inside the sphere) and y=1 is its tip, so scaling
+    // instance.y alone grows it outward from the surface.
+    const tejasGeometry = new THREE.PlaneGeometry(0.5, 1)
+    tejasGeometry.translate(0, 0.5, 0)
+    const tejas = new THREE.InstancedMesh(
+      tejasGeometry,
+      new THREE.MeshBasicMaterial({
+        map: tejasTexture,
+        color: 0xffd88a,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+      tejasCount,
+    )
+    const tejasDirs: THREE.Vector3[] = []
+    const tejasPhase: number[] = []
+    const tejasCycle: number[] = []
+    const UP = new THREE.Vector3(0, 1, 0)
+    for (let i = 0; i < tejasCount; i++) {
+      tejasDirs.push(
+        new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1).normalize(),
+      )
+      tejasPhase.push(Math.random())
+      tejasCycle.push(2.2 + Math.random() * 2.6)
+    }
+    core.add(tejas)
+
     // ── Starfield ───────────────────────────────────────────────────────
     const starCount = isNarrow ? 260 : 500
     const starPositions = new Float32Array(starCount * 3)
@@ -329,6 +406,8 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     // ── Animation loop ──────────────────────────────────────────────────
     let frameId = 0
     const clock = new THREE.Clock()
+    const dummy = new THREE.Object3D()
+    const tejasQuat = new THREE.Quaternion()
 
     const renderFrame = () => {
       const delta = clock.getDelta()
@@ -353,6 +432,25 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       // even before the viewer touches it.
       core.rotation.y += delta * 0.18
       core.rotation.x += delta * 0.05
+
+      for (let i = 0; i < tejasCount; i++) {
+        const t = (elapsed / tejasCycle[i] + tejasPhase[i]) % 1
+        // Fast launch (0 → 1 over the first 15% of the cycle), then a
+        // slower eased decay — an eruption, not a symmetric breathe.
+        const envelope =
+          t < 0.15 ? (() => { const r = t / 0.15; return r * r * (3 - 2 * r) })() : (() => { const d = (t - 0.15) / 0.85; return 1 - d * d })()
+
+        const dir = tejasDirs[i]
+        tejasQuat.setFromUnitVectors(UP, dir)
+        dummy.position.copy(dir).multiplyScalar(coreRadius * 0.9)
+        dummy.quaternion.copy(tejasQuat)
+        const length = 0.04 + envelope * coreRadius * 1.15
+        const width = 0.3 + envelope * 0.7
+        dummy.scale.set(width, length, 1)
+        dummy.updateMatrix()
+        tejas.setMatrixAt(i, dummy.matrix)
+      }
+      tejas.instanceMatrix.needsUpdate = true
 
       stars.rotation.y += 0.0004
 
@@ -380,6 +478,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
           mats.forEach((m) => m.dispose())
         }
       })
+      tejasTexture.dispose()
       renderer.dispose()
     }
   }, [onFailed])
