@@ -344,3 +344,21 @@ export interface Message {
   created_at: string
   read_at: string | null
 }
+
+export type ReportTargetType = 'temple_review' | 'community_post'
+export type ReportStatus = 'open' | 'dismissed' | 'resolved'
+
+export interface ContentReport {
+  id: string
+  reporter_id: string
+  target_type: ReportTargetType
+  target_id: string
+  content_snapshot: string
+  link_path: string
+  reason: string
+  status: ReportStatus
+  resolved_by: string | null
+  resolved_at: string | null
+  created_at: string
+  reporter?: Pick<UserProfile, 'username' | 'display_name'>
+}

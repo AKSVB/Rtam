@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext'
 import { usePendingStays, usePendingTemples, useReviewStay, useReviewTemple } from '../hooks/useModeration'
 import { usePendingEditSuggestions, useReviewEditSuggestion } from '../hooks/useEditSuggestions'
 import { usePendingDharmicActivities, useReviewDharmicActivity } from '../hooks/useDharmicActivities'
+import { useOpenReports, useResolveReport } from '../hooks/useReports'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Button } from '../components/common/Button'
 import { Select, TextInput } from '../components/common/FormField'
@@ -29,15 +30,17 @@ export function ModeratorQueuePage() {
   const { data: pendingStays, isLoading: staysLoading } = usePendingStays()
   const { data: pendingSuggestions, isLoading: suggestionsLoading } = usePendingEditSuggestions()
   const { data: pendingActivities, isLoading: activitiesLoading } = usePendingDharmicActivities()
+  const { data: openReports, isLoading: reportsLoading } = useOpenReports()
   const reviewTemple = useReviewTemple()
   const reviewStay = useReviewStay()
   const reviewSuggestion = useReviewEditSuggestion()
   const reviewActivity = useReviewDharmicActivity()
+  const resolveReport = useResolveReport()
   const [note, setNote] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<TempleEdits | null>(null)
 
-  if (templesLoading || staysLoading || suggestionsLoading || activitiesLoading)
+  if (templesLoading || staysLoading || suggestionsLoading || activitiesLoading || reportsLoading)
     return <LoadingSpinner label="Loading queue…" />
 
   const handleTempleDecision = (
@@ -100,6 +103,30 @@ export function ModeratorQueuePage() {
     )
   }
 
+  const handleReportDecision = (
+    report: NonNullable<typeof openReports>[number],
+    status: 'dismissed' | 'resolved',
+    removeContent: boolean,
+  ) => {
+    if (!profile) return
+    resolveReport.mutate(
+      {
+        reportId: report.id,
+        moderatorId: profile.id,
+        status,
+        deleteTarget: removeContent ? { targetType: report.target_type, targetId: report.target_id } : undefined,
+      },
+      {
+        onSuccess: () =>
+          toast(
+            removeContent ? 'Content removed.' : status === 'dismissed' ? 'Report dismissed.' : 'Report resolved.',
+            'success',
+          ),
+        onError: () => toast("Couldn't update that report. Please try again.", 'error'),
+      },
+    )
+  }
+
   const startEditing = (temple: Temple) => {
     setEditingId(temple.id)
     setDraft({
@@ -114,6 +141,59 @@ export function ModeratorQueuePage() {
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-2xl font-bold text-charcoal-900">{strings.moderator.title}</h1>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-charcoal-900">
+          Content Reports{openReports && openReports.length > 0 && ` (${openReports.length})`}
+        </h2>
+        {!openReports || openReports.length === 0 ? (
+          <p className="text-sm text-charcoal-700/70">No open reports right now.</p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {openReports.map((report) => (
+              <div key={report.id} className="rounded-xl border border-cream-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-saffron-500">
+                    {report.target_type === 'temple_review' ? 'Review' : 'Dharma Wall post'}
+                  </span>
+                  <span className="text-xs text-charcoal-700/60">
+                    reported by {report.reporter?.display_name ?? 'a devotee'}
+                    {report.reporter?.username && ` @${report.reporter.username}`}
+                  </span>
+                </div>
+                <Link to={report.link_path} className="mt-1 block text-sm font-semibold text-maroon-700 hover:underline">
+                  View content →
+                </Link>
+                <p className="mt-2 rounded-lg bg-cream-100 p-2 text-sm italic text-charcoal-700/80">
+                  "{report.content_snapshot}"
+                </p>
+                <p className="mt-2 text-sm text-charcoal-900">
+                  <span className="font-semibold">Reason: </span>
+                  {report.reason}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    variant="danger"
+                    className="min-h-9 px-3 py-1 text-xs"
+                    onClick={() => handleReportDecision(report, 'resolved', true)}
+                    disabled={resolveReport.isPending}
+                  >
+                    Remove content
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="min-h-9 px-3 py-1 text-xs"
+                    onClick={() => handleReportDecision(report, 'dismissed', false)}
+                    disabled={resolveReport.isPending}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section>
         <h2 className="mb-3 text-lg font-bold text-charcoal-900">Pending Temples</h2>

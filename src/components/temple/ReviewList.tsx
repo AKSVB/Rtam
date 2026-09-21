@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { TempleReview } from '../../types/database'
 import { strings } from '../../constants/strings'
+import { ReportButton } from '../common/ReportButton'
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -37,9 +38,16 @@ export function ReviewList({ reviews }: { reviews: TempleReview[] }) {
             <Stars rating={review.rating} />
           </div>
           {review.comment && <p className="mt-2 text-sm text-charcoal-700/90">{review.comment}</p>}
-          <p className="mt-2 text-xs text-charcoal-700/50">
-            {new Date(review.created_at).toLocaleDateString()}
-          </p>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <p className="text-xs text-charcoal-700/50">{new Date(review.created_at).toLocaleDateString()}</p>
+            <ReportButton
+              targetType="temple_review"
+              targetId={review.id}
+              contentSnapshot={review.comment ?? `${review.rating}-star review, no comment`}
+              linkPath={`/temples/${review.temple_id}`}
+              className="text-xs"
+            />
+          </div>
         </li>
       ))}
     </ul>

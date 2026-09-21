@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Avatar } from '../common/Avatar'
+import { ReportButton } from '../common/ReportButton'
 import type { CommunityPostWithMeta } from '../../hooks/useCommunityPosts'
 
 interface Props {
@@ -100,6 +101,13 @@ export function PostCard({ post, currentUserId, isModerator, onToggleLike, onDel
           >
             𝕏 Post
           </a>
+          <ReportButton
+            targetType="community_post"
+            targetId={post.id}
+            contentSnapshot={post.caption ?? '(photo post, no caption)'}
+            linkPath={`/dharma-wall/${post.id}`}
+            className="ml-auto text-charcoal-700/70"
+          />
         </div>
         <p className="text-xs text-charcoal-700/50">{new Date(post.created_at).toLocaleDateString()}</p>
       </div>
