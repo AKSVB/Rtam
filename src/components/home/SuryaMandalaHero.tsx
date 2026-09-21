@@ -234,6 +234,70 @@ function createTejasTexture(): THREE.CanvasTexture {
   return texture
 }
 
+/**
+ * A soft, non-literal luminous silhouette — not a portrait, not an
+ * attempt at iconographic detail, just a graceful coalescing of light
+ * into a seated feminine form with a halo, drawn and blurred on canvas
+ * so every edge is soft rather than a hard cutout. This is what
+ * "manifests" within the mandala at the peak of each breath.
+ */
+function createDivineFigureTexture(): THREE.CanvasTexture {
+  const w = 320
+  const h = 420
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')!
+  const cx = w / 2
+
+  // Halo, behind everything.
+  const halo = ctx.createRadialGradient(cx, h * 0.28, 0, cx, h * 0.28, w * 0.42)
+  halo.addColorStop(0, 'rgba(255,248,224,0.9)')
+  halo.addColorStop(0.5, 'rgba(255,224,150,0.35)')
+  halo.addColorStop(1, 'rgba(255,224,150,0)')
+  ctx.fillStyle = halo
+  ctx.fillRect(0, 0, w, h)
+
+  // The silhouette itself: head, then a flowing seated/robed form
+  // widening toward the base — deliberately impressionistic rather than
+  // anatomical.
+  ctx.filter = 'blur(3px)'
+  const bodyGradient = ctx.createLinearGradient(0, h * 0.1, 0, h)
+  bodyGradient.addColorStop(0, 'rgba(255,250,235,0.95)')
+  bodyGradient.addColorStop(0.35, 'rgba(255,222,150,0.85)')
+  bodyGradient.addColorStop(1, 'rgba(240,160,70,0.15)')
+  ctx.fillStyle = bodyGradient
+
+  ctx.beginPath()
+  // Head.
+  ctx.arc(cx, h * 0.22, w * 0.09, 0, Math.PI * 2)
+  ctx.fill()
+
+  // Seated, robed form — a smooth bell tapering from shoulders to a wide base.
+  ctx.beginPath()
+  ctx.moveTo(cx, h * 0.3)
+  ctx.bezierCurveTo(cx - w * 0.08, h * 0.32, cx - w * 0.14, h * 0.42, cx - w * 0.1, h * 0.55)
+  ctx.bezierCurveTo(cx - w * 0.3, h * 0.68, cx - w * 0.34, h * 0.85, cx - w * 0.3, h * 0.97)
+  ctx.lineTo(cx + w * 0.3, h * 0.97)
+  ctx.bezierCurveTo(cx + w * 0.34, h * 0.85, cx + w * 0.3, h * 0.68, cx + w * 0.1, h * 0.55)
+  ctx.bezierCurveTo(cx + w * 0.14, h * 0.42, cx + w * 0.08, h * 0.32, cx, h * 0.3)
+  ctx.closePath()
+  ctx.fill()
+
+  // Softened, raised-hands suggestion either side — kept minimal.
+  ctx.beginPath()
+  ctx.ellipse(cx - w * 0.32, h * 0.5, w * 0.05, h * 0.1, -0.5, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.ellipse(cx + w * 0.32, h * 0.5, w * 0.05, h * 0.1, 0.5, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.filter = 'none'
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.needsUpdate = true
+  return texture
+}
+
 /** A radiating sunburst pattern, baked once onto a canvas — the "volumetric ray" billboard behind the sphere. */
 function createSunburstTexture(): THREE.CanvasTexture {
   const size = 512
@@ -405,6 +469,29 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       }),
     )
     core.add(outerGlow)
+
+    // ── The divine presence — a soft, non-literal luminous silhouette
+    // that manifests at the peak of each breath and recedes back into
+    // the light. Always faces the camera (billboarded) and draws with
+    // depthTest disabled so it reads through the opaque plasma core from
+    // any orbit angle, rather than being hidden behind it. ──────────────
+    const divineFigureTexture = createDivineFigureTexture()
+    const divineFigureMaterial = new THREE.MeshBasicMaterial({
+      map: divineFigureTexture,
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthTest: false,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    })
+    const divineFigure = new THREE.Mesh(
+      new THREE.PlaneGeometry(coreRadius * 1.9, coreRadius * 1.9 * (420 / 320)),
+      divineFigureMaterial,
+    )
+    divineFigure.renderOrder = 10
+    scene.add(divineFigure)
 
     // ── Volumetric-style rays — a rotating sunburst billboard that always
     // faces the camera, sitting behind the sphere. ───────────────────────
@@ -610,6 +697,17 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       const sunburstMat = sunburst.material as THREE.MeshBasicMaterial
       sunburstMat.opacity = 0.0
 
+      // Manifestation: sharpen breath's smooth 0..1 cycle into a brief
+      // peak so the presence is mostly absent, gathering and appearing
+      // only around the top of each breath, then dissolving again.
+      const manifest = Math.pow(breath, 3)
+      divineFigure.quaternion.copy(camera.quaternion)
+      divineFigure.position.set(0, 0, 0)
+      divineFigureMaterial.opacity = manifest
+      const figureScale = 0.82 + manifest * 0.18
+      divineFigure.scale.setScalar(figureScale)
+      divineFigure.rotation.z = Math.sin(elapsed * 0.15) * 0.02
+
       for (let i = 0; i < tejasCount; i++) {
         const t = (elapsed / tejasCycle[i] + tejasPhase[i]) % 1
         const envelope =
@@ -692,6 +790,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       })
       tejasTexture.dispose()
       sunburstTexture.dispose()
+      divineFigureTexture.dispose()
       renderer.dispose()
     }
   }, [onFailed])
