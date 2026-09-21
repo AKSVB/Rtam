@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -9,15 +9,27 @@ import {
   useIncomingFollowRequests,
   useOutgoingFollowRequests,
   useRespondToFollowRequest,
+  useSearchUsers,
 } from '../hooks/useFollows'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Avatar } from '../components/common/Avatar'
 import { Button } from '../components/common/Button'
+import { FollowButton } from '../components/profile/FollowButton'
 import type { UserProfile } from '../types/database'
 
 type ConnectionProfile = Pick<UserProfile, 'id' | 'username' | 'display_name' | 'avatar_url'>
 
-type Tab = 'following' | 'followers' | 'requests'
+type Tab = 'find' | 'following' | 'followers' | 'requests'
+
+/** Debounces a fast-changing value (like search input) so we don't query on every keystroke. */
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs)
+    return () => clearTimeout(timer)
+  }, [value, delayMs])
+  return debounced
+}
 
 function ProfileRow({ profile, children }: { profile: ConnectionProfile; children?: React.ReactNode }) {
   return (
@@ -35,18 +47,22 @@ function ProfileRow({ profile, children }: { profile: ConnectionProfile; childre
 export function ConnectionsPage() {
   const { profile } = useAuth()
   const { toast } = useToast()
-  const [tab, setTab] = useState<Tab>('requests')
+  const [tab, setTab] = useState<Tab>('find')
+  const [searchInput, setSearchInput] = useState('')
+  const searchQuery = useDebouncedValue(searchInput, 300)
 
   const { data: incoming, isLoading: incomingLoading } = useIncomingFollowRequests(profile?.id)
   const { data: outgoing, isLoading: outgoingLoading } = useOutgoingFollowRequests(profile?.id)
   const { data: following, isLoading: followingLoading } = useFollowing(profile?.id)
   const { data: followers, isLoading: followersLoading } = useFollowers(profile?.id)
+  const { data: searchResults, isLoading: searchLoading } = useSearchUsers(searchQuery, profile?.id)
   const respond = useRespondToFollowRequest()
   const cancelRequest = useCancelFollowRequest()
 
   if (!profile) return <LoadingSpinner label="Loading…" />
 
   const tabs: { key: Tab; label: string; count: number }[] = [
+    { key: 'find', label: 'Find people', count: 0 },
     { key: 'requests', label: 'Requests', count: incoming?.length ?? 0 },
     { key: 'following', label: 'Following', count: following?.length ?? 0 },
     { key: 'followers', label: 'Followers', count: followers?.length ?? 0 },
@@ -78,6 +94,38 @@ export function ConnectionsPage() {
           </button>
         ))}
       </div>
+
+      {tab === 'find' && (
+        <div className="flex flex-col gap-4">
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search by username or display name…"
+            className="min-h-11 rounded-lg border border-cream-200 bg-white px-4 py-2 text-charcoal-900 placeholder:text-charcoal-700/40 focus:border-maroon-700 focus:outline-none"
+            autoFocus
+          />
+          {searchInput.trim().length > 0 && searchInput.trim().length < 2 ? (
+            <p className="text-sm text-charcoal-700/60">Keep typing…</p>
+          ) : searchQuery.trim().length < 2 ? (
+            <p className="text-sm text-charcoal-700/60">
+              Search for someone by their username or display name to send a follow request.
+            </p>
+          ) : searchLoading ? (
+            <LoadingSpinner label="Searching…" />
+          ) : !searchResults || searchResults.length === 0 ? (
+            <p className="text-sm text-charcoal-700/60">No one matches "{searchQuery}".</p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {searchResults.map((p) => (
+                <ProfileRow key={p.id} profile={p}>
+                  <FollowButton otherUserId={p.id} />
+                </ProfileRow>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {tab === 'requests' &&
         (incomingLoading || outgoingLoading ? (
@@ -145,7 +193,11 @@ export function ConnectionsPage() {
           <LoadingSpinner label="Loading…" />
         ) : !following || following.length === 0 ? (
           <p className="text-sm text-charcoal-700/60">
-            Not following anyone yet. Visit a contributor's profile to send a follow request.
+            Not following anyone yet.{' '}
+            <button type="button" onClick={() => setTab('find')} className="font-semibold text-maroon-700 hover:underline">
+              Find someone to follow
+            </button>
+            .
           </p>
         ) : (
           <ul className="flex flex-col gap-3">

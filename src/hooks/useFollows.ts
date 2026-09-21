@@ -149,6 +149,24 @@ export function useOutgoingFollowRequests(userId: string | undefined) {
   })
 }
 
+/** People whose username or display name matches the query, for "find someone to follow". */
+export function useSearchUsers(query: string, excludeUserId: string | undefined) {
+  const trimmed = query.trim()
+  return useQuery({
+    queryKey: ['search-users', trimmed],
+    queryFn: async (): Promise<ConnectionProfile[]> => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id, username, display_name, avatar_url')
+        .or(`username.ilike.%${trimmed}%,display_name.ilike.%${trimmed}%`)
+        .limit(20)
+      if (error) throw error
+      return (data ?? []).filter((p) => p.id !== excludeUserId)
+    },
+    enabled: trimmed.length >= 2,
+  })
+}
+
 async function fetchConnectionProfiles(ids: string[]): Promise<ConnectionProfile[]> {
   if (ids.length === 0) return []
   const { data, error } = await supabase
