@@ -78,7 +78,9 @@ export function AddBookPage() {
       <h1 className="mb-2 mt-2 text-2xl font-bold text-charcoal-900">Share a Devotional Book</h1>
       <p className="mb-6 text-sm text-charcoal-700/70">
         Only share texts you have the right to distribute — public-domain scriptures, your own work, or
-        works you have permission to share. A moderator reviews every submission before it goes live.
+        works you have permission to share. This is for spiritual and educational purposes only, in good
+        faith and for the wider public good, never for commercial use. A moderator reviews every
+        submission before it goes live, and any rights holder can request a book's removal from its page.
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-cream-200 bg-white p-5">

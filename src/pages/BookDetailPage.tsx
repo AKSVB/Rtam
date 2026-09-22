@@ -5,6 +5,8 @@ import { useDeleteDevotionalBook, useDevotionalBook } from '../hooks/useDevotion
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Badge } from '../components/common/Badge'
 import { Button } from '../components/common/Button'
+import { ReportButton } from '../components/common/ReportButton'
+import { LibraryDisclaimer } from '../components/library/LibraryDisclaimer'
 import { BOOK_CATEGORY_ICONS, BOOK_CATEGORY_LABELS } from '../constants/enumLabels'
 
 function formatFileSize(bytes: number | null): string {
@@ -121,6 +123,19 @@ export function BookDetailPage() {
 
       <div className="overflow-hidden rounded-xl border border-cream-200 bg-white">
         <iframe src={book.pdf_url} title={book.title} className="h-[70vh] w-full" />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <LibraryDisclaimer />
+        {user && !isOwner && (
+          <ReportButton
+            targetType="devotional_book"
+            targetId={book.id}
+            contentSnapshot={`${book.title}${book.author ? ` by ${book.author}` : ''}`}
+            linkPath={`/library/${book.id}`}
+            className="self-start"
+          />
+        )}
       </div>
 
       <Link to="/library" className="text-sm font-semibold text-maroon-700 hover:underline">

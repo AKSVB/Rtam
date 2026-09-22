@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDevotionalBooks } from '../hooks/useDevotionalBooks'
 import { BookCard } from '../components/library/BookCard'
+import { LibraryDisclaimer } from '../components/library/LibraryDisclaimer'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Button } from '../components/common/Button'
 import { Select, TextInput } from '../components/common/FormField'
@@ -29,6 +30,8 @@ export function LibraryPage() {
           <Button>+ Share a Book</Button>
         </Link>
       </div>
+
+      <LibraryDisclaimer compact />
 
       <div className="flex flex-wrap gap-3">
         <TextInput

@@ -176,7 +176,11 @@ export function ModeratorQueuePage() {
               <div key={report.id} className="rounded-xl border border-cream-200 bg-white p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-semibold uppercase tracking-wide text-saffron-500">
-                    {report.target_type === 'temple_review' ? 'Review' : 'Dharma Wall post'}
+                    {report.target_type === 'temple_review'
+                      ? 'Review'
+                      : report.target_type === 'devotional_book'
+                        ? 'Devotional book'
+                        : 'Dharma Wall post'}
                   </span>
                   <span className="text-xs text-charcoal-700/60">
                     reported by {report.reporter?.display_name ?? 'a devotee'}

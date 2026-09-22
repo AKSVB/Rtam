@@ -400,7 +400,7 @@ export interface Message {
   read_at: string | null
 }
 
-export type ReportTargetType = 'temple_review' | 'community_post'
+export type ReportTargetType = 'temple_review' | 'community_post' | 'devotional_book'
 export type ReportStatus = 'open' | 'dismissed' | 'resolved'
 
 export interface ContentReport {

@@ -6,6 +6,7 @@ import type { ContentReport, ReportTargetType } from '../types/database'
 export const REPORT_TARGET_TABLE: Record<ReportTargetType, string> = {
   temple_review: 'temple_reviews',
   community_post: 'community_posts',
+  devotional_book: 'devotional_books',
 }
 
 export function useFileReport() {
