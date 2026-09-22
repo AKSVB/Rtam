@@ -23,6 +23,7 @@ import { FreshnessBadge } from '../components/temple/FreshnessBadge'
 import { TempleTimings } from '../components/temple/TempleTimings'
 import { PackingChecklist } from '../components/temple/PackingChecklist'
 import { LiveStatusReporter } from '../components/temple/LiveStatusReporter'
+import { LiveWaitTimeReporter } from '../components/temple/LiveWaitTimeReporter'
 import { SandhyavandanamPrompt } from '../components/temple/SandhyavandanamPrompt'
 import { VisitButton } from '../components/temple/VisitButton'
 import { Button } from '../components/common/Button'
@@ -146,8 +147,9 @@ export function TempleDetailPage() {
         </div>
 
         {temple.status === 'approved' && (
-          <div className="mt-4 max-w-md">
+          <div className="mt-4 flex max-w-md flex-col gap-3">
             <LiveStatusReporter templeId={temple.id} />
+            <LiveWaitTimeReporter templeId={temple.id} />
           </div>
         )}
 

@@ -219,6 +219,15 @@ export interface TempleStatusReport {
   created_at: string
 }
 
+export interface TempleWaitReport {
+  id: string
+  temple_id: string
+  reported_by: string
+  wait_minutes: number
+  note: string | null
+  created_at: string
+}
+
 export interface TripList {
   id: string
   user_id: string
