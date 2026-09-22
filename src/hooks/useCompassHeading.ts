@@ -57,16 +57,21 @@ export function useCompassHeading() {
         // screen's current "up" — still needs the screen-angle correction.
         setHeading((iosHeading + screenAngle + 360) % 360)
       } else if (e.alpha != null) {
-        // alpha increases counter-clockwise from north when it's genuinely
-        // north-referenced — but plain 'deviceorientation' only guarantees
-        // that when e.absolute is true. Otherwise alpha is relative to
-        // whatever direction the phone happened to face when tracking
-        // started, and treating it as a compass heading anyway is exactly
-        // the "calibration" bug this once had: the needle would still turn
-        // smoothly with the phone, but point in a consistently wrong
-        // absolute direction. A wrong-but-confident reading is worse than
-        // none, so this is skipped rather than guessed.
-        if (e.absolute) setHeading((360 - e.alpha + screenAngle + 360) % 360)
+        // The textbook DeviceOrientation spec derivation says compass
+        // heading = 360 - alpha, but that inverted the turning direction
+        // in practice (confirmed on a real Android device: the needle
+        // swung the wrong way when turning, and so read as a fixed offset
+        // too, since an inverted reading only coincidentally matches truth
+        // at one heading and diverges everywhere else) — this browser's
+        // alpha already increases in the same clockwise sense as compass
+        // heading, so it's used directly instead of inverted.
+        //
+        // Plain 'deviceorientation' only guarantees alpha is genuinely
+        // north-referenced when e.absolute is true; otherwise it's relative
+        // to whatever direction the phone faced when tracking started, and
+        // using it anyway is the earlier "calibration" bug this hook had —
+        // a wrong-but-confident reading is worse than none, so it's skipped.
+        if (e.absolute) setHeading((e.alpha + screenAngle + 360) % 360)
       }
     }
 
