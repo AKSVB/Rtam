@@ -163,6 +163,11 @@ export function TrikalaSandhyaTracker() {
       { logDate: today, field, value: newValue },
       {
         onSuccess: () => {
+          // Sandhya Tejas points are awarded server-side by a database trigger
+          // (per sandhya recorded, plus streak milestones), so the profile
+          // needs a refetch to pick up the new total — it isn't part of the
+          // sandhya_logs response the mutation itself invalidates.
+          if (newValue) refreshProfile()
           if (newValue && wouldBeComplete && !todayComplete) {
             toast('🔥 Trikala Sandhya complete for today!', 'success')
           }
@@ -246,7 +251,9 @@ export function TrikalaSandhyaTracker() {
         <span className="text-charcoal-700/70">
           ✨ {profile.sandhya_tejas_points} Sandhya Tejas points
         </span>
-        <span className="text-xs text-charcoal-700/50">+108 for every unbroken 30-day streak</span>
+        <span className="text-xs text-charcoal-700/50">
+          +1 for every sandhya recorded, +108 for every unbroken 30-day streak
+        </span>
       </div>
 
       <label className="flex items-center gap-2 text-sm text-charcoal-700/80">

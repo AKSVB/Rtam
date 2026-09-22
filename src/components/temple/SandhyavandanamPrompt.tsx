@@ -19,7 +19,7 @@ function shownKey(periodKey: string) {
  * the rest of the period even across browser sessions.
  */
 export function SandhyavandanamPrompt({ deity, templeName }: { deity: string; templeName: string }) {
-  const { profile } = useAuth()
+  const { profile, refreshProfile } = useAuth()
   const [open, setOpen] = useState(false)
   const period = getCurrentSandhyaPeriod()
   const upsertLog = useUpsertSandhyaLog(profile?.id)
@@ -53,7 +53,12 @@ export function SandhyavandanamPrompt({ deity, templeName }: { deity: string; te
 
   const answer = (performed: boolean) => {
     if (profile) {
-      upsertLog.mutate({ logDate: istDateString(), field: period.key, value: performed })
+      // A "yes" earns a Sandhya Tejas point server-side — refetch the
+      // profile so it's reflected wherever it's shown next, not just after
+      // a full reload.
+      upsertLog.mutate({ logDate: istDateString(), field: period.key, value: performed }, {
+        onSuccess: () => performed && refreshProfile(),
+      })
     }
     dismiss()
   }
