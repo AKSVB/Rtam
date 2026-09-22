@@ -8,6 +8,27 @@ function getPermissionRequester(): PermissionRequester | undefined {
 }
 
 /**
+ * How far, in degrees clockwise, the current screen orientation is rotated
+ * from the device's "natural" one — e.g. 90 when a phone whose natural
+ * orientation is portrait is being held in landscape. Both alpha and
+ * webkitCompassHeading are defined relative to the physical device, not
+ * the screen's current "up", so without this a compass held in landscape
+ * (or on a tablet, whose natural orientation is often landscape already)
+ * reads off by a fixed 90/180/270° — the other classic source of a web
+ * compass "pointing the wrong way" alongside the absolute/relative alpha
+ * issue, and explicitly called out in MDN's orientation-and-motion guide.
+ */
+function getScreenAngle(): number {
+  if (typeof screen !== 'undefined' && screen.orientation && typeof screen.orientation.angle === 'number') {
+    return screen.orientation.angle
+  }
+  // Older iOS exposed only this, in the opposite sign convention to
+  // screen.orientation.angle (negative when rotated clockwise).
+  const legacy = (window as unknown as { orientation?: number }).orientation
+  return typeof legacy === 'number' ? -legacy : 0
+}
+
+/**
  * Best-effort device compass heading (0-360°, 0 = device top pointing
  * north), from the `deviceorientation` event. There's no magnetometer
  * calibration here — accuracy varies a lot by device and browser — so this
@@ -28,10 +49,13 @@ export function useCompassHeading() {
     if (!supported || needsPermission) return
 
     const applyEvent = (e: DeviceOrientationEvent) => {
+      const screenAngle = getScreenAngle()
       const iosHeading = (e as DeviceOrientationEvent & { webkitCompassHeading?: number }).webkitCompassHeading
       if (typeof iosHeading === 'number') {
-        // iOS's webkitCompassHeading is always magnetic-north-referenced.
-        setHeading(iosHeading)
+        // iOS's webkitCompassHeading is always magnetic-north-referenced,
+        // but still relative to the device's physical top, not the
+        // screen's current "up" — still needs the screen-angle correction.
+        setHeading((iosHeading + screenAngle + 360) % 360)
       } else if (e.alpha != null) {
         // alpha increases counter-clockwise from north when it's genuinely
         // north-referenced — but plain 'deviceorientation' only guarantees
@@ -42,7 +66,7 @@ export function useCompassHeading() {
         // smoothly with the phone, but point in a consistently wrong
         // absolute direction. A wrong-but-confident reading is worse than
         // none, so this is skipped rather than guessed.
-        if (e.absolute) setHeading((360 - e.alpha) % 360)
+        if (e.absolute) setHeading((360 - e.alpha + screenAngle + 360) % 360)
       }
     }
 
