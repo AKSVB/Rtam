@@ -1,5 +1,8 @@
--- Ṛtam — 4 more Gujarat temples beyond Somnath, Nageshwar Jyotirlinga,
--- Dwarkadhish, Ambaji and Bahucharaji seeded earlier.
+-- Ṛtam — 3 more Gujarat temples beyond Somnath, Nageshwar Jyotirlinga,
+-- Dwarkadhish, Ambaji and Bahucharaji seeded earlier. (A fourth
+-- candidate, Kalika Mata Temple at Pavagadh, turned out to already be
+-- in the database — added back on 2026-09-04, before this session —
+-- so it's left out here rather than duplicated.)
 --
 -- Modhera is, like Rajarani (Odisha) before it, not a living-worship
 -- temple — its founding date is unusually solid (an 1026-27 CE
@@ -9,8 +12,6 @@
 -- layer and a later, physically-standing structure; construction_century
 -- reflects the standing building people actually visit, with the older
 -- layer described in sthala_purana rather than folded into one date.
--- Pavagadh's Jain-vs-Hindu origin layering is presented as contested per
--- the research, not resolved into a single account.
 
 insert into public.temples (
   name, deity, sampradaya, significance, country, state, district, town, latitude, longitude, sandhya_friendly, sandhya_notes, samidhadhanam_friendly, samidhadhanam_notes, food_tier, food_source_name, food_distance_km, nearest_river_name, river_distance_km, best_season_notes, sthala_purana, sthala_purana_source, architecture_style, construction_century, status
@@ -19,11 +20,6 @@ insert into public.temples (
   'Sun Temple, Modhera', 'Surya (the Sun God) — no longer an active place of worship; maintained as an ASI monument', null, array['UNESCO tentative list']::text[], 'India', 'Gujarat', 'Mehsana', 'Modhera', 23.58380, 72.13270, 'unknown', null, 'unknown', null, 'unknown', null, null, null, null, 'The Modhera Dance Festival (Uttarardh Mahotsav), a 3-day classical dance festival, is held here each January — a cultural event, not a worship occasion, consistent with the temple''s non-active status.',
   $$Built under the Chaulukya (Solanki) dynasty during the reigns of Bhima I and Karna I, with a foundational inscription on the cella's western wall dated Vikram Samvat 1083 — 1026–27 CE, making this one of the more precisely dated ancient temples in India. The complex is arranged on one axis: the shrine (gudhamandapa), an assembly hall (sabhamandapa), and a large stepped tank, the Surya Kund. It was added to UNESCO's World Heritage tentative list in December 2022.$$,
   'Temple foundational inscription (Vikram Samvat 1083)', 'Māru-Gurjara (Chaulukya) style, 11th century CE', 11, 'approved'
-),
-(
-  'Kalika Mata Temple, Pavagadh', 'Mahakali, flanked by Kali and Bahucharamata', 'Shakta', array['Shakti Peetha']::text[], 'India', 'Gujarat', 'Panchmahal', 'Pavagadh', 22.46110, 73.51170, 'unknown', null, 'unknown', null, 'unknown', null, null, null, null, 'Navaratri (Sep–Oct) brings major pilgrimage crowds.',
-  $$Considered the oldest temple on Pavagadh Hill, with a core dating to the 10th–11th century, and traditionally counted among the 51 Shakti Peethas, associated with the fall of Sati's right toe. The hill's religious history is layered and contested: the Śvetāmbara Jain Achalgacch order was established here in the 12th century, and some accounts describe the Mahakali image as originally a protective deity of that Jain sect before Hindu Shakta worship became dominant — presented here as a blended, disputed tradition rather than a single settled account. The temple sits within the Champaner-Pavagadh Archaeological Park, a UNESCO World Heritage Site.$$,
-  'Local and Jain-Hindu layered tradition; UNESCO site documentation', 'Nagara style core (10th–11th century), later hilltop fortifications added', 10, 'approved'
 ),
 (
   'Ranchhodraiji Temple, Dakor', 'Krishna, worshipped as Ranchhodrai (Ranchhodraiji)', 'Vaishnava', array[]::text[], 'India', 'Gujarat', 'Kheda', 'Dakor', 22.75443, 73.14898, 'unknown', null, 'unknown', null, 'unknown', null, null, null, null, 'Sharad Purnima (the Ashwin/October full moon) is the temple''s most important festival, drawing large numbers of pilgrims who walk to Dakor.',
@@ -44,14 +40,6 @@ insert into public.temple_photos (temple_id, url, caption, credit, license, sour
   'Manoj Radhakrishnan, via Wikimedia Commons',
   'CC BY-SA 3.0',
   'https://commons.wikimedia.org/wiki/File:Sun_Temple,_Modhera,_Gujarat,_India.JPG'
-),
-(
-  (select id from public.temples where name = 'Kalika Mata Temple, Pavagadh'),
-  'https://upload.wikimedia.org/wikipedia/commons/8/8e/Kalika-mata-temple.jpg',
-  'Kalika Mata Temple, Pavagadh',
-  'Abhishek199892, via Wikimedia Commons',
-  'CC BY-SA 4.0',
-  'https://commons.wikimedia.org/wiki/File:Kalika-mata-temple.jpg'
 ),
 (
   (select id from public.temples where name = 'Ranchhodraiji Temple, Dakor'),
