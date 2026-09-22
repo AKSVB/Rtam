@@ -207,63 +207,6 @@ function createTejasTexture(): THREE.CanvasTexture {
 }
 
 /**
- * gpt-image-2 was asked for a transparent background and instead baked in
- * a literal checkerboard pattern (the image has no alpha channel at all —
- * confirmed by inspecting its PNG colour type): a faint (~11-level) wash
- * across the whole canvas, low-contrast enough to be easy to miss at a
- * glance but visible once rendered at scale. A uniform blur hides it, but
- * blurring the *whole* canvas softened her face and body along with it.
- * Instead: draw her sharp, full stop, and composite a separately-blurred
- * copy back in only toward the outer edge — well past her face and torso,
- * out where the source canvas is mostly background/sunburst-ray gaps
- * anyway — via its own radial alpha mask. A second, outer radial mask then
- * fades the whole thing to nothing before the canvas corners, the same
- * canvas-compositing trick as createTejasTexture above, just radial
- * instead of directional.
- */
-function createGayatriTexture(image: HTMLImageElement): THREE.CanvasTexture {
-  const w = image.naturalWidth
-  const h = image.naturalHeight
-  const cx = w / 2
-  const cy = h / 2
-
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(image, 0, 0)
-
-  const blurCanvas = document.createElement('canvas')
-  blurCanvas.width = w
-  blurCanvas.height = h
-  const bctx = blurCanvas.getContext('2d')!
-  bctx.filter = 'blur(5px)'
-  bctx.drawImage(image, 0, 0)
-  bctx.filter = 'none'
-  const sharpR = h * 0.3
-  const blurStartR = h * 0.42
-  const blurMask = bctx.createRadialGradient(cx, cy, sharpR, cx, cy, blurStartR)
-  blurMask.addColorStop(0, 'rgba(0,0,0,0)')
-  blurMask.addColorStop(1, 'rgba(0,0,0,1)')
-  bctx.globalCompositeOperation = 'destination-in'
-  bctx.fillStyle = blurMask
-  bctx.fillRect(0, 0, w, h)
-  ctx.drawImage(blurCanvas, 0, 0)
-
-  const outerMask = ctx.createRadialGradient(cx, cy, h * 0.42, cx, cy, h * 0.5)
-  outerMask.addColorStop(0, 'rgba(0,0,0,1)')
-  outerMask.addColorStop(1, 'rgba(0,0,0,0)')
-  ctx.globalCompositeOperation = 'destination-in'
-  ctx.fillStyle = outerMask
-  ctx.fillRect(0, 0, w, h)
-
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.colorSpace = THREE.SRGBColorSpace
-  texture.needsUpdate = true
-  return texture
-}
-
-/**
  * Gayatri Maata at the fixed centre — a clear, recognisable devotional
  * illustration (generated art: five faces, ten arms with her traditional
  * attributes, seated on a lotus), not an abstract shape. An earlier
@@ -410,17 +353,33 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     // depthTest is disabled so she reads through the opaque plasma core
     // from any orbit angle rather than being hidden inside it — she and
     // the sphere occupy the same point in space, so without this she'd
-    // vanish behind the sphere from most angles. The plane geometry
-    // matches the source image's own aspect ratio so her circular halo
-    // stays circular rather than stretching; the mask that removes the
-    // image's checkerboard "background" is circular in the same way, so
-    // this has to line up. The material starts mapless and gets its
-    // texture once the image element has actually decoded — building the
-    // canvas mask needs real pixel data, which isn't available the
-    // instant the <img> src is set. ─────────────────────────────────────
+    // vanish behind the sphere from most angles. The source PNG (see
+    // gayatri-devi.png) has already been cut out to a real, precise alpha
+    // channel offline — the generator gave it no alpha at all, only a
+    // baked-in checkerboard standing in for "transparent", so that
+    // checkerboard was flood-filled out from the image's own edges
+    // (leaving anything it doesn't touch, however irregularly shaped,
+    // completely untouched) rather than approximated at runtime with a
+    // blur or a crude circular mask — either of which either softened her
+    // or clipped real parts of the artwork. Getting this fully clean took
+    // two passes: the first cutout zeroed alpha but left the original
+    // checkerboard colour sitting in the RGB channel wherever alpha was
+    // 0, and that colour data — still there regardless of how correctly
+    // alpha blending behaves — showed back up as a faint grid under
+    // minification once the plane is smaller on screen than the source's
+    // 1280px width. The RGB is zeroed right alongside the alpha now, so
+    // there's no stray colour left to alias. Mipmapping is off so the
+    // full-resolution source is always sampled directly, for maximum
+    // sharpness. ─────────────────────────────────────────────────────────
     const figureImageAspect = 1280 / 720
     const figureHeight = coreRadius * 2.6
     const divineFigureMaterial = new THREE.MeshBasicMaterial({
+      map: new THREE.TextureLoader().load(gayatriDeviUrl, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace
+        tex.generateMipmaps = false
+        tex.minFilter = THREE.LinearFilter
+        tex.magFilter = THREE.LinearFilter
+      }),
       transparent: true,
       depthTest: false,
       depthWrite: false,
@@ -431,15 +390,6 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     )
     divineFigure.renderOrder = 10
     scene.add(divineFigure)
-
-    let gayatriTexture: THREE.CanvasTexture | null = null
-    const gayatriImage = new Image()
-    gayatriImage.onload = () => {
-      gayatriTexture = createGayatriTexture(gayatriImage)
-      divineFigureMaterial.map = gayatriTexture
-      divineFigureMaterial.needsUpdate = true
-    }
-    gayatriImage.src = gayatriDeviUrl
 
     // ── The mandala itself — rings orbiting the fixed centre. Deliberately
     // its own group, sibling to `core` (the sphere) and the figure, not a
@@ -697,7 +647,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       renderer.domElement.removeEventListener('pointerdown', handlePointerDown)
       controls.dispose()
       container.removeChild(renderer.domElement)
-      gayatriImage.onload = null
+      divineFigureMaterial.map?.dispose()
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh || obj instanceof THREE.Points || obj instanceof THREE.InstancedMesh) {
           obj.geometry.dispose()
@@ -707,7 +657,6 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       })
       tejasTexture.dispose()
       petalTexture.dispose()
-      gayatriTexture?.dispose()
       renderer.dispose()
     }
   }, [onFailed])
