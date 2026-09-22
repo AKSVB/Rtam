@@ -36,6 +36,22 @@ export function usePublicProfile(username: string | undefined) {
   })
 }
 
+/** Where a contributor ranks sitewide by points — #1 is the highest. Ties share the same rank, broken by username like the leaderboard itself. */
+export function useMyRank(userId: string | undefined, points: number | undefined) {
+  return useQuery({
+    queryKey: ['my-rank', userId, points],
+    queryFn: async (): Promise<number> => {
+      const { count, error } = await supabase
+        .from('user_profiles')
+        .select('id', { count: 'exact', head: true })
+        .gt('contribution_points', points!)
+      if (error) throw error
+      return (count ?? 0) + 1
+    },
+    enabled: !!userId && points != null,
+  })
+}
+
 /** Approved temples credited to a given contributor. */
 export function useContributorTemples(userId: string | undefined) {
   return useQuery({

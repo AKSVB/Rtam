@@ -64,6 +64,23 @@ export function useCommunityPosts(userId?: string) {
   })
 }
 
+/** Every Dharma Wall post the signed-in user has shared, newest first — for their profile page. No pagination; a personal photo feed stays small in practice. */
+export function useMyCommunityPosts(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['my-community-posts', userId],
+    queryFn: async (): Promise<CommunityPost[]> => {
+      const { data, error } = await supabase
+        .from('community_posts')
+        .select('*, temples(name)')
+        .eq('user_id', userId!)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!userId,
+  })
+}
+
 export function useCommunityPost(postId: string | undefined) {
   return useQuery({
     queryKey: ['community-post', postId],

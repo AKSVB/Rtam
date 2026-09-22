@@ -110,6 +110,23 @@ export function sortActivitiesByProximity<T extends { latitude: number; longitud
     .sort((a, b) => a.distanceKm - b.distanceKm)
 }
 
+/** Every activity the signed-in user has submitted, any status, newest first — for their profile page. */
+export function useMyDharmicActivities(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['my-dharmic-activities', userId],
+    queryFn: async (): Promise<DharmicActivity[]> => {
+      const { data, error } = await supabase
+        .from('dharmic_activities')
+        .select('*, temples(name)')
+        .eq('submitted_by', userId!)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!userId,
+  })
+}
+
 export function usePendingDharmicActivities() {
   return useQuery({
     queryKey: ['pending-dharmic-activities'],

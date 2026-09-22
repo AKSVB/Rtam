@@ -6,8 +6,16 @@ import { useToast } from '../context/ToastContext'
 import { supabase } from '../lib/supabase'
 import { useUploadAvatar } from '../hooks/useAvatar'
 import { useMyEditSuggestions } from '../hooks/useEditSuggestions'
+import { useMyAllReviews } from '../hooks/useTempleDetail'
+import { useMyDharmicActivities } from '../hooks/useDharmicActivities'
+import { useMyCommunityPosts } from '../hooks/useCommunityPosts'
+import { useMyYatraProgress } from '../hooks/useTempleVisits'
+import { useSandhyaLogs } from '../hooks/useSandhyaTracker'
+import { computeStreak } from '../lib/sandhya'
 import { TrikalaSandhyaTracker } from '../components/profile/TrikalaSandhyaTracker'
 import { MyYatraProgress } from '../components/profile/MyYatraProgress'
+import { ProfileStats, LevelProgress } from '../components/profile/ProfileStats'
+import { ProfileAchievements } from '../components/profile/ProfileAchievements'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Badge } from '../components/common/Badge'
 import { Avatar } from '../components/common/Avatar'
@@ -15,7 +23,23 @@ import { LevelBadge } from '../components/common/LevelBadge'
 import { Button } from '../components/common/Button'
 import { FormField, Select, TextInput } from '../components/common/FormField'
 import { strings } from '../constants/strings'
+import { DHARMIC_ACTIVITY_TYPE_ICONS, DHARMIC_ACTIVITY_TYPE_LABELS } from '../constants/enumLabels'
 import type { SubmissionStatus, Temple } from '../types/database'
+
+const activityStatusTone: Record<SubmissionStatus, 'positive' | 'partial' | 'negative'> = {
+  approved: 'positive',
+  pending: 'partial',
+  rejected: 'negative',
+}
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <span className="text-amber-500" aria-label={`${rating} out of 5 stars`}>
+      {'★'.repeat(rating)}
+      <span className="text-cream-300">{'★'.repeat(5 - rating)}</span>
+    </span>
+  )
+}
 
 const statusTone: Record<SubmissionStatus, 'positive' | 'partial' | 'negative'> = {
   approved: 'positive',
@@ -54,8 +78,22 @@ export function ProfilePage() {
   })
 
   const { data: editSuggestions, isLoading: suggestionsLoading } = useMyEditSuggestions(user?.id)
+  const { data: reviews, isLoading: reviewsLoading } = useMyAllReviews(user?.id)
+  const { data: activities, isLoading: activitiesLoading } = useMyDharmicActivities(user?.id)
+  const { data: posts, isLoading: postsLoading } = useMyCommunityPosts(user?.id)
+  const { data: yatra } = useMyYatraProgress(user?.id)
+  const { data: sandhyaLogs } = useSandhyaLogs(user?.id)
 
   if (!profile) return <LoadingSpinner label="Loading profile…" />
+
+  const achievementStats = {
+    templesVisited: yatra?.totalVisited ?? 0,
+    sandhyaStreak: computeStreak(sandhyaLogs ?? []),
+    reviewsWritten: reviews?.length ?? 0,
+    activitiesSubmitted: activities?.length ?? 0,
+    postsShared: posts?.length ?? 0,
+    templesApproved: submissions?.filter((t) => t.status === 'approved').length ?? 0,
+  }
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault()
@@ -119,11 +157,18 @@ export function ProfilePage() {
           <div className="mt-1 flex items-center gap-2">
             <LevelBadge points={profile.contribution_points} />
           </div>
+          <div className="mt-2">
+            <LevelProgress points={profile.contribution_points} />
+          </div>
           <p className="mt-1 text-sm text-charcoal-700/60">
             {strings.contributors.howPointsWork}
           </p>
         </div>
       </div>
+
+      <ProfileStats userId={profile.id} points={profile.contribution_points} />
+
+      <ProfileAchievements stats={achievementStats} />
 
       <MyYatraProgress userId={profile.id} />
 
@@ -155,6 +200,97 @@ export function ProfilePage() {
           {saving ? 'Saving…' : 'Save changes'}
         </Button>
       </form>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-charcoal-900">My Reviews</h2>
+        {reviewsLoading ? (
+          <LoadingSpinner label="Loading reviews…" />
+        ) : !reviews || reviews.length === 0 ? (
+          <p className="text-sm text-charcoal-700/70">
+            You haven't written any temple reviews yet. Visit a temple's page to leave one.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {reviews.map((review) => (
+              <li key={review.id} className="rounded-xl border border-cream-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Link
+                    to={`/temples/${review.temple_id}`}
+                    className="font-semibold text-charcoal-900 hover:underline"
+                  >
+                    {review.temples?.name ?? 'Temple'}
+                  </Link>
+                  <StarRating rating={review.rating} />
+                </div>
+                {review.comment && <p className="mt-1 text-sm text-charcoal-700/80">{review.comment}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-charcoal-900">My Dharmic Activities</h2>
+        {activitiesLoading ? (
+          <LoadingSpinner label="Loading activities…" />
+        ) : !activities || activities.length === 0 ? (
+          <p className="text-sm text-charcoal-700/70">
+            You haven't submitted any dharmic activities yet.{' '}
+            <Link to="/dharmic-feed/add" className="font-semibold text-maroon-700 hover:underline">
+              Add one
+            </Link>
+            .
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {activities.map((activity) => (
+              <li key={activity.id} className="rounded-xl border border-cream-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-semibold text-charcoal-900">
+                    <span aria-hidden>{DHARMIC_ACTIVITY_TYPE_ICONS[activity.activity_type]}</span>{' '}
+                    {activity.title}
+                  </span>
+                  <Badge tone={activityStatusTone[activity.status]}>{activity.status}</Badge>
+                </div>
+                <p className="mt-1 text-xs text-charcoal-700/60">
+                  {DHARMIC_ACTIVITY_TYPE_LABELS[activity.activity_type]} · {activity.temples?.name ?? activity.venue_name} ·{' '}
+                  {activity.activity_date}
+                </p>
+                {activity.status === 'rejected' && activity.moderator_note && (
+                  <p className="mt-2 text-sm text-maroon-700">Feedback: {activity.moderator_note}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-charcoal-900">My Dharma Wall Posts</h2>
+        {postsLoading ? (
+          <LoadingSpinner label="Loading posts…" />
+        ) : !posts || posts.length === 0 ? (
+          <p className="text-sm text-charcoal-700/70">
+            You haven't shared any Dharma Wall posts yet.{' '}
+            <Link to="/dharma-wall" className="font-semibold text-maroon-700 hover:underline">
+              Share one
+            </Link>
+            .
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {posts.map((post) => (
+              <Link
+                key={post.id}
+                to={`/dharma-wall/${post.id}`}
+                className="aspect-square overflow-hidden rounded-lg border border-cream-200"
+              >
+                <img src={post.image_url} alt={post.caption ?? ''} className="h-full w-full object-cover" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section>
         <h2 className="mb-3 text-lg font-bold text-charcoal-900">My Submissions</h2>

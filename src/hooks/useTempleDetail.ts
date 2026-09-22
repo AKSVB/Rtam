@@ -115,6 +115,23 @@ export function useMyReview(templeId: string | undefined, userId: string | undef
   })
 }
 
+/** Every review the signed-in user has ever written, across all temples, newest first — for their profile page. */
+export function useMyAllReviews(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['my-all-reviews', userId],
+    queryFn: async (): Promise<(TempleReview & { temples: Pick<Temple, 'id' | 'name'> | null })[]> => {
+      const { data, error } = await supabase
+        .from('temple_reviews')
+        .select('*, temples(id, name)')
+        .eq('user_id', userId!)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!userId,
+  })
+}
+
 /**
  * Insert-or-update in one call. temple_reviews has a unique (temple_id,
  * user_id) constraint, so a second review from the same person would
