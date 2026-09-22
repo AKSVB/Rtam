@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import gayatriDeviUrl from '../../assets/gayatri-devi.png'
 
 // Ṛtam's palette, as literal hex — this file can't reach into Tailwind's
 // CSS custom properties, so the values are copied from src/index.css and
@@ -206,85 +207,61 @@ function createTejasTexture(): THREE.CanvasTexture {
 }
 
 /**
- * A real, solid 3D relief of a seated feminine form with a halo —
- * deliberately not a flat camera-facing decal. An earlier version was a
- * billboarded plane (always turned to face the camera, so orbiting the
- * scene never revealed anything but the same flat front view); this
- * builds one continuous outline as a THREE.Shape and extrudes it with a
- * gentle bevel, so it has an actual silhouette and a lit edge that
- * responds correctly as the camera moves around her — an edifice you
- * can walk around, not a sticker.
+ * gpt-image-2 was asked for a transparent background and instead baked in
+ * a literal checkerboard pattern (the image has no alpha channel at all —
+ * confirmed by inspecting its PNG colour type). The generated artwork is a
+ * roughly circular sunburst-and-deity composition centred in a wider
+ * canvas, so a radial-gradient alpha mask (opaque through the circle,
+ * fading to nothing before the canvas edges) cleanly removes the
+ * checkerboard corners without touching her or the halo — the same
+ * canvas-compositing trick as createTejasTexture above, just with a
+ * radial mask instead of a directional one.
  */
-function createDivineFigureGeometry(): THREE.ExtrudeGeometry {
-  const shape = new THREE.Shape()
-  shape.moveTo(0, 1.0)
-  shape.quadraticCurveTo(0.22, 0.98, 0.24, 0.78)
-  shape.quadraticCurveTo(0.16, 0.64, 0.1, 0.56)
-  shape.bezierCurveTo(0.3, 0.42, 0.5, 0.1, 0.46, -0.3)
-  shape.bezierCurveTo(0.44, -0.55, 0.4, -0.75, 0.36, -0.85)
-  shape.lineTo(-0.36, -0.85)
-  shape.bezierCurveTo(-0.4, -0.75, -0.44, -0.55, -0.46, -0.3)
-  shape.bezierCurveTo(-0.5, 0.1, -0.3, 0.42, -0.1, 0.56)
-  shape.quadraticCurveTo(-0.16, 0.64, -0.24, 0.78)
-  shape.quadraticCurveTo(-0.22, 0.98, 0, 1.0)
+function createGayatriTexture(image: HTMLImageElement): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas')
+  canvas.width = image.naturalWidth
+  canvas.height = image.naturalHeight
+  const ctx = canvas.getContext('2d')!
+  // The checkerboard isn't confined to the far corners — it's a faint
+  // (~11-level) wash across the whole canvas, low-contrast enough to be
+  // easy to miss at a glance but visible once rendered at scale. A small
+  // blur smooths out that high-frequency noise (its checker cells are
+  // ~10-14px) while leaving actual facial/ornamental detail, which is far
+  // larger scale, essentially untouched.
+  ctx.filter = 'blur(3px)'
+  ctx.drawImage(image, 0, 0)
+  ctx.filter = 'none'
 
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: 0.16,
-    bevelEnabled: true,
-    bevelThickness: 0.035,
-    bevelSize: 0.035,
-    bevelSegments: 4,
-    curveSegments: 24,
-  })
-  // Extrusion runs 0..depth along Z; recentre so the pivot (and rotation
-  // axis) sits in the middle of her actual thickness, not at her back.
-  geometry.center()
-  return geometry
+  const cx = canvas.width / 2
+  const cy = canvas.height / 2
+  const innerR = canvas.height * 0.42
+  const outerR = canvas.height * 0.5
+  const mask = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR)
+  mask.addColorStop(0, 'rgba(0,0,0,1)')
+  mask.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.globalCompositeOperation = 'destination-in'
+  ctx.fillStyle = mask
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.needsUpdate = true
+  return texture
 }
 
-const FIGURE_VERTEX = /* glsl */ `
-  varying vec3 vNormal;
-  varying vec3 vViewPos;
-  varying float vLocalY;
-  void main() {
-    vLocalY = position.y;
-    vNormal = normalize(normalMatrix * normal);
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    vViewPos = mv.xyz;
-    gl_Position = projectionMatrix * mv;
-  }
-`
-
-const FIGURE_FRAGMENT = /* glsl */ `
-  uniform float uGlow;
-  varying vec3 vNormal;
-  varying vec3 vViewPos;
-  varying float vLocalY;
-  void main() {
-    vec3 N = normalize(vNormal);
-    vec3 V = normalize(-vViewPos);
-    float t = clamp(vLocalY * 0.55 + 0.55, 0.0, 1.0);
-
-    vec3 warm = vec3(0.86, 0.52, 0.16);
-    vec3 hot = vec3(1.0, 0.85, 0.55);
-    vec3 white = vec3(1.0, 0.98, 0.93);
-    vec3 color = mix(warm, hot, t);
-    color = mix(color, white, pow(t, 2.2) * 0.55);
-
-    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.0);
-    color += white * fresnel * (0.55 + uGlow * 0.35);
-
-    gl_FragColor = vec4(color, 1.0);
-  }
-`
-
 /**
- * Gayatri Maata at the fixed, motionless centre — a real extruded 3D
- * relief (not a camera-facing billboard, so orbiting the scene actually
- * reveals her form and edge-lit silhouette rather than the same flat
- * view from every angle), with her own rotation set once at creation
- * and never touched again in the render loop. Everything else in the
- * scene moves around her: the plasma sphere (multi-octave simplex
+ * Gayatri Maata at the fixed centre — a clear, recognisable devotional
+ * illustration (generated art: five faces, ten arms with her traditional
+ * attributes, seated on a lotus), not an abstract shape. An earlier
+ * version tried a genuinely-3D extruded relief instead of an image so she
+ * could be lit and orbited like a solid object, but that traded away
+ * legibility for geometric "realness" — the silhouette read as an
+ * abstract blob rather than as her. A flat image can only stay legible
+ * from every orbit angle by always facing the camera, so she does turn
+ * to track it each frame — but that is the *only* thing that ever
+ * changes about her: no spin, no drift, no position or scale change, and
+ * she is always fully opaque. Everything else in the scene moves around
+ * her: the plasma sphere (multi-octave simplex
  * displacement with a hand-rebuilt normal, so it actually shades like
  * the bumps it has) tumbles on all three axes in place, and a separate
  * `mandalaRing` group — two tilted rings plus a ring of petal marks —
@@ -415,28 +392,40 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     )
     core.add(outerGlow)
 
-    // ── The divine presence — a real 3D relief, fixed at the centre with
-    // a fixed orientation set once below and never touched again in the
-    // render loop, so she genuinely does not move while everything else
-    // does. depthTest is still disabled so she reads through the opaque
-    // plasma core from any orbit angle rather than being hidden inside
-    // it — she and the sphere occupy the same point in space, so without
-    // this she'd vanish behind the sphere from most angles. ─────────────
-    const divineFigureUniforms = { uGlow: { value: 0 } }
-    const divineFigureMaterial = new THREE.ShaderMaterial({
-      uniforms: divineFigureUniforms,
-      vertexShader: FIGURE_VERTEX,
-      fragmentShader: FIGURE_FRAGMENT,
+    // ── The divine presence — a clear illustration, fixed at the centre.
+    // depthTest is disabled so she reads through the opaque plasma core
+    // from any orbit angle rather than being hidden inside it — she and
+    // the sphere occupy the same point in space, so without this she'd
+    // vanish behind the sphere from most angles. The plane geometry
+    // matches the source image's own aspect ratio so her circular halo
+    // stays circular rather than stretching; the mask that removes the
+    // image's checkerboard "background" is circular in the same way, so
+    // this has to line up. The material starts mapless and gets its
+    // texture once the image element has actually decoded — building the
+    // canvas mask needs real pixel data, which isn't available the
+    // instant the <img> src is set. ─────────────────────────────────────
+    const figureImageAspect = 1280 / 720
+    const figureHeight = coreRadius * 2.6
+    const divineFigureMaterial = new THREE.MeshBasicMaterial({
+      transparent: true,
       depthTest: false,
       depthWrite: false,
     })
-    const divineFigure = new THREE.Mesh(createDivineFigureGeometry(), divineFigureMaterial)
-    divineFigure.scale.setScalar(coreRadius * 1.05)
-    // Face roughly toward the camera's starting position (azimuth only,
-    // so she stays upright) — set once, here, not in the render loop.
-    divineFigure.rotation.y = Math.atan2(camera.position.x, camera.position.z)
+    const divineFigure = new THREE.Mesh(
+      new THREE.PlaneGeometry(figureHeight * figureImageAspect, figureHeight),
+      divineFigureMaterial,
+    )
     divineFigure.renderOrder = 10
     scene.add(divineFigure)
+
+    let gayatriTexture: THREE.CanvasTexture | null = null
+    const gayatriImage = new Image()
+    gayatriImage.onload = () => {
+      gayatriTexture = createGayatriTexture(gayatriImage)
+      divineFigureMaterial.map = gayatriTexture
+      divineFigureMaterial.needsUpdate = true
+    }
+    gayatriImage.src = gayatriDeviUrl
 
     // ── The mandala itself — rings orbiting the fixed centre. Deliberately
     // its own group, sibling to `core` (the sphere) and the figure, not a
@@ -638,10 +627,12 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
         mesh.rotation.z += delta * speed
       }
 
-      // She does not move at all — no position, rotation, or scale
-      // change here, ever. Only a gentle breathing brightness on her
-      // rim light, so she still feels alive without appearing to turn.
-      divineFigureUniforms.uGlow.value = breath * 0.6 + pulse
+      // Position, scale and opacity never change here — the only thing
+      // that ever moves is her facing, and that's a correction for the
+      // camera orbiting around her, not motion of her own: a flat image
+      // that didn't track the camera would go edge-on and vanish the
+      // moment someone drags the scene.
+      divineFigure.quaternion.copy(camera.quaternion)
 
       for (let i = 0; i < tejasCount; i++) {
         const t = (elapsed / tejasCycle[i] + tejasPhase[i]) % 1
@@ -692,6 +683,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       renderer.domElement.removeEventListener('pointerdown', handlePointerDown)
       controls.dispose()
       container.removeChild(renderer.domElement)
+      gayatriImage.onload = null
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh || obj instanceof THREE.Points || obj instanceof THREE.InstancedMesh) {
           obj.geometry.dispose()
@@ -701,6 +693,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       })
       tejasTexture.dispose()
       petalTexture.dispose()
+      gayatriTexture?.dispose()
       renderer.dispose()
     }
   }, [onFailed])
