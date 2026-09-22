@@ -24,6 +24,7 @@ import { TempleTimings } from '../components/temple/TempleTimings'
 import { PackingChecklist } from '../components/temple/PackingChecklist'
 import { LiveStatusReporter } from '../components/temple/LiveStatusReporter'
 import { SandhyavandanamPrompt } from '../components/temple/SandhyavandanamPrompt'
+import { VisitButton } from '../components/temple/VisitButton'
 import { Button } from '../components/common/Button'
 import { Avatar } from '../components/common/Avatar'
 import { LevelBadge } from '../components/common/LevelBadge'
@@ -182,6 +183,9 @@ export function TempleDetailPage() {
         )}
 
         <div className="mt-4 flex flex-wrap gap-2">
+          {temple.status === 'approved' && (
+            <VisitButton templeId={temple.id} templeName={temple.name} />
+          )}
           <Button
             variant={inTrip ? 'secondary' : 'primary'}
             onClick={() => {

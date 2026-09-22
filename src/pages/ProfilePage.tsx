@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { useUploadAvatar } from '../hooks/useAvatar'
 import { useMyEditSuggestions } from '../hooks/useEditSuggestions'
 import { TrikalaSandhyaTracker } from '../components/profile/TrikalaSandhyaTracker'
+import { MyYatraProgress } from '../components/profile/MyYatraProgress'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Badge } from '../components/common/Badge'
 import { Avatar } from '../components/common/Avatar'
@@ -118,6 +119,8 @@ export function ProfilePage() {
           </p>
         </div>
       </div>
+
+      <MyYatraProgress userId={profile.id} />
 
       <TrikalaSandhyaTracker />
 
