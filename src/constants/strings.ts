@@ -20,6 +20,7 @@ export const strings = {
     connections: 'Connections',
     messages: 'Messages',
     tripPlanner: 'Trip Planner',
+    compass: 'Kṣetra Compass',
     moderatorQueue: 'Moderator Queue',
     adminUsers: 'Manage Users',
     contributors: 'Contributors',

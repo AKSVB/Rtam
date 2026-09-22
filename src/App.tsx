@@ -19,6 +19,7 @@ const SuggestEditPage = lazy(() =>
 const TripPlannerPage = lazy(() =>
   import('./pages/TripPlannerPage').then((m) => ({ default: m.TripPlannerPage })),
 )
+const CompassPage = lazy(() => import('./pages/CompassPage').then((m) => ({ default: m.CompassPage })))
 const ModeratorQueuePage = lazy(() =>
   import('./pages/ModeratorQueuePage').then((m) => ({ default: m.ModeratorQueuePage })),
 )
@@ -115,6 +116,7 @@ function App() {
           <Route path="/circuits" element={<CircuitsPage />} />
           <Route path="/circuits/:tag" element={<CircuitDetailPage />} />
           <Route path="/trip" element={<TripPlannerPage />} />
+          <Route path="/compass" element={<CompassPage />} />
           <Route path="/contributors" element={<ContributorsPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/samishti-sandhyavandanam" element={<SamishtiSandhyaPage />} />
