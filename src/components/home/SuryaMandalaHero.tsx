@@ -209,39 +209,53 @@ function createTejasTexture(): THREE.CanvasTexture {
 /**
  * gpt-image-2 was asked for a transparent background and instead baked in
  * a literal checkerboard pattern (the image has no alpha channel at all —
- * confirmed by inspecting its PNG colour type). The generated artwork is a
- * roughly circular sunburst-and-deity composition centred in a wider
- * canvas, so a radial-gradient alpha mask (opaque through the circle,
- * fading to nothing before the canvas edges) cleanly removes the
- * checkerboard corners without touching her or the halo — the same
- * canvas-compositing trick as createTejasTexture above, just with a
- * radial mask instead of a directional one.
+ * confirmed by inspecting its PNG colour type): a faint (~11-level) wash
+ * across the whole canvas, low-contrast enough to be easy to miss at a
+ * glance but visible once rendered at scale. A uniform blur hides it, but
+ * blurring the *whole* canvas softened her face and body along with it.
+ * Instead: draw her sharp, full stop, and composite a separately-blurred
+ * copy back in only toward the outer edge — well past her face and torso,
+ * out where the source canvas is mostly background/sunburst-ray gaps
+ * anyway — via its own radial alpha mask. A second, outer radial mask then
+ * fades the whole thing to nothing before the canvas corners, the same
+ * canvas-compositing trick as createTejasTexture above, just radial
+ * instead of directional.
  */
 function createGayatriTexture(image: HTMLImageElement): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas')
-  canvas.width = image.naturalWidth
-  canvas.height = image.naturalHeight
-  const ctx = canvas.getContext('2d')!
-  // The checkerboard isn't confined to the far corners — it's a faint
-  // (~11-level) wash across the whole canvas, low-contrast enough to be
-  // easy to miss at a glance but visible once rendered at scale. A small
-  // blur smooths out that high-frequency noise (its checker cells are
-  // ~10-14px) while leaving actual facial/ornamental detail, which is far
-  // larger scale, essentially untouched.
-  ctx.filter = 'blur(3px)'
-  ctx.drawImage(image, 0, 0)
-  ctx.filter = 'none'
+  const w = image.naturalWidth
+  const h = image.naturalHeight
+  const cx = w / 2
+  const cy = h / 2
 
-  const cx = canvas.width / 2
-  const cy = canvas.height / 2
-  const innerR = canvas.height * 0.42
-  const outerR = canvas.height * 0.5
-  const mask = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR)
-  mask.addColorStop(0, 'rgba(0,0,0,1)')
-  mask.addColorStop(1, 'rgba(0,0,0,0)')
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(image, 0, 0)
+
+  const blurCanvas = document.createElement('canvas')
+  blurCanvas.width = w
+  blurCanvas.height = h
+  const bctx = blurCanvas.getContext('2d')!
+  bctx.filter = 'blur(5px)'
+  bctx.drawImage(image, 0, 0)
+  bctx.filter = 'none'
+  const sharpR = h * 0.3
+  const blurStartR = h * 0.42
+  const blurMask = bctx.createRadialGradient(cx, cy, sharpR, cx, cy, blurStartR)
+  blurMask.addColorStop(0, 'rgba(0,0,0,0)')
+  blurMask.addColorStop(1, 'rgba(0,0,0,1)')
+  bctx.globalCompositeOperation = 'destination-in'
+  bctx.fillStyle = blurMask
+  bctx.fillRect(0, 0, w, h)
+  ctx.drawImage(blurCanvas, 0, 0)
+
+  const outerMask = ctx.createRadialGradient(cx, cy, h * 0.42, cx, cy, h * 0.5)
+  outerMask.addColorStop(0, 'rgba(0,0,0,1)')
+  outerMask.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.globalCompositeOperation = 'destination-in'
-  ctx.fillStyle = mask
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = outerMask
+  ctx.fillRect(0, 0, w, h)
 
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
