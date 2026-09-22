@@ -9,6 +9,7 @@ import { useMyEditSuggestions } from '../hooks/useEditSuggestions'
 import { useMyAllReviews } from '../hooks/useTempleDetail'
 import { useMyDharmicActivities } from '../hooks/useDharmicActivities'
 import { useMyCommunityPosts } from '../hooks/useCommunityPosts'
+import { useMyDevotionalBooks } from '../hooks/useDevotionalBooks'
 import { useMyYatraProgress } from '../hooks/useTempleVisits'
 import { useSandhyaLogs } from '../hooks/useSandhyaTracker'
 import { computeStreak } from '../lib/sandhya'
@@ -84,6 +85,7 @@ export function ProfilePage() {
   const { data: reviews, isLoading: reviewsLoading } = useMyAllReviews(user?.id)
   const { data: activities, isLoading: activitiesLoading } = useMyDharmicActivities(user?.id)
   const { data: posts, isLoading: postsLoading } = useMyCommunityPosts(user?.id)
+  const { data: books, isLoading: booksLoading } = useMyDevotionalBooks(user?.id)
   const { data: yatra } = useMyYatraProgress(user?.id)
   const { data: sandhyaLogs } = useSandhyaLogs(user?.id)
 
@@ -315,6 +317,37 @@ export function ProfilePage() {
               </Link>
             ))}
           </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-charcoal-900">My Library Submissions</h2>
+        {booksLoading ? (
+          <LoadingSpinner label="Loading submissions…" />
+        ) : !books || books.length === 0 ? (
+          <p className="text-sm text-charcoal-700/70">
+            You haven't shared any devotional books yet.{' '}
+            <Link to="/library/new" className="font-semibold text-maroon-700 hover:underline">
+              Add one
+            </Link>
+            .
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {books.map((book) => (
+              <li key={book.id} className="rounded-xl border border-cream-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Link to={`/library/${book.id}`} className="font-semibold text-charcoal-900 hover:underline">
+                    {book.title}
+                  </Link>
+                  <Badge tone={statusTone[book.status]}>{book.status}</Badge>
+                </div>
+                {book.status === 'rejected' && book.moderator_note && (
+                  <p className="mt-2 text-sm text-maroon-700">Feedback: {book.moderator_note}</p>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 

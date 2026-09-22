@@ -219,6 +219,37 @@ export interface TempleStatusReport {
   created_at: string
 }
 
+export type BookCategory =
+  | 'stotra'
+  | 'purana'
+  | 'itihasa'
+  | 'upanishad'
+  | 'veda'
+  | 'bhajan'
+  | 'panchang'
+  | 'biography'
+  | 'other'
+
+export interface DevotionalBook {
+  id: string
+  title: string
+  author: string | null
+  deity: string | null
+  language: string
+  category: BookCategory
+  description: string | null
+  page_count: number | null
+  file_size_bytes: number | null
+  cover_image_url: string | null
+  pdf_url: string
+  submitted_by: string
+  status: SubmissionStatus
+  moderator_note: string | null
+  created_at: string
+  updated_at: string
+  user_profiles?: Pick<UserProfile, 'display_name' | 'username'>
+}
+
 export interface TempleWaitReport {
   id: string
   temple_id: string

@@ -21,6 +21,7 @@ export const strings = {
     messages: 'Messages',
     tripPlanner: 'Trip Planner',
     compass: 'Kṣetra Compass',
+    library: 'Devotional Library',
     moderatorQueue: 'Moderator Queue',
     adminUsers: 'Manage Users',
     contributors: 'Contributors',
@@ -117,7 +118,7 @@ export const strings = {
     points: 'points',
     templesAdded: 'temples added',
     howPointsWork:
-      'Points are awarded automatically: 25 for each temple accepted, 15 for an accepted Samishti Sandhyavandanam proposal, 10 for an accepted edit, 8 for another accepted dharmic activity post, 5 per photo (temple or Dharma Wall), 3 per review, 1 per live status check-in.',
+      'Points are awarded automatically: 25 for each temple accepted, 15 for an accepted Samishti Sandhyavandanam proposal, 10 for an accepted edit or devotional book, 8 for another accepted dharmic activity post, 5 per photo (temple or Dharma Wall), 3 per review, 1 per live status or wait-time check-in.',
     joinedPrompt: 'Add a temple nobody has listed yet',
   },
 

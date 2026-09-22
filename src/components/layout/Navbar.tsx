@@ -97,6 +97,9 @@ function ExploreMenu() {
           <NavLink to="/compass" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
             {strings.nav.compass}
           </NavLink>
+          <NavLink to="/library" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
+            {strings.nav.library}
+          </NavLink>
           <NavLink to="/contributors" className={dropdownLinkClasses} onClick={() => setOpen(false)}>
             {strings.nav.contributors}
           </NavLink>
@@ -310,6 +313,9 @@ export function Navbar() {
           </NavLink>
           <NavLink to="/compass" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.compass}
+          </NavLink>
+          <NavLink to="/library" className={linkClasses} onClick={() => setMenuOpen(false)}>
+            {strings.nav.library}
           </NavLink>
           <NavLink to="/contributors" className={linkClasses} onClick={() => setMenuOpen(false)}>
             {strings.nav.contributors}

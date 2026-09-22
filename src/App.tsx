@@ -20,6 +20,11 @@ const TripPlannerPage = lazy(() =>
   import('./pages/TripPlannerPage').then((m) => ({ default: m.TripPlannerPage })),
 )
 const CompassPage = lazy(() => import('./pages/CompassPage').then((m) => ({ default: m.CompassPage })))
+const LibraryPage = lazy(() => import('./pages/LibraryPage').then((m) => ({ default: m.LibraryPage })))
+const BookDetailPage = lazy(() =>
+  import('./pages/BookDetailPage').then((m) => ({ default: m.BookDetailPage })),
+)
+const AddBookPage = lazy(() => import('./pages/AddBookPage').then((m) => ({ default: m.AddBookPage })))
 const ModeratorQueuePage = lazy(() =>
   import('./pages/ModeratorQueuePage').then((m) => ({ default: m.ModeratorQueuePage })),
 )
@@ -117,6 +122,16 @@ function App() {
           <Route path="/circuits/:tag" element={<CircuitDetailPage />} />
           <Route path="/trip" element={<TripPlannerPage />} />
           <Route path="/compass" element={<CompassPage />} />
+          <Route path="/library" element={<LibraryPage />} />
+          <Route path="/library/:id" element={<BookDetailPage />} />
+          <Route
+            path="/library/new"
+            element={
+              <ProtectedRoute>
+                <AddBookPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/contributors" element={<ContributorsPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/samishti-sandhyavandanam" element={<SamishtiSandhyaPage />} />

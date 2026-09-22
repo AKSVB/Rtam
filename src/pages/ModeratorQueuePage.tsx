@@ -5,12 +5,18 @@ import { useToast } from '../context/ToastContext'
 import { usePendingStays, usePendingTemples, useReviewStay, useReviewTemple } from '../hooks/useModeration'
 import { usePendingEditSuggestions, useReviewEditSuggestion } from '../hooks/useEditSuggestions'
 import { usePendingDharmicActivities, useReviewDharmicActivity } from '../hooks/useDharmicActivities'
+import { usePendingDevotionalBooks, useReviewDevotionalBook } from '../hooks/useDevotionalBooks'
 import { useOpenReports, useResolveReport } from '../hooks/useReports'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Button } from '../components/common/Button'
 import { Select, TextInput } from '../components/common/FormField'
 import { strings } from '../constants/strings'
-import { DHARMIC_ACTIVITY_TYPE_LABELS, FOOD_TIER_LABELS, FRIENDLINESS_LABELS } from '../constants/enumLabels'
+import {
+  BOOK_CATEGORY_LABELS,
+  DHARMIC_ACTIVITY_TYPE_LABELS,
+  FOOD_TIER_LABELS,
+  FRIENDLINESS_LABELS,
+} from '../constants/enumLabels'
 import { EDITABLE_TEMPLE_FIELDS, formatFieldValue, type EditableTempleField } from '../constants/editableTempleFields'
 import type { FoodTierLevel, FriendlinessLevel, Temple } from '../types/database'
 
@@ -30,17 +36,19 @@ export function ModeratorQueuePage() {
   const { data: pendingStays, isLoading: staysLoading } = usePendingStays()
   const { data: pendingSuggestions, isLoading: suggestionsLoading } = usePendingEditSuggestions()
   const { data: pendingActivities, isLoading: activitiesLoading } = usePendingDharmicActivities()
+  const { data: pendingBooks, isLoading: booksLoading } = usePendingDevotionalBooks()
   const { data: openReports, isLoading: reportsLoading } = useOpenReports()
   const reviewTemple = useReviewTemple()
   const reviewStay = useReviewStay()
   const reviewSuggestion = useReviewEditSuggestion()
   const reviewActivity = useReviewDharmicActivity()
+  const reviewBook = useReviewDevotionalBook()
   const resolveReport = useResolveReport()
   const [note, setNote] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<TempleEdits | null>(null)
 
-  if (templesLoading || staysLoading || suggestionsLoading || activitiesLoading || reportsLoading)
+  if (templesLoading || staysLoading || suggestionsLoading || activitiesLoading || booksLoading || reportsLoading)
     return <LoadingSpinner label="Loading queue…" />
 
   const handleTempleDecision = (
@@ -99,6 +107,20 @@ export function ModeratorQueuePage() {
             status === 'approved' ? 'success' : 'info',
           ),
         onError: () => toast(`Couldn't update ${activityTitle}. Please try again.`, 'error'),
+      },
+    )
+  }
+
+  const handleBookDecision = (bookId: string, bookTitle: string, status: 'approved' | 'rejected') => {
+    reviewBook.mutate(
+      { bookId, status, moderatorNote: note[bookId] },
+      {
+        onSuccess: () =>
+          toast(
+            status === 'approved' ? `${bookTitle} approved and published.` : `${bookTitle} rejected.`,
+            status === 'approved' ? 'success' : 'info',
+          ),
+        onError: () => toast(`Couldn't update ${bookTitle}. Please try again.`, 'error'),
       },
     )
   }
@@ -521,6 +543,67 @@ export function ModeratorQueuePage() {
                       variant="danger"
                       className="min-h-9 px-3 py-1 text-xs"
                       onClick={() => handleActivityDecision(activity.id, activity.title, 'rejected')}
+                    >
+                      {strings.moderator.reject}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold text-charcoal-900">Pending Library Books</h2>
+        {!pendingBooks || pendingBooks.length === 0 ? (
+          <p className="text-sm text-charcoal-700/70">{strings.moderator.empty}</p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {pendingBooks.map((book) => (
+              <div key={book.id} className="rounded-xl border border-cream-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-saffron-500">
+                      {BOOK_CATEGORY_LABELS[book.category]}
+                    </span>
+                    <p className="font-semibold text-charcoal-900">{book.title}</p>
+                    <p className="text-xs text-charcoal-700/70">
+                      {book.author ? `${book.author} · ` : ''}
+                      {book.language}
+                      {book.deity ? ` · ${book.deity}` : ''}
+                    </p>
+                  </div>
+                  <a
+                    href={book.pdf_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-semibold text-maroon-700 hover:underline"
+                  >
+                    Open PDF ↗
+                  </a>
+                </div>
+                {book.description && <p className="mt-2 text-sm text-charcoal-700/80">{book.description}</p>}
+                <div className="mt-3 flex flex-col gap-2">
+                  <input
+                    type="text"
+                    placeholder={strings.moderator.feedbackPlaceholder}
+                    value={note[book.id] ?? ''}
+                    onChange={(e) => setNote((prev) => ({ ...prev, [book.id]: e.target.value }))}
+                    className="min-h-9 w-full max-w-sm rounded-md border border-stone-300 px-2 text-xs sm:w-56"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="primary"
+                      className="min-h-9 px-3 py-1 text-xs"
+                      onClick={() => handleBookDecision(book.id, book.title, 'approved')}
+                    >
+                      {strings.moderator.approve}
+                    </Button>
+                    <Button
+                      variant="danger"
+                      className="min-h-9 px-3 py-1 text-xs"
+                      onClick={() => handleBookDecision(book.id, book.title, 'rejected')}
                     >
                       {strings.moderator.reject}
                     </Button>

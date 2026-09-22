@@ -1,4 +1,4 @@
-import type { DharmicActivityType, FoodTierLevel, FriendlinessLevel } from '../types/database'
+import type { BookCategory, DharmicActivityType, FoodTierLevel, FriendlinessLevel } from '../types/database'
 
 // Human-readable labels for raw enum values. Keeping these centralized means
 // the UI never shows a raw db value like "brahmin_run_kitchen" to a user.
@@ -100,6 +100,30 @@ export const DHARMIC_ACTIVITY_TYPE_ICONS: Record<DharmicActivityType, string> = 
   anugraha_bhashanam: '🙏',
   bhajan_utsavam: '🎶',
   other: '✦',
+}
+
+export const BOOK_CATEGORY_LABELS: Record<BookCategory, string> = {
+  stotra: 'Stotra / Hymn',
+  purana: 'Purana',
+  itihasa: 'Itihasa (Ramayana, Mahabharata...)',
+  upanishad: 'Upanishad',
+  veda: 'Veda',
+  bhajan: 'Bhajan Collection',
+  panchang: 'Panchang / Almanac',
+  biography: 'Biography',
+  other: 'Other',
+}
+
+export const BOOK_CATEGORY_ICONS: Record<BookCategory, string> = {
+  stotra: '📿',
+  purana: '📜',
+  itihasa: '⚔️',
+  upanishad: '🕉️',
+  veda: '🔥',
+  bhajan: '🎶',
+  panchang: '🗓️',
+  biography: '👤',
+  other: '📚',
 }
 
 export const MONTH_NAMES = [
