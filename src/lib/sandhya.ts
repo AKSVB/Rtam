@@ -65,6 +65,35 @@ export const REMINDER_WINDOWS: ReminderWindow[] = [
   { key: 'evening', label: 'Sāyam (evening) Sandhyavandanam', afterMinutes: 21 * 60 },
 ]
 
+export interface SandhyaPeriod {
+  key: 'morning' | 'madhyahnika' | 'evening'
+  label: string
+  /** Used to phrase the temple-door prompt's question for the period the visitor is currently in. */
+  question: string
+}
+
+// Boundaries split the IST day into three roughly equal windows matching
+// the traditional Pratah/Madhyahnika/Sayam sandhyas — deliberately simpler
+// than REMINDER_WINDOWS' "about to miss it" cutoffs above, since this is
+// classifying which sandhya is current, not judging lateness.
+export const SANDHYA_PERIODS: SandhyaPeriod[] = [
+  { key: 'morning', label: 'Prātaḥ (morning) Sandhya', question: 'perform Prātaḥ Sandhyavandanam this morning' },
+  {
+    key: 'madhyahnika',
+    label: 'Madhyahnika (afternoon) Sandhya',
+    question: 'perform Madhyahnika Sandhyavandanam this afternoon',
+  },
+  { key: 'evening', label: 'Sāyam (evening) Sandhya', question: 'perform Sāyam Sandhyavandanam this evening' },
+]
+
+/** Which of the three sandhyas is "current" right now, in IST. */
+export function getCurrentSandhyaPeriod(date: Date = new Date()): SandhyaPeriod {
+  const minutes = istMinutesOfDay(date)
+  if (minutes < 12 * 60) return SANDHYA_PERIODS[0]
+  if (minutes < 17 * 60) return SANDHYA_PERIODS[1]
+  return SANDHYA_PERIODS[2]
+}
+
 export function getDueReminders(
   todayLog: Pick<SandhyaLog, 'morning' | 'madhyahnika' | 'evening'> | undefined,
   now: Date = new Date(),

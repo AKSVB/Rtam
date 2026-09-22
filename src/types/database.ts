@@ -31,6 +31,8 @@ export interface UserProfile {
   last_tejas_milestone: number
   /** Opt-in: when true, mutual followers can see this user's current streak length via `current_sandhya_streak()`. */
   share_sandhya_streak: boolean
+  /** Null = not asked / prefers not to say. Gates the Sandhyavandanam temple-door prompt to 'male' only. */
+  gender: 'male' | 'female' | null
   created_at: string
   updated_at: string
   banned_at: string | null

@@ -97,7 +97,7 @@ export function TempleDetailPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <SandhyavandanamPrompt templeId={temple.id} deity={temple.deity} templeName={temple.name} />
+      <SandhyavandanamPrompt deity={temple.deity} templeName={temple.name} />
 
       <div>
         {temple.status === 'pending' && (

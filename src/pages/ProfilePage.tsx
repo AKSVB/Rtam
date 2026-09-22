@@ -13,7 +13,7 @@ import { Badge } from '../components/common/Badge'
 import { Avatar } from '../components/common/Avatar'
 import { LevelBadge } from '../components/common/LevelBadge'
 import { Button } from '../components/common/Button'
-import { FormField, TextInput } from '../components/common/FormField'
+import { FormField, Select, TextInput } from '../components/common/FormField'
 import { strings } from '../constants/strings'
 import type { SubmissionStatus, Temple } from '../types/database'
 
@@ -34,6 +34,7 @@ export function ProfilePage() {
   const { toast } = useToast()
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '')
   const [homeCity, setHomeCity] = useState(profile?.home_city ?? '')
+  const [gender, setGender] = useState(profile?.gender ?? '')
   const [saving, setSaving] = useState(false)
   const uploadAvatar = useUploadAvatar()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -61,7 +62,11 @@ export function ProfilePage() {
     setSaving(true)
     await supabase
       .from('user_profiles')
-      .update({ display_name: displayName, home_city: homeCity || null })
+      .update({
+        display_name: displayName,
+        home_city: homeCity || null,
+        gender: gender || null,
+      })
       .eq('id', profile.id)
     await refreshProfile()
     setSaving(false)
@@ -134,6 +139,17 @@ export function ProfilePage() {
         </FormField>
         <FormField label="Home city" htmlFor="homeCity">
           <TextInput id="homeCity" value={homeCity} onChange={(e) => setHomeCity(e.target.value)} />
+        </FormField>
+        <FormField
+          label="Gender"
+          htmlFor="gender"
+          helpText="Used only to decide whether you see the Sandhyavandanam temple-door prompt."
+        >
+          <Select id="gender" value={gender} onChange={(e) => setGender(e.target.value as typeof gender)}>
+            <option value="">Prefer not to say</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </Select>
         </FormField>
         <Button type="submit" disabled={saving} className="self-start">
           {saving ? 'Saving…' : 'Save changes'}

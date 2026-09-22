@@ -1,34 +1,37 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
+import { useUpsertSandhyaLog } from '../../hooks/useSandhyaTracker'
+import { getCurrentSandhyaPeriod, istDateString } from '../../lib/sandhya'
 
 const SANDHYAVANDANAM_VIDEO_URL = 'https://www.youtube.com/watch?v=IwPT0UqDWN8'
 
-function sessionKey(templeId: string) {
-  return `rtam:sandhya-prompt:${templeId}`
+function shownKey(periodKey: string) {
+  return `rtam:sandhya-prompt:${istDateString()}:${periodKey}`
 }
 
 /**
- * A gentle devotional nudge shown once per temple per browser session —
- * framed as the presiding deity itself asking, since that's far more
- * likely to actually land with a visitor than a generic app notification.
- * Dismissing it (either way) is remembered so it doesn't nag on repeat
- * visits to the same temple within the same session.
+ * A gentle devotional nudge, framed as the presiding deity itself asking —
+ * shown at most once per sandhya period per day (Prātaḥ, Madhyahnika, Sāyam),
+ * app-wide, not once per temple. Only shown to devotees who've told us
+ * they're male, since Trikala Sandhyavandanam is traditionally observed by
+ * men after Upanayanam; anyone else (or anyone who hasn't said) never sees
+ * it. Persisted in localStorage (not sessionStorage) so it stays quiet for
+ * the rest of the period even across browser sessions.
  */
-export function SandhyavandanamPrompt({
-  templeId,
-  deity,
-  templeName,
-}: {
-  templeId: string
-  deity: string
-  templeName: string
-}) {
+export function SandhyavandanamPrompt({ deity, templeName }: { deity: string; templeName: string }) {
+  const { profile } = useAuth()
   const [open, setOpen] = useState(false)
+  const period = getCurrentSandhyaPeriod()
+  const upsertLog = useUpsertSandhyaLog(profile?.id)
+
+  const eligible = profile?.gender === 'male'
 
   useEffect(() => {
-    const key = sessionKey(templeId)
+    if (!eligible) return
+    const key = shownKey(period.key)
     let alreadyShown = true
     try {
-      alreadyShown = !!sessionStorage.getItem(key)
+      alreadyShown = !!localStorage.getItem(key)
     } catch {
       /* private-browsing / storage disabled — treat as not-yet-shown */
       alreadyShown = false
@@ -36,15 +39,23 @@ export function SandhyavandanamPrompt({
     if (alreadyShown) return
     const timer = setTimeout(() => setOpen(true), 400)
     return () => clearTimeout(timer)
-  }, [templeId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eligible, period.key])
 
   const dismiss = () => {
     setOpen(false)
     try {
-      sessionStorage.setItem(sessionKey(templeId), '1')
+      localStorage.setItem(shownKey(period.key), '1')
     } catch {
       /* private-browsing / storage disabled — fine to just not persist */
     }
+  }
+
+  const answer = (performed: boolean) => {
+    if (profile) {
+      upsertLog.mutate({ logDate: istDateString(), field: period.key, value: performed })
+    }
+    dismiss()
   }
 
   useEffect(() => {
@@ -57,7 +68,7 @@ export function SandhyavandanamPrompt({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  if (!open) return null
+  if (!eligible || !open) return null
 
   return (
     <div
@@ -94,13 +105,30 @@ export function SandhyavandanamPrompt({
 
         <div className="flex flex-col gap-4 px-6 py-6 text-center">
           <p className="font-display text-lg italic leading-snug text-maroon-900">
-            "{deity} asks — did you perform Sandhyavandanam before coming to see me?"
+            "{deity} asks — did you {period.question}?"
           </p>
           <p className="text-sm leading-relaxed text-charcoal-700/80">
             Sandhyavandanam quiets the mind and purifies the body, so that when you stand before{' '}
             {deity}, you stand fully present. If you haven't yet, there's no shame in it — only in
             not knowing how.
           </p>
+
+          <div className="flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => answer(true)}
+              className="min-h-11 flex-1 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
+            >
+              Yes, I have
+            </button>
+            <button
+              type="button"
+              onClick={() => answer(false)}
+              className="min-h-11 flex-1 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-charcoal-700 hover:bg-cream-100"
+            >
+              Not yet
+            </button>
+          </div>
 
           <a
             href={SANDHYAVANDANAM_VIDEO_URL}
