@@ -127,7 +127,7 @@ export function BookDetailPage() {
 
       <div className="flex flex-col gap-2">
         <LibraryDisclaimer />
-        {user && !isOwner && (
+        {user ? (
           <ReportButton
             targetType="devotional_book"
             targetId={book.id}
@@ -135,6 +135,10 @@ export function BookDetailPage() {
             linkPath={`/library/${book.id}`}
             className="self-start"
           />
+        ) : (
+          <Link to="/login" className="self-start text-xs font-semibold text-maroon-700 hover:underline">
+            🚩 Log in to report this book
+          </Link>
         )}
       </div>
 
