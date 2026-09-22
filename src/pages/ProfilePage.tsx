@@ -12,10 +12,13 @@ import { useMyCommunityPosts } from '../hooks/useCommunityPosts'
 import { useMyYatraProgress } from '../hooks/useTempleVisits'
 import { useSandhyaLogs } from '../hooks/useSandhyaTracker'
 import { computeStreak } from '../lib/sandhya'
+import { getContributionLevel } from '../lib/contributionLevels'
+import { ACHIEVEMENTS } from '../lib/achievements'
 import { TrikalaSandhyaTracker } from '../components/profile/TrikalaSandhyaTracker'
 import { MyYatraProgress } from '../components/profile/MyYatraProgress'
 import { ProfileStats, LevelProgress } from '../components/profile/ProfileStats'
 import { ProfileAchievements } from '../components/profile/ProfileAchievements'
+import { YatraPassport } from '../components/profile/YatraPassport'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Badge } from '../components/common/Badge'
 import { Avatar } from '../components/common/Avatar'
@@ -95,6 +98,27 @@ export function ProfilePage() {
     templesApproved: submissions?.filter((t) => t.status === 'approved').length ?? 0,
   }
 
+  const level = getContributionLevel(profile.contribution_points)
+  const topCircuit = yatra?.circuits[0]
+  const passportData = {
+    displayName: profile.display_name,
+    username: profile.username,
+    avatarUrl: profile.avatar_url,
+    levelName: level.name,
+    levelIcon: level.icon,
+    points: profile.contribution_points,
+    templesVisited: achievementStats.templesVisited,
+    streak: achievementStats.sandhyaStreak,
+    tejasPoints: profile.sandhya_tejas_points,
+    unlockedAchievements: ACHIEVEMENTS.filter((a) => a.test(achievementStats)).map((a) => ({
+      icon: a.icon,
+      label: a.label,
+    })),
+    topCircuit: topCircuit
+      ? { tag: topCircuit.tag, visited: topCircuit.visitedCount, expected: topCircuit.expectedCount }
+      : undefined,
+  }
+
   const handleSave = async (e: FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -169,6 +193,8 @@ export function ProfilePage() {
       <ProfileStats userId={profile.id} points={profile.contribution_points} />
 
       <ProfileAchievements stats={achievementStats} />
+
+      <YatraPassport data={passportData} />
 
       <MyYatraProgress userId={profile.id} />
 
