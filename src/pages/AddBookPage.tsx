@@ -8,7 +8,7 @@ import { BOOK_CATEGORY_LABELS } from '../constants/enumLabels'
 import type { BookCategory } from '../types/database'
 
 const CATEGORIES = Object.keys(BOOK_CATEGORY_LABELS) as BookCategory[]
-const MAX_PDF_MB = 25
+const MAX_PDF_MB = 100
 
 export function AddBookPage() {
   const { user } = useAuth()

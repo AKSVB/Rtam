@@ -59,7 +59,7 @@ export function useMyDevotionalBooks(userId: string | undefined) {
   })
 }
 
-const MAX_PDF_BYTES = 25 * 1024 * 1024
+const MAX_PDF_BYTES = 100 * 1024 * 1024
 const COVER_MAX_DIMENSION = 600
 
 export interface NewBookInput {
