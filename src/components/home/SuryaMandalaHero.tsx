@@ -206,94 +206,95 @@ function createTejasTexture(): THREE.CanvasTexture {
 }
 
 /**
- * A soft, non-literal luminous silhouette — not a portrait, not an
- * attempt at iconographic detail, just a seated feminine form with a
- * halo, coalesced from light. Needs to read clearly against the sphere
- * at all times (not just flicker into visibility), so unlike the other
- * textures in this file it carries its own dark contrasting aura behind
- * the figure — the thing that makes a bright shape actually legible
- * against an already-bright, similarly-coloured background — rather
- * than relying on being simply "a bit brighter" than its surroundings.
+ * A real, solid 3D relief of a seated feminine form with a halo —
+ * deliberately not a flat camera-facing decal. An earlier version was a
+ * billboarded plane (always turned to face the camera, so orbiting the
+ * scene never revealed anything but the same flat front view); this
+ * builds one continuous outline as a THREE.Shape and extrudes it with a
+ * gentle bevel, so it has an actual silhouette and a lit edge that
+ * responds correctly as the camera moves around her — an edifice you
+ * can walk around, not a sticker.
  */
-function createDivineFigureTexture(): THREE.CanvasTexture {
-  const w = 320
-  const h = 420
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
-  const cx = w / 2
+function createDivineFigureGeometry(): THREE.ExtrudeGeometry {
+  const shape = new THREE.Shape()
+  shape.moveTo(0, 1.0)
+  shape.quadraticCurveTo(0.22, 0.98, 0.24, 0.78)
+  shape.quadraticCurveTo(0.16, 0.64, 0.1, 0.56)
+  shape.bezierCurveTo(0.3, 0.42, 0.5, 0.1, 0.46, -0.3)
+  shape.bezierCurveTo(0.44, -0.55, 0.4, -0.75, 0.36, -0.85)
+  shape.lineTo(-0.36, -0.85)
+  shape.bezierCurveTo(-0.4, -0.75, -0.44, -0.55, -0.46, -0.3)
+  shape.bezierCurveTo(-0.5, 0.1, -0.3, 0.42, -0.1, 0.56)
+  shape.quadraticCurveTo(-0.16, 0.64, -0.24, 0.78)
+  shape.quadraticCurveTo(-0.22, 0.98, 0, 1.0)
 
-  // A dark contrasting aura behind the figure — this, not brightness
-  // alone, is what keeps the silhouette legible against the sphere's own
-  // gold regardless of the pulse.
-  const shadow = ctx.createRadialGradient(cx, h * 0.55, 0, cx, h * 0.55, w * 0.62)
-  shadow.addColorStop(0, 'rgba(60,15,10,0.75)')
-  shadow.addColorStop(0.55, 'rgba(60,15,10,0.4)')
-  shadow.addColorStop(1, 'rgba(60,15,10,0)')
-  ctx.fillStyle = shadow
-  ctx.fillRect(0, 0, w, h)
-
-  // Halo behind the head.
-  const halo = ctx.createRadialGradient(cx, h * 0.24, 0, cx, h * 0.24, w * 0.34)
-  halo.addColorStop(0, 'rgba(255,250,230,0.95)')
-  halo.addColorStop(0.55, 'rgba(255,224,150,0.45)')
-  halo.addColorStop(1, 'rgba(255,224,150,0)')
-  ctx.fillStyle = halo
-  ctx.fillRect(0, 0, w, h)
-
-  function bodyPath() {
-    ctx.beginPath()
-    ctx.arc(cx, h * 0.22, w * 0.095, 0, Math.PI * 2)
-    ctx.moveTo(cx + w * 0.1, h * 0.3)
-    ctx.bezierCurveTo(cx - w * 0.08, h * 0.32, cx - w * 0.14, h * 0.42, cx - w * 0.1, h * 0.55)
-    ctx.bezierCurveTo(cx - w * 0.3, h * 0.68, cx - w * 0.34, h * 0.85, cx - w * 0.3, h * 0.97)
-    ctx.lineTo(cx + w * 0.3, h * 0.97)
-    ctx.bezierCurveTo(cx + w * 0.34, h * 0.85, cx + w * 0.3, h * 0.68, cx + w * 0.1, h * 0.55)
-    ctx.bezierCurveTo(cx + w * 0.14, h * 0.42, cx + w * 0.08, h * 0.32, cx, h * 0.3)
-    ctx.closePath()
-    ctx.moveTo(cx - w * 0.27, h * 0.5)
-    ctx.ellipse(cx - w * 0.32, h * 0.5, w * 0.05, h * 0.1, -0.5, 0, Math.PI * 2)
-    ctx.moveTo(cx + w * 0.37, h * 0.5)
-    ctx.ellipse(cx + w * 0.32, h * 0.5, w * 0.05, h * 0.1, 0.5, 0, Math.PI * 2)
-  }
-
-  // A soft, slightly larger rim-light pass first, so the true silhouette
-  // reads with a visible glowing edge against the dark aura.
-  ctx.filter = 'blur(6px)'
-  ctx.fillStyle = 'rgba(255,255,255,0.9)'
-  bodyPath()
-  ctx.fill()
-
-  // The crisp(er) silhouette itself.
-  ctx.filter = 'blur(1px)'
-  const bodyGradient = ctx.createLinearGradient(0, h * 0.1, 0, h)
-  bodyGradient.addColorStop(0, 'rgba(255,252,240,1)')
-  bodyGradient.addColorStop(0.35, 'rgba(255,220,145,0.98)')
-  bodyGradient.addColorStop(1, 'rgba(235,150,60,0.85)')
-  ctx.fillStyle = bodyGradient
-  bodyPath()
-  ctx.fill()
-  ctx.filter = 'none'
-
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.needsUpdate = true
-  return texture
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: 0.16,
+    bevelEnabled: true,
+    bevelThickness: 0.035,
+    bevelSize: 0.035,
+    bevelSegments: 4,
+    curveSegments: 24,
+  })
+  // Extrusion runs 0..depth along Z; recentre so the pivot (and rotation
+  // axis) sits in the middle of her actual thickness, not at her back.
+  geometry.center()
+  return geometry
 }
 
+const FIGURE_VERTEX = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vViewPos;
+  varying float vLocalY;
+  void main() {
+    vLocalY = position.y;
+    vNormal = normalize(normalMatrix * normal);
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vViewPos = mv.xyz;
+    gl_Position = projectionMatrix * mv;
+  }
+`
+
+const FIGURE_FRAGMENT = /* glsl */ `
+  uniform float uGlow;
+  varying vec3 vNormal;
+  varying vec3 vViewPos;
+  varying float vLocalY;
+  void main() {
+    vec3 N = normalize(vNormal);
+    vec3 V = normalize(-vViewPos);
+    float t = clamp(vLocalY * 0.55 + 0.55, 0.0, 1.0);
+
+    vec3 warm = vec3(0.86, 0.52, 0.16);
+    vec3 hot = vec3(1.0, 0.85, 0.55);
+    vec3 white = vec3(1.0, 0.98, 0.93);
+    vec3 color = mix(warm, hot, t);
+    color = mix(color, white, pow(t, 2.2) * 0.55);
+
+    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.0);
+    color += white * fresnel * (0.55 + uGlow * 0.35);
+
+    gl_FragColor = vec4(color, 1.0);
+  }
+`
+
 /**
- * Savitṛ — the pre-dawn light of the Gayatri Mantra (Rigveda 3.62.10) —
- * a solid, lit, boiling plasma sphere (multi-octave simplex displacement
- * with a hand-rebuilt normal, so it actually shades like the bumps it
- * has), wrapped in two layered additive glow shells, punctuated by soft
- * eruptive tejas bursts in random directions, with a luminous presence
- * that stays clearly visible at its centre throughout — not a flicker
- * gated to a pulse — drawn with its own dark contrasting aura so it
- * reads against the sphere regardless of brightness. The camera orbits
- * fully in 3D (drag) and carries a gentle parallax on top of that as the
- * cursor moves. Kept deliberately less busy than an earlier version of
- * this scene, which added a flowing particle stream and a sunburst
- * billboard that made it read as cluttered rather than clearer.
+ * Gayatri Maata at the fixed, motionless centre — a real extruded 3D
+ * relief (not a camera-facing billboard, so orbiting the scene actually
+ * reveals her form and edge-lit silhouette rather than the same flat
+ * view from every angle), with her own rotation set once at creation
+ * and never touched again in the render loop. Everything else in the
+ * scene moves around her: the plasma sphere (multi-octave simplex
+ * displacement with a hand-rebuilt normal, so it actually shades like
+ * the bumps it has) tumbles on all three axes in place, and a separate
+ * `mandalaRing` group — two tilted rings plus a ring of petal marks —
+ * tumbles around the same fixed centre on its own independent axes and
+ * speed. Savitṛ is the pre-dawn light of the Gayatri Mantra (Rigveda
+ * 3.62.10). The camera orbits fully in 3D (drag) and carries a gentle
+ * parallax on top of that as the cursor moves. Kept deliberately less
+ * busy than an earlier version of this scene, which added a flowing
+ * particle stream and a sunburst billboard that made it read as
+ * cluttered rather than clearer.
  *
  * The "physically overwhelming" radiance a brief for this scene once
  * called for was meant to come from real post-process Bloom (three.js's
@@ -414,25 +415,26 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     )
     core.add(outerGlow)
 
-    // ── The divine presence — a soft, non-literal luminous silhouette,
-    // fixed at the centre and never rotating. Always faces the camera
-    // (billboarded, re-oriented every frame to the camera's current
-    // quaternion rather than inheriting any spin) and draws with
-    // depthTest disabled so it reads through the opaque plasma core from
-    // any orbit angle, rather than being hidden behind it. ──────────────
-    const divineFigureTexture = createDivineFigureTexture()
-    const divineFigureMaterial = new THREE.MeshBasicMaterial({
-      map: divineFigureTexture,
-      transparent: true,
-      opacity: 0,
+    // ── The divine presence — a real 3D relief, fixed at the centre with
+    // a fixed orientation set once below and never touched again in the
+    // render loop, so she genuinely does not move while everything else
+    // does. depthTest is still disabled so she reads through the opaque
+    // plasma core from any orbit angle rather than being hidden inside
+    // it — she and the sphere occupy the same point in space, so without
+    // this she'd vanish behind the sphere from most angles. ─────────────
+    const divineFigureUniforms = { uGlow: { value: 0 } }
+    const divineFigureMaterial = new THREE.ShaderMaterial({
+      uniforms: divineFigureUniforms,
+      vertexShader: FIGURE_VERTEX,
+      fragmentShader: FIGURE_FRAGMENT,
       depthTest: false,
       depthWrite: false,
-      side: THREE.DoubleSide,
     })
-    const divineFigure = new THREE.Mesh(
-      new THREE.PlaneGeometry(coreRadius * 1.9, coreRadius * 1.9 * (420 / 320)),
-      divineFigureMaterial,
-    )
+    const divineFigure = new THREE.Mesh(createDivineFigureGeometry(), divineFigureMaterial)
+    divineFigure.scale.setScalar(coreRadius * 1.05)
+    // Face roughly toward the camera's starting position (azimuth only,
+    // so she stays upright) — set once, here, not in the render loop.
+    divineFigure.rotation.y = Math.atan2(camera.position.x, camera.position.z)
     divineFigure.renderOrder = 10
     scene.add(divineFigure)
 
@@ -618,25 +620,28 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
 
       // Self-rotation independent of the orbit camera — under a fixed
       // light direction this sweeps a real lit/dark terminator across the
-      // bumpy surface.
+      // bumpy surface. Tumbling on all three axes (not just spinning
+      // around one) is what makes it read as genuinely turning in 3D
+      // rather than a flat disc rotating in the view plane.
       core.rotation.y += delta * 0.18
       core.rotation.x += delta * 0.05
+      core.rotation.z += delta * 0.03
 
-      // The mandala turns around her — she does not turn with it. This
-      // group is a sibling of `core` and the figure, not a child of
-      // either, specifically so its spin is independent of both.
+      // The mandala turns around her — she does not turn with it at all.
+      // This group is a sibling of `core` and the figure, not a child of
+      // either, specifically so its spin is independent of both, and it
+      // tumbles on all three axes for the same reason as the core above.
       mandalaRing.rotation.z += delta * 0.16
+      mandalaRing.rotation.x += delta * 0.07
+      mandalaRing.rotation.y += delta * 0.045
       for (const { mesh, speed } of rings) {
         mesh.rotation.z += delta * speed
       }
 
-      // The presence stays clearly visible throughout — only a gentle
-      // breathing variation in opacity/scale, not a fade to near-zero.
-      divineFigure.quaternion.copy(camera.quaternion)
-      divineFigure.position.set(0, 0, 0)
-      divineFigureMaterial.opacity = 0.88 + breath * 0.1 + pulse * 0.02
-      divineFigure.scale.setScalar(0.95 + breath * 0.06)
-      divineFigure.rotation.z = Math.sin(elapsed * 0.15) * 0.015
+      // She does not move at all — no position, rotation, or scale
+      // change here, ever. Only a gentle breathing brightness on her
+      // rim light, so she still feels alive without appearing to turn.
+      divineFigureUniforms.uGlow.value = breath * 0.6 + pulse
 
       for (let i = 0; i < tejasCount; i++) {
         const t = (elapsed / tejasCycle[i] + tejasPhase[i]) % 1
@@ -696,7 +701,6 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       })
       tejasTexture.dispose()
       petalTexture.dispose()
-      divineFigureTexture.dispose()
       renderer.dispose()
     }
   }, [onFailed])
