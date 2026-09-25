@@ -5,24 +5,43 @@ import type { BookCategory, DevotionalBook } from '../types/database'
 
 export interface BookFilters {
   category?: BookCategory
+  language?: string
   search?: string
+  sort?: 'title' | 'newest'
 }
 
-/** Every approved book, optionally filtered by category and/or a title/author search. */
+/** Every approved book, optionally filtered by category, language and/or a title/author/deity search. */
 export function useDevotionalBooks(filters: BookFilters) {
   return useQuery({
     queryKey: ['devotional-books', filters],
     queryFn: async (): Promise<DevotionalBook[]> => {
       let query = supabase.from('devotional_books').select('*').eq('status', 'approved')
       if (filters.category) query = query.eq('category', filters.category)
+      if (filters.language) query = query.eq('language', filters.language)
       if (filters.search?.trim()) {
         const term = filters.search.trim()
         query = query.or(`title.ilike.%${term}%,author.ilike.%${term}%,deity.ilike.%${term}%`)
       }
-      const { data, error } = await query.order('title', { ascending: true })
+      const { data, error } =
+        filters.sort === 'newest'
+          ? await query.order('created_at', { ascending: false })
+          : await query.order('title', { ascending: true })
       if (error) throw error
       return data ?? []
     },
+  })
+}
+
+/** Distinct languages across approved books, for the library's language filter. */
+export function useBookLanguages() {
+  return useQuery({
+    queryKey: ['devotional-book-languages'],
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase.from('devotional_books').select('language').eq('status', 'approved')
+      if (error) throw error
+      return [...new Set((data ?? []).map((r) => r.language))].sort()
+    },
+    staleTime: 5 * 60_000,
   })
 }
 
@@ -153,6 +172,7 @@ export function useReviewDevotionalBook() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-devotional-books'] })
       queryClient.invalidateQueries({ queryKey: ['devotional-books'] })
+      queryClient.invalidateQueries({ queryKey: ['devotional-book-languages'] })
     },
   })
 }
