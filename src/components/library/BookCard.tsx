@@ -1,21 +1,8 @@
 import { Link } from 'react-router-dom'
 import type { DevotionalBook } from '../../types/database'
 import { Badge } from '../common/Badge'
-import { BOOK_CATEGORY_ICONS, BOOK_CATEGORY_LABELS } from '../../constants/enumLabels'
-
-const PLACEHOLDER_GRADIENTS = [
-  'from-saffron-400 to-vermilion-600',
-  'from-turmeric-300 to-gold-600',
-  'from-gold-400 to-maroon-700',
-  'from-peacock-500 to-turmeric-500',
-  'from-vermilion-400 to-maroon-700',
-]
-
-function placeholderGradient(seed: string) {
-  let hash = 0
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
-  return PLACEHOLDER_GRADIENTS[hash % PLACEHOLDER_GRADIENTS.length]
-}
+import { BookCover } from './BookCover'
+import { BOOK_CATEGORY_LABELS } from '../../constants/enumLabels'
 
 export function BookCard({ book }: { book: DevotionalBook }) {
   return (
@@ -32,13 +19,7 @@ export function BookCard({ book }: { book: DevotionalBook }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div
-            className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${placeholderGradient(book.id)}`}
-          >
-            <span className="text-5xl drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]" aria-hidden>
-              {BOOK_CATEGORY_ICONS[book.category]}
-            </span>
-          </div>
+          <BookCover id={book.id} title={book.title} author={book.author} category={book.category} />
         )}
       </div>
 

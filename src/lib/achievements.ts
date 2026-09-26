@@ -21,7 +21,7 @@ export interface Achievement {
 export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first-darshan',
-    icon: '🪔',
+    icon: '🏺',
     label: 'First Darshan',
     test: (s) => s.templesVisited >= 1,
     description: (s) => (s.templesVisited >= 1 ? 'Logged your first temple visit.' : 'Mark a temple as visited.'),

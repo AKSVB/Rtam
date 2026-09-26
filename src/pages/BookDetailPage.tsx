@@ -7,7 +7,8 @@ import { Badge } from '../components/common/Badge'
 import { Button } from '../components/common/Button'
 import { ReportButton } from '../components/common/ReportButton'
 import { LibraryDisclaimer } from '../components/library/LibraryDisclaimer'
-import { BOOK_CATEGORY_ICONS, BOOK_CATEGORY_LABELS } from '../constants/enumLabels'
+import { BookCover } from '../components/library/BookCover'
+import { BOOK_CATEGORY_LABELS } from '../constants/enumLabels'
 
 function formatFileSize(bytes: number | null): string {
   if (!bytes) return ''
@@ -65,11 +66,7 @@ export function BookDetailPage() {
           {book.cover_image_url ? (
             <img src={book.cover_image_url} alt="" className="aspect-[3/4] w-full object-cover" />
           ) : (
-            <div className="flex aspect-[3/4] w-full items-center justify-center bg-gradient-to-br from-gold-400 to-maroon-700">
-              <span className="text-6xl" aria-hidden>
-                {BOOK_CATEGORY_ICONS[book.category]}
-              </span>
-            </div>
+            <BookCover id={book.id} title={book.title} author={book.author} category={book.category} size="lg" />
           )}
         </div>
 

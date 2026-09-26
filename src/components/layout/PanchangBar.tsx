@@ -9,7 +9,7 @@ export function PanchangBar() {
   const [panchang] = useState(() => getTodaysPanchang())
 
   const text = [
-    `🪔 Today's Panchang (${panchang.weekday})`,
+    `🕉️ Today's Panchang (${panchang.weekday})`,
     `${panchang.paksha} Paksha, ${panchang.tithi} till ${formatIstTime(panchang.tithiEndsAt)} IST`,
     `Nakshatra: ${panchang.nakshatra} till ${formatIstTime(panchang.nakshatraEndsAt)} IST`,
     panchang.amantaMasa === panchang.purnimantaMasa

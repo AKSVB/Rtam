@@ -20,7 +20,7 @@ export function VisitButton({ templeId, templeName }: { templeId: string; temple
         to="/login"
         className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-maroon-200 bg-cream-100 px-4 py-2.5 text-sm font-semibold text-maroon-800 hover:bg-cream-200"
       >
-        🪔 Log in to mark as visited
+        🕉️ Log in to mark as visited
       </Link>
     )
   }
@@ -42,7 +42,7 @@ export function VisitButton({ templeId, templeName }: { templeId: string; temple
         })
       }}
     >
-      {visited ? '✓ Visited' : '🪔 Mark as visited'}
+      {visited ? '✓ Visited' : '🕉️ Mark as visited'}
       {visitCount != null && visitCount > 0 && (
         <span className="text-charcoal-700/50">
           · {visitCount} devotee{visitCount === 1 ? '' : 's'}

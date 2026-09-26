@@ -10,7 +10,7 @@ export interface ContributionLevel {
 // a tier later.
 export const CONTRIBUTION_LEVELS: ContributionLevel[] = [
   { name: 'Seeker', icon: '🌱', minPoints: 0 },
-  { name: 'Sevak', icon: '🪔', minPoints: 25 },
+  { name: 'Sevak', icon: '🏺', minPoints: 25 },
   { name: 'Karyakarta', icon: '🛕', minPoints: 100 },
   { name: 'Rakshak', icon: '🛡️', minPoints: 250 },
   { name: 'Acharya', icon: '✦', minPoints: 500 },

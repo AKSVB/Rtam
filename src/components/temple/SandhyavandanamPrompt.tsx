@@ -89,7 +89,7 @@ export function SandhyavandanamPrompt({ deity, templeName }: { deity: string; te
       >
         <div className="bg-gradient-to-r from-maroon-800 via-maroon-700 to-maroon-800 px-6 py-5 text-center">
           <span className="text-3xl" aria-hidden>
-            🪔
+            🕉️
           </span>
           <h2
             id="sandhya-prompt-title"

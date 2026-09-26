@@ -332,7 +332,7 @@ export function HomePage() {
       {!isBrowsing && recent && recent.length > 0 && (
         <section>
           <h2 className="mb-4 font-display text-2xl font-semibold text-charcoal-900">
-            🕯 Newly Added by the Community
+            🪷 Newly Added by the Community
           </h2>
           <TempleStrip temples={recent.slice(0, 4)} covers={covers} />
         </section>

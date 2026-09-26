@@ -15,7 +15,7 @@ export function MyYatraProgress({ userId }: { userId: string }) {
       <div className="rounded-xl border border-cream-200 bg-white p-5 text-sm text-charcoal-700/70">
         <p>
           You haven't logged any temple visits yet. Look for the{' '}
-          <span className="font-semibold text-maroon-700">🪔 Mark as visited</span> button on a temple
+          <span className="font-semibold text-maroon-700">🕉️ Mark as visited</span> button on a temple
           page after you've been there.
         </p>
       </div>
@@ -25,7 +25,7 @@ export function MyYatraProgress({ userId }: { userId: string }) {
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-gold-400/40 bg-white p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="font-display text-lg font-semibold text-maroon-900">🪔 My Yatra</h3>
+        <h3 className="font-display text-lg font-semibold text-maroon-900">🕉️ My Yatra</h3>
         <span className="text-sm text-charcoal-700/70">
           {data.totalVisited} temple{data.totalVisited === 1 ? '' : 's'} visited
         </span>

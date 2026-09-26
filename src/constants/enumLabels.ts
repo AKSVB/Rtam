@@ -115,15 +115,15 @@ export const BOOK_CATEGORY_LABELS: Record<BookCategory, string> = {
 }
 
 export const BOOK_CATEGORY_ICONS: Record<BookCategory, string> = {
-  stotra: '📿',
-  purana: '📜',
-  itihasa: '⚔️',
-  upanishad: '🕉️',
-  veda: '🔥',
-  bhajan: '🎶',
-  panchang: '🗓️',
-  biography: '👤',
-  other: '📚',
+  stotra: '🕉️',
+  purana: '🪷',
+  itihasa: '🐚',
+  upanishad: '📿',
+  veda: '🏺',
+  bhajan: '🔔',
+  panchang: '🌙',
+  biography: '🙏',
+  other: '🪷',
 }
 
 export const MONTH_NAMES = [
