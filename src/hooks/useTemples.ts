@@ -162,6 +162,51 @@ export function useCircuitSpotlight(tags: readonly string[], limit = 4) {
   return { tag, ...query }
 }
 
+function dayOfYear(): number {
+  return Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000)
+}
+
+/**
+ * One approved temple, picked deterministically by the day of year (not
+ * randomly re-rolled on every load) so every visitor sees the same "Temple
+ * of the Day" and it changes once at midnight IST-ish. Picked by stable id
+ * order and a modulo index, rather than curated by hand.
+ */
+export function useTempleOfTheDay() {
+  const countQuery = useQuery({
+    queryKey: ['approved-temple-count'],
+    queryFn: async (): Promise<number> => {
+      const { count, error } = await supabase
+        .from('temples')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'approved')
+      if (error) throw error
+      return count ?? 0
+    },
+    staleTime: 60 * 60_000,
+  })
+
+  const index = countQuery.data ? dayOfYear() % countQuery.data : 0
+
+  const templeQuery = useQuery({
+    queryKey: ['temple-of-the-day', index],
+    queryFn: async (): Promise<Temple | null> => {
+      const { data, error } = await supabase
+        .from('temples')
+        .select('*')
+        .eq('status', 'approved')
+        .order('id')
+        .range(index, index)
+      if (error) throw error
+      return data?.[0] ?? null
+    },
+    enabled: !!countQuery.data,
+    staleTime: 60 * 60_000,
+  })
+
+  return templeQuery
+}
+
 /** Nearest approved temples to an arbitrary point — used for the "temples near me" homepage action. */
 export function useTemplesNearLocation(
   coords: { latitude: number; longitude: number } | null,

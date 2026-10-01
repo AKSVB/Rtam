@@ -24,6 +24,7 @@ const TempleMap = lazy(() => import('../components/temple/TempleMap').then((m) =
 const SuryaMandalaHero = lazy(() =>
   import('../components/home/SuryaMandalaHero').then((m) => ({ default: m.SuryaMandalaHero })),
 )
+import { TempleOfTheDay } from '../components/home/TempleOfTheDay'
 import { Select, TextInput } from '../components/common/FormField'
 import { Button } from '../components/common/Button'
 import { strings } from '../constants/strings'
@@ -308,6 +309,9 @@ export function HomePage() {
           )}
         </section>
       )}
+
+      {/* ── Temple of the day (only while not actively browsing) ────────── */}
+      {!isBrowsing && <TempleOfTheDay />}
 
       {/* ── Circuit spotlight (only while not actively browsing) ────────── */}
       {!isBrowsing && spotlight.data && spotlight.data.length > 0 && (

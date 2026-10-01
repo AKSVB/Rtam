@@ -43,6 +43,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ defa
 const ContributorsPage = lazy(() =>
   import('./pages/ContributorsPage').then((m) => ({ default: m.ContributorsPage })),
 )
+const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })))
 const FestivalCalendarPage = lazy(() =>
   import('./pages/FestivalCalendarPage').then((m) => ({ default: m.FestivalCalendarPage })),
 )
@@ -133,6 +134,7 @@ function App() {
             }
           />
           <Route path="/contributors" element={<ContributorsPage />} />
+          <Route path="/stats" element={<StatsPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/samishti-sandhyavandanam" element={<SamishtiSandhyaPage />} />
           <Route path="/dharmic-feed" element={<DharmicFeedPage />} />

@@ -45,6 +45,38 @@ export default defineConfig({
               expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
+          {
+            // Temple/book data from Supabase's REST API — NetworkFirst so a
+            // connected visitor always sees fresh data, but a temple or
+            // library page already opened once still renders offline (e.g.
+            // at a remote hill temple with no signal) from the last-seen
+            // response, falling back after a short timeout rather than
+            // hanging on a dead connection.
+            urlPattern: /^https:\/\/[^/]+\.supabase\.co\/rest\/v1\/.*/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-data',
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Temple/book cover photos — small, so safe to cache generously;
+            // deliberately excludes the large PDFs under /storage/.../devotional-books/,
+            // which stay network-only so the service worker never tries to
+            // hold a 100 MB file in the browser's cache quota.
+            urlPattern: ({ url }) =>
+              url.hostname.endsWith('.supabase.co') &&
+              url.pathname.startsWith('/storage/v1/object/public/') &&
+              !url.pathname.includes('/devotional-books/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'supabase-images',
+              expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
     }),

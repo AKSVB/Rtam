@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { useDeleteDevotionalBook, useDevotionalBook } from '../hooks/useDevotionalBooks'
+import { recordBookOpened } from '../lib/recentlyReadBooks'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Badge } from '../components/common/Badge'
 import { Button } from '../components/common/Button'
@@ -23,6 +25,12 @@ export function BookDetailPage() {
   const navigate = useNavigate()
   const { data: book, isLoading } = useDevotionalBook(id)
   const deleteBook = useDeleteDevotionalBook()
+
+  useEffect(() => {
+    // Only worth remembering once it's actually a real, viewable book —
+    // not a pending/rejected submission only its own submitter can see.
+    if (book?.status === 'approved') recordBookOpened(book.id)
+  }, [book])
 
   if (isLoading) return <LoadingSpinner label="Loading book…" />
   if (!book) return <p className="text-sm text-charcoal-700/70">Book not found.</p>

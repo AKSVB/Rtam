@@ -25,6 +25,7 @@ export const strings = {
     moderatorQueue: 'Moderator Queue',
     adminUsers: 'Manage Users',
     contributors: 'Contributors',
+    stats: 'Coverage & Stats',
     profile: 'Profile',
     login: 'Log In',
     signup: 'Sign Up',

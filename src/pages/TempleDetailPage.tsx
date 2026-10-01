@@ -24,6 +24,8 @@ import { TempleTimings } from '../components/temple/TempleTimings'
 import { PackingChecklist } from '../components/temple/PackingChecklist'
 import { LiveStatusReporter } from '../components/temple/LiveStatusReporter'
 import { LiveWaitTimeReporter } from '../components/temple/LiveWaitTimeReporter'
+import { RelatedStotras } from '../components/temple/RelatedStotras'
+import { TemplePrintCard } from '../components/temple/TemplePrintCard'
 import { SandhyavandanamPrompt } from '../components/temple/SandhyavandanamPrompt'
 import { VisitButton } from '../components/temple/VisitButton'
 import { Button } from '../components/common/Button'
@@ -97,7 +99,10 @@ export function TempleDetailPage() {
   const inTrip = isInTrip(temple.id)
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 print:gap-0">
+      <TemplePrintCard temple={temple} />
+
+      <div className="flex flex-col gap-8 print:hidden">
       <SandhyavandanamPrompt deity={temple.deity} templeName={temple.name} />
 
       <div>
@@ -224,6 +229,9 @@ export function TempleDetailPage() {
           >
             ⤴ Share
           </Button>
+          <Button variant="ghost" onClick={() => window.print()}>
+            🖨 Print info card
+          </Button>
         </div>
       </div>
 
@@ -334,6 +342,8 @@ export function TempleDetailPage() {
         </section>
       )}
 
+      <RelatedStotras deity={temple.deity} />
+
       <section>
         <h2 className="mb-3 text-lg font-bold text-charcoal-900">{strings.temple.photos}</h2>
         <PhotoGallery photos={photos ?? []} templeName={temple.name} />
@@ -397,6 +407,7 @@ export function TempleDetailPage() {
           </ul>
         </section>
       )}
+      </div>
     </div>
   )
 }

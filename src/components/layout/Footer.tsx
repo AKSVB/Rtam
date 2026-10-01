@@ -51,6 +51,11 @@ export function Footer() {
                     {strings.nav.contributors}
                   </Link>
                 </li>
+                <li>
+                  <Link to="/stats" className="hover:text-gold-300 hover:underline">
+                    {strings.nav.stats}
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>

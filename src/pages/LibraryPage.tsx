@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useBookLanguages, useDevotionalBooks } from '../hooks/useDevotionalBooks'
+import { useBookLanguages, useContinueReading, useDevotionalBooks } from '../hooks/useDevotionalBooks'
 import { BookCard } from '../components/library/BookCard'
 import { LibraryDisclaimer } from '../components/library/LibraryDisclaimer'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
@@ -18,6 +18,7 @@ export function LibraryPage() {
   const [language, setLanguage] = useState('')
   const [sort, setSort] = useState<'title' | 'newest'>('title')
   const { data: languages } = useBookLanguages()
+  const { data: continueReading } = useContinueReading()
   const { data: books, isLoading } = useDevotionalBooks({
     search,
     category: category || undefined,
@@ -40,6 +41,21 @@ export function LibraryPage() {
       </div>
 
       <LibraryDisclaimer compact />
+
+      {continueReading && continueReading.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-charcoal-700/60">
+            📖 Continue Reading
+          </h2>
+          <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+            {continueReading.map((book) => (
+              <div key={book.id} className="w-36 shrink-0 snap-start sm:w-40">
+                <BookCard book={book} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="flex flex-wrap gap-3">
         <TextInput

@@ -8,6 +8,7 @@ import { useTemplesBySignificance } from '../hooks/useTemples'
 import { useToast } from '../context/ToastContext'
 import { TempleCard } from '../components/temple/TempleCard'
 import { TempleMap } from '../components/temple/TempleMap'
+import { TripPrintCard } from '../components/temple/TripPrintCard'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Button } from '../components/common/Button'
 import { strings } from '../constants/strings'
@@ -54,19 +55,28 @@ export function TripPlannerPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {itinerary.length > 0 && <TripPrintCard itinerary={itinerary} temples={orderedTemples} />}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <h1 className="text-2xl font-bold text-charcoal-900">
           {isSharedView ? 'Shared Trip List' : strings.tripPlanner.title}
         </h1>
-        {!isSharedView && myTempleIds.length > 0 && (
-          <Button variant="secondary" onClick={handleShare}>
-            {copied ? strings.tripPlanner.linkCopied : strings.tripPlanner.shareLink}
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {templeIds.length > 0 && (
+            <Button variant="ghost" onClick={() => window.print()}>
+              🖨 Print itinerary
+            </Button>
+          )}
+          {!isSharedView && myTempleIds.length > 0 && (
+            <Button variant="secondary" onClick={handleShare}>
+              {copied ? strings.tripPlanner.linkCopied : strings.tripPlanner.shareLink}
+            </Button>
+          )}
+        </div>
       </div>
 
       {!isSharedView && circuits && Object.keys(circuits).length > 0 && (
-        <section>
+        <section className="print:hidden">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-charcoal-700/60">
             Or start from a curated circuit
           </h2>
@@ -91,11 +101,11 @@ export function TripPlannerPage() {
       {isLoading ? (
         <LoadingSpinner label="Loading your trip…" />
       ) : templeIds.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-cream-200 bg-white p-8 text-center text-charcoal-700/70">
+        <p className="rounded-xl border border-dashed border-cream-200 bg-white p-8 text-center text-charcoal-700/70 print:hidden">
           {strings.tripPlanner.empty}
         </p>
       ) : (
-        <>
+        <div className="flex flex-col gap-6 print:hidden">
           <TempleMap temples={orderedTemples} />
 
           {itinerary.length > 1 && (
@@ -143,7 +153,7 @@ export function TripPlannerPage() {
               </li>
             ))}
           </ol>
-        </>
+        </div>
       )}
     </div>
   )

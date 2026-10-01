@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { compressImageForUpload } from '../lib/imageCompression'
+import { expandDeitySynonyms } from '../constants/deitySynonyms'
+import { getRecentlyReadIds } from '../lib/recentlyReadBooks'
 import type { BookCategory, DevotionalBook } from '../types/database'
 
 export interface BookFilters {
@@ -8,6 +10,58 @@ export interface BookFilters {
   language?: string
   search?: string
   sort?: 'title' | 'newest'
+}
+
+// Splits a temple's free-text deity field ("Shiva, as Jyeshteshwara, with a
+// lingam...") into plain candidate words a book's own (also free-text) deity
+// field might share, e.g. ["shiva", "jyeshteshwara"]. Short connector words
+// are dropped so they don't cause false matches against unrelated books.
+const STOPWORDS = new Set([
+  'as', 'a', 'the', 'and', 'or', 'with', 'in', 'of', 'to', 'his', 'her', 'its', 'form', 'forms', 'also', 'known',
+])
+function deityKeywords(deity: string): string[] {
+  return deity
+    .toLowerCase()
+    .split(/[,()/;]|\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length > 2 && !STOPWORDS.has(w))
+}
+
+/**
+ * Devotional books whose own `deity` field shares a word (or a known synonym
+ * — Shiva/Mahadeva, Vishnu/Krishna/Rama, Devi/Amman/Durga, etc.) with this
+ * temple's presiding deity. Matching is client-side against the small,
+ * already-cached approved-books list, since both fields are free text and a
+ * SQL pattern can't express the synonym groups.
+ */
+export function useRelatedStotras(templeDeity: string | null | undefined) {
+  const { data: allBooks } = useQuery({
+    queryKey: ['devotional-books-all-approved'],
+    queryFn: async (): Promise<DevotionalBook[]> => {
+      const { data, error } = await supabase
+        .from('devotional_books')
+        .select('*')
+        .eq('status', 'approved')
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 5 * 60_000,
+  })
+
+  if (!templeDeity || !allBooks) return []
+
+  const keywords = deityKeywords(templeDeity)
+  const wanted = new Set(keywords.flatMap((w) => [w, ...expandDeitySynonyms(w)]))
+  if (wanted.size === 0) return []
+
+  const categoryRank: Record<BookCategory, number> = {
+    stotra: 0, bhajan: 1, veda: 2, upanishad: 3, purana: 4, itihasa: 5, panchang: 6, biography: 7, other: 8,
+  }
+
+  return allBooks
+    .filter((book) => book.deity && deityKeywords(book.deity).some((w) => wanted.has(w)))
+    .sort((a, b) => categoryRank[a.category] - categoryRank[b.category])
+    .slice(0, 6)
 }
 
 /** Every approved book, optionally filtered by category, language and/or a title/author/deity search. */
@@ -42,6 +96,29 @@ export function useBookLanguages() {
       return [...new Set((data ?? []).map((r) => r.language))].sort()
     },
     staleTime: 5 * 60_000,
+  })
+}
+
+/** The books this device most recently opened, most recent first — the library's "Continue Reading" shelf. */
+export function useContinueReading() {
+  const ids = getRecentlyReadIds()
+  return useQuery({
+    queryKey: ['continue-reading', ids],
+    queryFn: async (): Promise<DevotionalBook[]> => {
+      if (ids.length === 0) return []
+      const { data, error } = await supabase
+        .from('devotional_books')
+        .select('*')
+        .eq('status', 'approved')
+        .in('id', ids)
+      if (error) throw error
+      const byId = new Map((data ?? []).map((b) => [b.id, b]))
+      // Supabase's `in` doesn't preserve input order, so re-sort by the
+      // device's own recency list and drop any book since deleted/unapproved.
+      return ids.map((id) => byId.get(id)).filter((b): b is DevotionalBook => !!b)
+    },
+    enabled: ids.length > 0,
+    staleTime: 60_000,
   })
 }
 
