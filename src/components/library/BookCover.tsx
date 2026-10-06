@@ -5,12 +5,18 @@ type CoverSymbol = 'om' | 'swastika' | 'kalasam' | 'lotus'
 // Only auspicious symbols — never weapons or flames. Which one a book gets
 // is fixed by its category so covers within a category read as a family.
 const CATEGORY_SYMBOL: Record<BookCategory, CoverSymbol> = {
+  veda: 'kalasam',
+  upanishad: 'om',
+  vedanta: 'lotus',
+  smriti: 'swastika',
+  agama: 'kalasam',
+  ritual: 'swastika',
   stotra: 'om',
+  bhajan: 'lotus',
   purana: 'lotus',
   itihasa: 'swastika',
-  upanishad: 'om',
-  veda: 'kalasam',
-  bhajan: 'lotus',
+  sthala: 'kalasam',
+  kavya: 'lotus',
   panchang: 'swastika',
   biography: 'lotus',
   other: 'kalasam',

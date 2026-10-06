@@ -103,27 +103,58 @@ export const DHARMIC_ACTIVITY_TYPE_ICONS: Record<DharmicActivityType, string> = 
 }
 
 export const BOOK_CATEGORY_LABELS: Record<BookCategory, string> = {
-  stotra: 'Stotra / Hymn',
-  purana: 'Purana',
-  itihasa: 'Itihasa (Ramayana, Mahabharata...)',
-  upanishad: 'Upanishad',
-  veda: 'Veda',
-  bhajan: 'Bhajan Collection',
-  panchang: 'Panchang / Almanac',
-  biography: 'Biography',
+  veda: 'Vedas (Samhitas, Brahmanas, Suktas)',
+  upanishad: 'Upanishads',
+  vedanta: 'Gita & Vedanta',
+  smriti: 'Dharmashastra, Smriti & Sutras',
+  agama: 'Agama, Tantra & Vastu',
+  ritual: 'Sandhyavandanam, Puja & Vrata',
+  stotra: 'Stotras & Sahasranamas',
+  bhajan: 'Bhajans, Kirtanas & Devotional Verse',
+  purana: 'Puranas',
+  itihasa: 'Itihasa (Ramayana, Mahabharata)',
+  sthala: 'Kshetra Mahatmyams & Temple Histories',
+  kavya: 'Kavya & Prabandha (classical poetry)',
+  panchang: 'Panchangam & Jyotisha',
+  biography: 'Biographies & Saints',
+  other: 'Other',
+}
+
+/** Short names for badges and filter chips. */
+export const BOOK_CATEGORY_SHORT: Record<BookCategory, string> = {
+  veda: 'Vedas',
+  upanishad: 'Upanishads',
+  vedanta: 'Gita & Vedanta',
+  smriti: 'Smriti & Sutras',
+  agama: 'Agama & Tantra',
+  ritual: 'Sandhya, Puja & Vrata',
+  stotra: 'Stotras',
+  bhajan: 'Bhajans & Kirtanas',
+  purana: 'Puranas',
+  itihasa: 'Itihasa',
+  sthala: 'Kshetra Mahatmyams',
+  kavya: 'Kavya',
+  panchang: 'Panchangam',
+  biography: 'Saints & Lives',
   other: 'Other',
 }
 
 export const BOOK_CATEGORY_ICONS: Record<BookCategory, string> = {
+  veda: '🏺',
+  upanishad: '📿',
+  vedanta: '🌼',
+  smriti: '📜',
+  agama: '🛕',
+  ritual: '🪔',
   stotra: '🕉️',
+  bhajan: '🔔',
   purana: '🪷',
   itihasa: '🐚',
-  upanishad: '📿',
-  veda: '🏺',
-  bhajan: '🔔',
+  sthala: '⛰️',
+  kavya: '🌺',
   panchang: '🌙',
   biography: '🙏',
-  other: '🪷',
+  other: '✦',
 }
 
 export const MONTH_NAMES = [

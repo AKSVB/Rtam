@@ -11,6 +11,7 @@ import { ReportButton } from '../components/common/ReportButton'
 import { LibraryDisclaimer } from '../components/library/LibraryDisclaimer'
 import { BookCover } from '../components/library/BookCover'
 import { BOOK_CATEGORY_LABELS } from '../constants/enumLabels'
+import { FORMAT_LABELS, TOPIC_LABELS } from '../lib/libraryTaxonomy'
 
 function formatFileSize(bytes: number | null): string {
   if (!bytes) return ''
@@ -88,7 +89,25 @@ export function BookDetailPage() {
             <Badge tone="neutral">{BOOK_CATEGORY_LABELS[book.category]}</Badge>
             <Badge tone="neutral">{book.language}</Badge>
             {book.deity && <Badge tone="neutral">{book.deity}</Badge>}
+            <Badge tone="neutral">
+              {book.format === 'manuscript' ? FORMAT_LABELS.manuscript : 'Printed'}
+              {book.published_year ? ` · ${book.published_year}` : ''}
+            </Badge>
           </div>
+
+          {book.tags && book.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5" aria-label="Topics">
+              {book.tags.map((tag) => (
+                <Link
+                  key={tag}
+                  to={`/library?topic=${encodeURIComponent(tag)}`}
+                  className="rounded-full border border-gold-400/50 bg-gold-400/10 px-2.5 py-0.5 text-xs font-medium text-maroon-800 hover:bg-gold-400/20"
+                >
+                  {TOPIC_LABELS[tag] ?? tag}
+                </Link>
+              ))}
+            </div>
+          )}
 
           {book.description && <p className="text-sm leading-relaxed text-charcoal-700/80">{book.description}</p>}
 

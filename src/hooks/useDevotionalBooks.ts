@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { compressImageForUpload } from '../lib/imageCompression'
 import { expandDeitySynonyms } from '../constants/deitySynonyms'
 import { getRecentlyReadIds } from '../lib/recentlyReadBooks'
-import type { BookCategory, DevotionalBook } from '../types/database'
+import type { BookCategory, BookFormat, DevotionalBook } from '../types/database'
 
 export interface BookFilters {
   category?: BookCategory
@@ -55,7 +55,8 @@ export function useRelatedStotras(templeDeity: string | null | undefined) {
   if (wanted.size === 0) return []
 
   const categoryRank: Record<BookCategory, number> = {
-    stotra: 0, bhajan: 1, veda: 2, upanishad: 3, purana: 4, itihasa: 5, panchang: 6, biography: 7, other: 8,
+    stotra: 0, bhajan: 1, ritual: 2, veda: 3, upanishad: 4, vedanta: 5, smriti: 6, agama: 7,
+    purana: 8, itihasa: 9, sthala: 10, kavya: 11, biography: 12, panchang: 13, other: 14,
   }
 
   return allBooks
@@ -83,6 +84,23 @@ export function useDevotionalBooks(filters: BookFilters) {
       if (error) throw error
       return data ?? []
     },
+  })
+}
+
+/**
+ * Every approved book in one query. The library page filters, searches, sorts and counts facets
+ * client-side over this list, so combining filters is instant and the facet counts always match
+ * what is on screen; it stays small enough to do that (a few hundred rows of metadata).
+ */
+export function useLibraryCatalog() {
+  return useQuery({
+    queryKey: ['library-catalog'],
+    queryFn: async (): Promise<DevotionalBook[]> => {
+      const { data, error } = await supabase.from('devotional_books').select('*').eq('status', 'approved').limit(5000)
+      if (error) throw error
+      return (data ?? []).map((b) => ({ ...b, tags: b.tags ?? [], format: b.format ?? 'printed' }))
+    },
+    staleTime: 5 * 60_000,
   })
 }
 
@@ -164,6 +182,9 @@ export interface NewBookInput {
   deity: string
   language: string
   category: BookCategory
+  tags: string[]
+  publishedYear: number | null
+  format: BookFormat
   description: string
   pdfFile: File
   coverFile: File | null
@@ -206,6 +227,9 @@ export function useSubmitDevotionalBook() {
         deity: book.deity.trim() || null,
         language: book.language.trim(),
         category: book.category,
+        tags: book.tags,
+        published_year: book.publishedYear,
+        format: book.format,
         description: book.description.trim() || null,
         file_size_bytes: book.pdfFile.size,
         cover_image_url: coverUrl,

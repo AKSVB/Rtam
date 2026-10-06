@@ -5,7 +5,8 @@ import { useSubmitDevotionalBook } from '../hooks/useDevotionalBooks'
 import { Button } from '../components/common/Button'
 import { FormField, Select, TextArea, TextInput } from '../components/common/FormField'
 import { BOOK_CATEGORY_LABELS } from '../constants/enumLabels'
-import type { BookCategory } from '../types/database'
+import { TOPIC_LABELS } from '../lib/libraryTaxonomy'
+import type { BookCategory, BookFormat } from '../types/database'
 
 const CATEGORIES = Object.keys(BOOK_CATEGORY_LABELS) as BookCategory[]
 const MAX_PDF_MB = 100
@@ -21,6 +22,9 @@ export function AddBookPage() {
   const [language, setLanguage] = useState('')
   const [category, setCategory] = useState<BookCategory>('stotra')
   const [description, setDescription] = useState('')
+  const [tags, setTags] = useState<string[]>([])
+  const [publishedYear, setPublishedYear] = useState('')
+  const [format, setFormat] = useState<BookFormat>('printed')
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -28,7 +32,10 @@ export function AddBookPage() {
 
   if (!user) return <p className="text-charcoal-700">Log in to share a book.</p>
 
-  const valid = title.trim() && language.trim() && !!pdfFile
+  const yearNumber = publishedYear.trim() ? Number(publishedYear) : null
+  const yearValid =
+    yearNumber === null || (Number.isInteger(yearNumber) && yearNumber >= 1000 && yearNumber <= new Date().getFullYear())
+  const valid = title.trim() && language.trim() && !!pdfFile && yearValid
 
   const handlePdfChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
@@ -48,7 +55,9 @@ export function AddBookPage() {
     try {
       await submitBook.mutateAsync({
         userId: user.id,
-        book: { title, author, deity, language, category, description, pdfFile, coverFile },
+        book: {
+          title, author, deity, language, category, tags, publishedYear: yearNumber, format, description, pdfFile, coverFile,
+        },
       })
       setSubmitted(true)
     } catch (err) {
@@ -99,7 +108,7 @@ export function AddBookPage() {
           <FormField label="Language" htmlFor="book-language" required helpText='e.g. "Sanskrit", "Telugu"'>
             <TextInput id="book-language" value={language} onChange={(e) => setLanguage(e.target.value)} />
           </FormField>
-          <FormField label="Category" htmlFor="book-category" required>
+          <FormField label="Type" htmlFor="book-category" required>
             <Select
               id="book-category"
               value={category}
@@ -113,6 +122,51 @@ export function AddBookPage() {
             </Select>
           </FormField>
         </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField
+            label="Year published"
+            htmlFor="book-year"
+            helpText={yearValid ? 'Optional — the print year, if known' : 'Enter a four-digit year'}
+          >
+            <TextInput
+              id="book-year"
+              inputMode="numeric"
+              placeholder="e.g. 1912"
+              value={publishedYear}
+              onChange={(e) => setPublishedYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+            />
+          </FormField>
+          <FormField label="Format" htmlFor="book-format">
+            <Select id="book-format" value={format} onChange={(e) => setFormat(e.target.value as BookFormat)}>
+              <option value="printed">Printed book</option>
+              <option value="manuscript">Manuscript (palm-leaf / hand-copied)</option>
+            </Select>
+          </FormField>
+        </div>
+        <fieldset>
+          <legend className="mb-1 text-sm font-medium text-charcoal-900">Topics</legend>
+          <p className="mb-2 text-xs text-charcoal-700/60">Optional — tick anything that fits, so people can find it.</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(TOPIC_LABELS).map(([key, label]) => {
+              const on = tags.includes(key)
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setTags((current) => (on ? current.filter((x) => x !== key) : [...current, key]))}
+                  className={`min-h-8 rounded-full border px-2.5 text-xs font-medium ${
+                    on
+                      ? 'border-maroon-700 bg-maroon-700 text-cream-50'
+                      : 'border-gold-400/50 bg-gold-400/10 text-maroon-800 hover:bg-gold-400/20'
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
         <FormField label="Description" htmlFor="book-description">
           <TextArea id="book-description" value={description} onChange={(e) => setDescription(e.target.value)} />
         </FormField>

@@ -220,15 +220,23 @@ export interface TempleStatusReport {
 }
 
 export type BookCategory =
+  | 'veda'
+  | 'upanishad'
+  | 'vedanta'
+  | 'smriti'
+  | 'agama'
+  | 'ritual'
   | 'stotra'
+  | 'bhajan'
   | 'purana'
   | 'itihasa'
-  | 'upanishad'
-  | 'veda'
-  | 'bhajan'
+  | 'sthala'
+  | 'kavya'
   | 'panchang'
   | 'biography'
   | 'other'
+
+export type BookFormat = 'printed' | 'manuscript'
 
 export interface DevotionalBook {
   id: string
@@ -237,6 +245,9 @@ export interface DevotionalBook {
   deity: string | null
   language: string
   category: BookCategory
+  tags: string[]
+  published_year: number | null
+  format: BookFormat
   description: string | null
   page_count: number | null
   file_size_bytes: number | null

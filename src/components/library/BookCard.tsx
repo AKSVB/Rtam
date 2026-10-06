@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import type { DevotionalBook } from '../../types/database'
 import { Badge } from '../common/Badge'
 import { BookCover } from './BookCover'
-import { BOOK_CATEGORY_LABELS } from '../../constants/enumLabels'
+import { BOOK_CATEGORY_SHORT } from '../../constants/enumLabels'
 
 export function BookCard({ book }: { book: DevotionalBook }) {
   return (
@@ -29,9 +29,15 @@ export function BookCard({ book }: { book: DevotionalBook }) {
         <h3 className="font-display text-base font-semibold leading-tight text-charcoal-900">{book.title}</h3>
         {book.author && <p className="text-xs text-charcoal-700/70">{book.author}</p>}
         <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
-          <Badge tone="neutral">{BOOK_CATEGORY_LABELS[book.category]}</Badge>
+          <Badge tone="neutral">{BOOK_CATEGORY_SHORT[book.category]}</Badge>
           <Badge tone="neutral">{book.language}</Badge>
         </div>
+        {(book.format === 'manuscript' || book.published_year) && (
+          <p className="text-[11px] text-charcoal-700/60">
+            {book.format === 'manuscript' ? 'Manuscript' : 'Printed'}
+            {book.published_year ? ` · ${book.published_year}` : ''}
+          </p>
+        )}
       </div>
     </Link>
   )
