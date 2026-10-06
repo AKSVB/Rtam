@@ -13,12 +13,17 @@ import {
   DEITY_LABELS,
   EMPTY_FILTERS,
   FORMAT_LABELS,
+  INTENTS,
+  INTENT_ORDER,
+  LEVEL_LABELS,
   PERIOD_LABELS,
+  SCRIPT_LABELS,
   SORT_OPTIONS,
   TOPIC_LABELS,
   activeFilterCount,
   facetCounts,
   filterBooks,
+  groupWorks,
   filtersFromParams,
   indexBooks,
   paramsFromFilters,
@@ -37,6 +42,9 @@ function chipLabel(facet: FacetKey, value: string): string {
     case 'deities': return DEITY_LABELS[value] ?? value
     case 'formats': return FORMAT_LABELS[value] ?? value
     case 'periods': return PERIOD_LABELS[value] ?? value
+    case 'scripts': return SCRIPT_LABELS[value] ?? value
+    case 'levels': return LEVEL_LABELS[value] ?? value
+    case 'intents': return INTENTS[value]?.label ?? value
     default: return value
   }
 }
@@ -53,6 +61,11 @@ export function LibraryPage() {
   const items = useMemo(() => indexBooks(catalog ?? []), [catalog])
 
   const results = useMemo(() => sortBooks(filterBooks(items, filters), sort), [items, filters, sort])
+  // One card per work (its editions and volumes together), unless the reader asked for a single work's editions or turned grouping off.
+  const grouped = params.get('ungroup') !== '1' && !filters.work
+  const groups = useMemo(() => (grouped ? groupWorks(results) : results.map((rep) => ({ rep, members: [rep] }))), [grouped, results])
+  const intentCounts = useMemo(() => facetCounts(items, filters, 'intents'), [items, filters])
+  const workTitle = filters.work ? items.find((i) => i.workKey === filters.work)?.book.title : null
   const typeCounts = useMemo(() => facetCounts(items, filters, 'types'), [items, filters])
   const filterCount = activeFilterCount(filters)
 
@@ -61,11 +74,19 @@ export function LibraryPage() {
   const visible = shown.signature === signature ? shown.count : PAGE_SIZE
 
   const update = (partial: Partial<LibraryFilters>, nextSort: SortKey = sort) => {
-    setParams(paramsFromFilters({ ...filters, ...partial }, nextSort), { replace: true })
+    const next = paramsFromFilters({ ...filters, ...partial }, nextSort)
+    if (params.get('ungroup') === '1') next.set('ungroup', '1')
+    setParams(next, { replace: true })
+  }
+  const setGrouping = (on: boolean) => {
+    const next = new URLSearchParams(params)
+    if (on) next.delete('ungroup')
+    else next.set('ungroup', '1')
+    setParams(next, { replace: true })
   }
   const clearAll = () => setParams(paramsFromFilters(EMPTY_FILTERS, sort), { replace: true })
 
-  const activeChips = (['types', 'languages', 'topics', 'deities', 'formats', 'periods'] as FacetKey[]).flatMap((facet) =>
+  const activeChips = (['intents', 'types', 'languages', 'levels', 'scripts', 'topics', 'deities', 'formats', 'periods'] as FacetKey[]).flatMap((facet) =>
     filters[facet].map((value) => ({ facet, value, label: chipLabel(facet, value) })),
   )
 
@@ -133,6 +154,32 @@ export function LibraryPage() {
         </button>
       </div>
 
+      {/* Intent shelves — what the reader wants to do */}
+      {!isLoading && !filters.work && (
+        <div role="group" aria-label="What would you like to do?" className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          {INTENT_ORDER.map((k) => {
+            const on = filters.intents.includes(k)
+            return (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={on}
+                onClick={() => update({ intents: on ? filters.intents.filter((x) => x !== k) : [...filters.intents, k] })}
+                className={`flex min-h-16 flex-col items-start rounded-xl border px-3 py-2 text-left transition-colors ${
+                  on ? 'border-maroon-700 bg-maroon-700 text-cream-50' : 'border-gold-400/50 bg-gold-400/10 text-maroon-900 hover:bg-gold-400/20'
+                }`}
+              >
+                <span className="text-sm font-semibold">
+                  <span aria-hidden>{INTENTS[k].icon}</span> {INTENTS[k].label}{' '}
+                  <span className={on ? 'text-cream-100/80' : 'text-charcoal-700/50'}>{intentCounts.get(k) ?? 0}</span>
+                </span>
+                <span className={`text-[11px] leading-tight ${on ? 'text-cream-100/80' : 'text-charcoal-700/60'}`}>{INTENTS[k].hint}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* Type chips — the main way in */}
       {!isLoading && (
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Book type">
@@ -179,8 +226,11 @@ export function LibraryPage() {
           {/* Result summary + active filters */}
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <p className="text-sm text-charcoal-700/80">
-              {isLoading ? 'Loading…' : `Showing ${Math.min(visible, results.length)} of ${results.length} books`}
-              {!isLoading && results.length !== items.length ? ` (${items.length} in the library)` : ''}
+              {isLoading
+                ? 'Loading…'
+                : `Showing ${Math.min(visible, groups.length)} of ${groups.length} ${grouped ? 'works' : 'books'}`}
+              {!isLoading && grouped && groups.length !== results.length ? ` · ${results.length} books incl. editions` : ''}
+              {!isLoading && results.length !== items.length ? ` · ${items.length} in the library` : ''}
             </p>
             {activeChips.map((c) => (
               <button
@@ -193,6 +243,16 @@ export function LibraryPage() {
                 {c.label} <span aria-hidden>✕</span>
               </button>
             ))}
+            {filters.work && (
+              <button
+                type="button"
+                onClick={() => update({ work: '' })}
+                className="inline-flex min-h-7 items-center gap-1 rounded-full bg-maroon-700/10 px-2.5 text-xs font-medium text-maroon-800 hover:bg-maroon-700/20"
+                aria-label="Show all works again"
+              >
+                All editions of “{workTitle}” <span aria-hidden>✕</span>
+              </button>
+            )}
             {filters.q.trim() && (
               <button
                 type="button"
@@ -202,6 +262,12 @@ export function LibraryPage() {
               >
                 “{filters.q.trim()}” <span aria-hidden>✕</span>
               </button>
+            )}
+            {!filters.work && (
+              <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-xs text-charcoal-700/80">
+                <input type="checkbox" checked={grouped} onChange={(e) => setGrouping(e.target.checked)} className="h-4 w-4 accent-maroon-700" />
+                Group editions
+              </label>
             )}
             {filterCount > 0 && (
               <button type="button" onClick={clearAll} className="text-xs font-semibold text-maroon-700 hover:underline">
@@ -214,7 +280,7 @@ export function LibraryPage() {
             <LoadingSpinner label="Loading library…" />
           ) : isError ? (
             <p className="text-sm text-maroon-700">Couldn’t load the library. Please try again in a moment.</p>
-          ) : results.length === 0 ? (
+          ) : groups.length === 0 ? (
             <div className="rounded-xl border border-dashed border-cream-200 bg-white p-8 text-center">
               <p className="text-charcoal-700/80">No books match these filters.</p>
               {filterCount > 0 ? (
@@ -230,14 +296,25 @@ export function LibraryPage() {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-                {results.slice(0, visible).map(({ book }) => (
-                  <BookCard key={book.id} book={book} />
+                {groups.slice(0, visible).map(({ rep, members }) => (
+                  <div key={rep.book.id} className="flex flex-col gap-1.5">
+                    <BookCard book={rep.book} />
+                    {members.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => update({ work: rep.workKey })}
+                        className="rounded-lg border border-gold-400/50 bg-gold-400/10 px-2 py-1.5 text-xs font-semibold text-maroon-800 hover:bg-gold-400/25"
+                      >
+                        {members.length} editions &amp; volumes →
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
-              {visible < results.length && (
+              {visible < groups.length && (
                 <div className="mt-6 flex justify-center">
                   <Button variant="secondary" onClick={() => setShown({ signature, count: visible + PAGE_SIZE })}>
-                    Show {Math.min(PAGE_SIZE, results.length - visible)} more ({results.length - visible} remaining)
+                    Show {Math.min(PAGE_SIZE, groups.length - visible)} more ({groups.length - visible} remaining)
                   </Button>
                 </div>
               )}

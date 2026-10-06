@@ -3,8 +3,15 @@ import type { DevotionalBook } from '../../types/database'
 import { Badge } from '../common/Badge'
 import { BookCover } from './BookCover'
 import { BOOK_CATEGORY_SHORT } from '../../constants/enumLabels'
+import { LEVEL_LABELS, SCRIPT_LABELS, levelOf, scriptOf } from '../../lib/libraryTaxonomy'
+
+/** Languages printed in several scripts — only these get a script badge, since for the rest the script is obvious. */
+const MULTI_SCRIPT_LANGUAGES = new Set(['Sanskrit'])
 
 export function BookCard({ book }: { book: DevotionalBook }) {
+  const script = scriptOf(book)
+  const showScript = MULTI_SCRIPT_LANGUAGES.has(book.language) && script !== 'unknown'
+  const level = levelOf(book)
   return (
     <Link
       to={`/library/${book.id}`}
@@ -31,7 +38,9 @@ export function BookCard({ book }: { book: DevotionalBook }) {
         <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
           <Badge tone="neutral">{BOOK_CATEGORY_SHORT[book.category]}</Badge>
           <Badge tone="neutral">{book.language}</Badge>
+          {showScript && <Badge tone="neutral">{SCRIPT_LABELS[script]}</Badge>}
         </div>
+        <p className="text-[11px] text-charcoal-700/60">{LEVEL_LABELS[level]}</p>
         {(book.format === 'manuscript' || book.published_year) && (
           <p className="text-[11px] text-charcoal-700/60">
             {book.format === 'manuscript' ? 'Manuscript' : 'Printed'}

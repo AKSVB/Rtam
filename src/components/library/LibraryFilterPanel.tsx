@@ -2,8 +2,11 @@ import { useMemo, useState, type ReactNode } from 'react'
 import {
   DEITY_LABELS,
   FORMAT_LABELS,
+  LEVEL_LABELS,
+  LEVEL_ORDER,
   PERIOD_LABELS,
   PERIOD_ORDER,
+  SCRIPT_LABELS,
   TOPIC_LABELS,
   facetCounts,
   type FacetKey,
@@ -74,7 +77,7 @@ export function LibraryFilterPanel({
 
   const counts = useMemo(() => {
     const out = {} as Record<FacetKey, Map<string, number>>
-    for (const facet of ['types', 'languages', 'topics', 'deities', 'formats', 'periods'] as FacetKey[]) {
+    for (const facet of ['types', 'languages', 'topics', 'deities', 'formats', 'periods', 'scripts', 'levels', 'intents'] as FacetKey[]) {
       out[facet] = facetCounts(items, filters, facet)
     }
     return out
@@ -95,12 +98,30 @@ export function LibraryFilterPanel({
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-cream-200 bg-white p-4">
+      <Section title="Reading level">
+        <CheckList
+          options={LEVEL_ORDER.map((value) => ({ value, label: LEVEL_LABELS[value] }))}
+          counts={counts.levels}
+          selected={filters.levels}
+          onToggle={(v) => onChange({ levels: toggle(filters.levels, v) })}
+        />
+      </Section>
+
       <Section title="Language">
         <CheckList
           options={languageList}
           counts={counts.languages}
           selected={filters.languages}
           onToggle={(v) => onChange({ languages: toggle(filters.languages, v) })}
+        />
+      </Section>
+
+      <Section title="Script">
+        <CheckList
+          options={Object.entries(SCRIPT_LABELS).map(([value, label]) => ({ value, label }))}
+          counts={counts.scripts}
+          selected={filters.scripts}
+          onToggle={(v) => onChange({ scripts: toggle(filters.scripts, v) })}
         />
       </Section>
 
