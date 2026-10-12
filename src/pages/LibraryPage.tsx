@@ -7,6 +7,7 @@ import { LibraryFilterPanel } from '../components/library/LibraryFilterPanel'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { Button } from '../components/common/Button'
 import { Select, TextInput } from '../components/common/FormField'
+import { LIBRARY_FILES_OFFLINE } from '../constants/libraryStatus'
 import { BOOK_CATEGORY_ICONS, BOOK_CATEGORY_SHORT } from '../constants/enumLabels'
 import {
   BOOK_TYPE_ORDER,
@@ -106,6 +107,15 @@ export function LibraryPage() {
           <Button>+ Share a Book</Button>
         </Link>
       </div>
+
+      {LIBRARY_FILES_OFFLINE && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">📚 Book files are temporarily offline.</p>
+          <p className="mt-1">
+            You can still browse, search and filter the whole catalogue. Reading and downloading will return soon.
+          </p>
+        </div>
+      )}
 
       <LibraryDisclaimer compact />
 

@@ -12,6 +12,7 @@ import { LibraryDisclaimer } from '../components/library/LibraryDisclaimer'
 import { BookCover } from '../components/library/BookCover'
 import { BOOK_CATEGORY_LABELS } from '../constants/enumLabels'
 import { FORMAT_LABELS, TOPIC_LABELS } from '../lib/libraryTaxonomy'
+import { LIBRARY_FILES_OFFLINE } from '../constants/libraryStatus'
 
 function formatFileSize(bytes: number | null): string {
   if (!bytes) return ''
@@ -117,7 +118,17 @@ export function BookDetailPage() {
             {book.user_profiles?.display_name && ` · shared by ${book.user_profiles.display_name}`}
           </p>
 
-          <div className="mt-2 flex flex-wrap gap-3">
+          {LIBRARY_FILES_OFFLINE && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p className="font-semibold">📚 The PDF is temporarily unavailable.</p>
+              <p className="mt-1">
+                To keep Ṛtam running free of charge, the book files are being stored offline for now and will be put back soon.
+                The book remains listed here so you can find it again.
+              </p>
+            </div>
+          )}
+
+          <div className={`mt-2 flex flex-wrap gap-3 ${LIBRARY_FILES_OFFLINE ? 'hidden' : ''}`}>
             <a
               href={book.pdf_url}
               target="_blank"
@@ -145,9 +156,11 @@ export function BookDetailPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-cream-200 bg-white">
-        <iframe src={book.pdf_url} title={book.title} className="h-[70vh] w-full" />
-      </div>
+      {!LIBRARY_FILES_OFFLINE && (
+        <div className="overflow-hidden rounded-xl border border-cream-200 bg-white">
+          <iframe src={book.pdf_url} title={book.title} className="h-[70vh] w-full" />
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         <LibraryDisclaimer />

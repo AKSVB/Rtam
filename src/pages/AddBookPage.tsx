@@ -7,6 +7,7 @@ import { FormField, Select, TextArea, TextInput } from '../components/common/For
 import { BOOK_CATEGORY_LABELS } from '../constants/enumLabels'
 import { TOPIC_LABELS } from '../lib/libraryTaxonomy'
 import type { BookCategory, BookFormat } from '../types/database'
+import { LIBRARY_FILES_OFFLINE } from '../constants/libraryStatus'
 
 const CATEGORIES = Object.keys(BOOK_CATEGORY_LABELS) as BookCategory[]
 const MAX_PDF_MB = 100
@@ -92,6 +93,11 @@ export function AddBookPage() {
         submission before it goes live, and any rights holder can request a book's removal from its page.
       </p>
 
+      {LIBRARY_FILES_OFFLINE && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Book uploads are paused for now while storage is being reorganised. Please come back soon.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-cream-200 bg-white p-5">
         <FormField label="Title" htmlFor="book-title" required>
           <TextInput id="book-title" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -189,7 +195,7 @@ export function AddBookPage() {
           />
         </FormField>
         {error && <p className="text-sm text-maroon-700">{error}</p>}
-        <Button type="submit" disabled={!valid || submitBook.isPending} className="self-start">
+        <Button type="submit" disabled={LIBRARY_FILES_OFFLINE || !valid || submitBook.isPending} className="self-start">
           {submitBook.isPending ? 'Uploading…' : 'Submit for Review'}
         </Button>
       </form>
