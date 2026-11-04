@@ -301,6 +301,11 @@ export function TempleDetailPage() {
                   : null
               }
             />
+            {(temple.nearest_airport_distance_km != null || temple.nearest_railway_distance_km != null) && (
+              <p className="text-xs text-charcoal-700/60 md:col-span-2">
+                Distances are approximate and measured in a straight line — the road or rail journey will be longer.
+              </p>
+            )}
           </div>
         )}
         {temple.emergency_contact_notes && (
