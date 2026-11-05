@@ -377,23 +377,54 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     // a real alpha channel. The Devi's silhouette is the same shape the
     // earlier cut-out used, so she sits in the middle of the mandala as before.
     const figureImageAspect = 1489 / 1905
-    const figureHeight = coreRadius * 3.9
+    const figureHeight = coreRadius * 4.2
+    // To make her stand out from the bright glow behind, the picture is drawn
+    // onto a canvas with a soft dark shadow around her silhouette. The canvas
+    // (and so the texture) is only created once the image has loaded: WebGL2
+    // textures have immutable size, so a placeholder of another size would
+    // leave the plane blank. The plane is enlarged by the padding so she keeps
+    // exactly the same scale.
+    const SHADOW_PAD = 0.06
     const divineFigureMaterial = new THREE.MeshBasicMaterial({
-      map: new THREE.TextureLoader().load(gayatriDeviUrl, (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace
-        tex.generateMipmaps = false
-        tex.minFilter = THREE.LinearFilter
-        tex.magFilter = THREE.LinearFilter
-      }),
       transparent: true,
       depthTest: false,
       depthWrite: false,
     })
     const divineFigure = new THREE.Mesh(
-      new THREE.PlaneGeometry(figureHeight * figureImageAspect, figureHeight),
+      new THREE.PlaneGeometry(
+        figureHeight * figureImageAspect * (1 + 2 * SHADOW_PAD),
+        figureHeight * (1 + 2 * SHADOW_PAD),
+      ),
       divineFigureMaterial,
     )
     divineFigure.renderOrder = 10
+    divineFigure.visible = false // shown once the picture has loaded
+    const figureImage = new Image()
+    figureImage.onload = () => {
+      const w = figureImage.naturalWidth
+      const h = figureImage.naturalHeight
+      const pad = Math.round(w * SHADOW_PAD)
+      const canvas = document.createElement('canvas')
+      canvas.width = w + pad * 2
+      canvas.height = Math.round(h * (1 + 2 * SHADOW_PAD))
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      ctx.shadowColor = 'rgba(14, 3, 6, 0.75)'
+      ctx.shadowBlur = w * 0.022
+      ctx.drawImage(figureImage, pad, Math.round(h * SHADOW_PAD), w, h)
+      // a second, tighter pass deepens the shadow right at her edge
+      ctx.shadowBlur = w * 0.008
+      ctx.drawImage(figureImage, pad, Math.round(h * SHADOW_PAD), w, h)
+      const tex = new THREE.CanvasTexture(canvas)
+      tex.colorSpace = THREE.SRGBColorSpace
+      tex.generateMipmaps = false
+      tex.minFilter = THREE.LinearFilter
+      tex.magFilter = THREE.LinearFilter
+      divineFigureMaterial.map = tex
+      divineFigureMaterial.needsUpdate = true
+      divineFigure.visible = true
+    }
+    figureImage.src = gayatriDeviUrl
     scene.add(divineFigure)
 
     // ── The mandala itself — rings orbiting the fixed centre. Deliberately
@@ -652,6 +683,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       renderer.domElement.removeEventListener('pointerdown', handlePointerDown)
       controls.dispose()
       container.removeChild(renderer.domElement)
+      figureImage.onload = null
       divineFigureMaterial.map?.dispose()
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh || obj instanceof THREE.Points || obj instanceof THREE.InstancedMesh) {
@@ -666,5 +698,5 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     }
   }, [onFailed])
 
-  return <div ref={containerRef} className="h-full w-full cursor-grab touch-none active:cursor-grabbing" />
+  return <div ref={containerRef} className="relative h-full w-full cursor-grab touch-none active:cursor-grabbing" />
 }
