@@ -189,6 +189,31 @@ export function TempleDetailPage() {
           </div>
         )}
 
+        {temple.status === 'approved' &&
+          (() => {
+            const missing: string[] = []
+            if (!temple.morning_opens_at && !temple.timings_notes) missing.push('darshan timings')
+            if (temple.sandhya_friendly === 'unknown') missing.push('Sandhya Vandanam suitability')
+            if (temple.samidhadhanam_friendly === 'unknown') missing.push('Samidhadhanam suitability')
+            if (temple.food_tier === 'unknown') missing.push('food availability')
+            if (missing.length === 0) return null
+            return (
+              <div className="mt-4 max-w-xl rounded-lg border border-saffron-400 bg-white p-3 text-sm text-charcoal-700">
+                <p className="font-semibold text-maroon-700">Help complete this temple</p>
+                <p className="mt-1">
+                  We do not yet know the {missing.join(', ')}. If you have visited, your first-hand knowledge
+                  helps every devotee who comes after you.
+                </p>
+                <Link
+                  to={user ? `/temples/${temple.id}/suggest-edit` : '/login'}
+                  className="mt-2 inline-block font-semibold text-maroon-700 hover:underline"
+                >
+                  {user ? 'Share what you know →' : 'Sign in to share what you know →'}
+                </Link>
+              </div>
+            )
+          })()}
+
         <div className="mt-4 flex flex-wrap gap-2">
           {temple.status === 'approved' && (
             <VisitButton templeId={temple.id} templeName={temple.name} />
