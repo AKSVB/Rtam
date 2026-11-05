@@ -287,6 +287,23 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     controls.dampingFactor = 0.08
     controls.autoRotate = !prefersReducedMotion
     controls.autoRotateSpeed = 0.5
+    // The wheel zooms the scene only until it reaches its nearest or farthest
+    // distance; after that the event is left alone so the page scrolls on to
+    // the bottom. (OrbitControls' own wheel zoom always swallows the event,
+    // which trapped the page's scroll while the pointer was over the hero.)
+    controls.enableZoom = false
+    const handleWheelZoom = (e: WheelEvent) => {
+      if (e.ctrlKey) return // pinch-zoom gestures belong to the browser
+      const dist = camera.position.distanceTo(controls.target)
+      const zoomingOut = e.deltaY > 0
+      const atLimit = zoomingOut ? dist >= controls.maxDistance - 0.02 : dist <= controls.minDistance + 0.02
+      if (atLimit) return // let the page scroll
+      e.preventDefault()
+      const delta = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY
+      const next = Math.min(controls.maxDistance, Math.max(controls.minDistance, dist * Math.exp(delta * 0.0015)))
+      camera.position.sub(controls.target).setLength(next).add(controls.target)
+    }
+    renderer.domElement.addEventListener('wheel', handleWheelZoom, { passive: false })
     controls.update()
 
     const core = new THREE.Group()
@@ -681,6 +698,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       resizeObserver.disconnect()
       renderer.domElement.removeEventListener('pointermove', handlePointerMove)
       renderer.domElement.removeEventListener('pointerdown', handlePointerDown)
+      renderer.domElement.removeEventListener('wheel', handleWheelZoom)
       controls.dispose()
       container.removeChild(renderer.domElement)
       figureImage.onload = null
