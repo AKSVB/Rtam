@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import gayatriDeviUrl from '../../assets/gayatri-devi.png'
+import gayatriDeviUrl from '../../assets/gayatri-devi-new.jpg'
 
 // Ṛtam's palette, as literal hex — this file can't reach into Tailwind's
 // CSS custom properties, so the values are copied from src/index.css and
@@ -371,15 +371,44 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     // there's no stray colour left to alias. Mipmapping is off so the
     // full-resolution source is always sampled directly, for maximum
     // sharpness. ─────────────────────────────────────────────────────────
-    const figureImageAspect = 1280 / 720
-    const figureHeight = coreRadius * 2.6
+    // The current artwork is a full devotional painting (Gayatri Maata with
+    // the Gayatri Mantra arched over her halo, lake and mountains behind),
+    // not a cut-out figure, so it is shown as a portrait picture: drawn onto
+    // a canvas with rounded corners (transparent outside them) and a thin
+    // gold rule, then used as the plane's texture.
+    const figureImageAspect = 1493 / 2000
+    const figureHeight = coreRadius * 3.9
+    // The texture is created only once the image has loaded: WebGL2 textures
+    // have immutable size, so swapping a placeholder canvas for a differently
+    // sized one afterwards would leave the plane blank.
+    const figureImage = new Image()
+    figureImage.onload = () => {
+      const w = figureImage.naturalWidth
+      const h = figureImage.naturalHeight
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      const r = w * 0.05
+      ctx.beginPath()
+      ctx.roundRect(0, 0, w, h, r)
+      ctx.clip()
+      ctx.drawImage(figureImage, 0, 0, w, h)
+      ctx.lineWidth = w * 0.008
+      ctx.strokeStyle = '#e6c778'
+      ctx.beginPath()
+      ctx.roundRect(ctx.lineWidth / 2, ctx.lineWidth / 2, w - ctx.lineWidth, h - ctx.lineWidth, r)
+      ctx.stroke()
+      const figureTexture = new THREE.CanvasTexture(canvas)
+      figureTexture.colorSpace = THREE.SRGBColorSpace
+      figureTexture.generateMipmaps = false
+      figureTexture.minFilter = THREE.LinearFilter
+      figureTexture.magFilter = THREE.LinearFilter
+      divineFigureMaterial.map = figureTexture
+      divineFigureMaterial.needsUpdate = true
+    }
     const divineFigureMaterial = new THREE.MeshBasicMaterial({
-      map: new THREE.TextureLoader().load(gayatriDeviUrl, (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace
-        tex.generateMipmaps = false
-        tex.minFilter = THREE.LinearFilter
-        tex.magFilter = THREE.LinearFilter
-      }),
       transparent: true,
       depthTest: false,
       depthWrite: false,
@@ -389,6 +418,11 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
       divineFigureMaterial,
     )
     divineFigure.renderOrder = 10
+    divineFigure.visible = false // shown once the picture has loaded
+    figureImage.addEventListener('load', () => {
+      divineFigure.visible = true
+    })
+    figureImage.src = gayatriDeviUrl
     scene.add(divineFigure)
 
     // ── The mandala itself — rings orbiting the fixed centre. Deliberately
