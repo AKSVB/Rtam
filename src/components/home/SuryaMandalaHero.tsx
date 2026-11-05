@@ -393,7 +393,7 @@ export function SuryaMandalaHero({ onFailed }: { onFailed?: () => void }) {
     // the landscape and the mantra ring removed so only the Devi remains, on
     // a real alpha channel. The Devi's silhouette is the same shape the
     // earlier cut-out used, so she sits in the middle of the mandala as before.
-    const figureImageAspect = 1489 / 1905
+    const figureImageAspect = 1489 / 1867
     const figureHeight = coreRadius * 4.2
     // To make her stand out from the bright glow behind, the picture is drawn
     // onto a canvas with a soft dark shadow around her silhouette. The canvas
